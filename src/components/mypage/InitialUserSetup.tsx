@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { axiosInstance } from '../../utils/api';
-import { ENDPOINTS } from '../../api/endpoints';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_APP_BACKEND_URL.replace(/\/+$/, '');
 
 interface UserData {
   clerk_user_id: string;
@@ -31,7 +32,7 @@ export const InitialUserSetup: React.FC = () => {
     };
 
     try {
-      await axiosInstance.post(ENDPOINTS.USER.CREATE, userData);
+      await axios.post(`${API_URL}/api/users`, userData);
       window.location.reload();
     } catch (error: any) {
       console.error('Failed to create user profile:', error);
