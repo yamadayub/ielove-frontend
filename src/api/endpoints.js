@@ -21,6 +21,7 @@ export const ENDPOINTS = {
     USER: {
         ME: '/api/users/me',
         SELLER: '/api/users/me/seller',
+        CREATE: '/api/users',
     },
     UPDATE_PROPERTY: (propertyId) => `/api/properties/${propertyId}`,
     DELETE_PROPERTY: (propertyId) => `/api/properties/${propertyId}`,
