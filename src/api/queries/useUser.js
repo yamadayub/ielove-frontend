@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_APP_BACKEND_URL;
+const API_URL = import.meta.env.VITE_APP_BACKEND_URL.replace(/\/+$/, '');
 
 export const useUserProfile = (userId) => {
   return useQuery({
