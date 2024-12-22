@@ -1,8 +1,19 @@
 import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+interface Image {
+  id: number;
+  url: string;
+  description: string;
+  image_type: 'main' | 'sub';
+  property_id: number;
+  room_id: number | null;
+  product_id: number | null;
+  s3_key: string | null;
+}
+
 interface PropertyGalleryProps {
-  images: string[];
+  images: Image[];
 }
 
 export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images }) => {
@@ -39,11 +50,11 @@ export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images }) => {
       >
         <div className="flex">
           {images.map((image, index) => (
-            <div key={index} className="flex-none w-full snap-start">
+            <div key={image.id} className="flex-none w-full snap-start">
               <div className="aspect-square md:aspect-[4/3]">
                 <img
-                  src={image}
-                  alt={`Property image ${index + 1}`}
+                  src={image.url}
+                  alt={image.description || `Property image ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
               </div>

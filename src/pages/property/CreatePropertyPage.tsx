@@ -1,71 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useImageUpload } from '../../hooks/useImageUpload';
-import { PropertyForm as PropertyFormType } from '../../types';
-import { PropertyForm } from '../../components/property/PropertyForm';
-import { mockApi } from '../../utils/mockApi';
+import { useAuth } from '@clerk/clerk-react';
+import axios from 'axios';
 import { ArrowLeft } from 'lucide-react';
+import { PropertyForm } from '../../components/property/PropertyForm';
+import type { PropertyFormData, PropertyCreateData } from '../../types/property';
+import { useUserProfile } from '../../api/queries/useUser';
 
 export const CreatePropertyPage: React.FC = () => {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  
-  const [property, setProperty] = React.useState<PropertyFormType>({
-    name: '',
-    location: '',
-    description: '',
-    property_type: 'house',
-    layout: '',
-    construction_year: undefined,
-    construction_month: undefined,
-    site_area: undefined,
-    building_area: undefined,
-    floor_count: undefined,
-    structure: '',
-    images: [],
-  });
+  const { userId } = useAuth();
+  const { data: userProfile } = useUserProfile(userId);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { images, handleUpload, deleteImage, isUploading } = useImageUpload();
-
-  const handlePropertyChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    
-    if (type === 'number') {
-      setProperty(prev => ({
-        ...prev,
-        [name]: value === '' ? undefined : Number(value)
-      }));
-    } else {
-      setProperty(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isUploading) return;
+  const handleSubmit = async (formData: PropertyFormData) => {
+    if (isSubmitting) return;
     
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const imageUrls = images.map(img => img.url);
-      const propertyData = {
-        ...property,
-        images: imageUrls,
-      };
+      const response = await axios.post(
+        `${import.meta.env.VITE_APP_BACKEND_URL}/api/properties`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const response = await mockApi.createProperty(propertyData);
       navigate(`/property/${response.data.id}/edit`);
     } catch (error) {
-      console.error('Failed to create property:', error);
+      console.error('物件の作成に失敗しました:', error);
       setError('物件の作成に失敗しました。もう一度お試しください。');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!userProfile) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-white md:bg-gray-50">
@@ -96,15 +73,11 @@ export const CreatePropertyPage: React.FC = () => {
       )}
 
       <div className="md:max-w-2xl md:mx-auto md:bg-white md:rounded-lg md:shadow-sm md:my-8">
-        <PropertyForm
-          property={property}
-          images={images}
-          onPropertyChange={handlePropertyChange}
-          onImageUpload={(e) => handleUpload(e.target.files)}
-          onImageDelete={deleteImage}
+        <PropertyForm 
           onSubmit={handleSubmit}
-          isSubmitting={isSubmitting || isUploading}
-          submitLabel={isSubmitting ? '登録中...' : '物件を登録'}
+          isSubmitting={isSubmitting}
+          userId={userProfile.id}
+          submitButtonText="登録する"
         />
       </div>
     </div>

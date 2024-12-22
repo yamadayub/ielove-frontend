@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
-import axios from '../../axios';
+import axios from '../../api/axios';
 
 interface CreateRoomModalProps {
   isOpen: boolean;

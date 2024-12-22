@@ -1,47 +1,66 @@
-import React from 'react';
-import { PropertyForm as PropertyFormType } from '../../types';
-import { ImageUploader } from './ImageUploader';
-import { UploadedImage } from '../../types';
-import { Camera } from 'lucide-react';
+import React, { useState } from 'react';
+import type { PropertyFormData } from '../../types/property';
 
 interface PropertyFormProps {
-  property: PropertyFormType;
-  images: UploadedImage[];
-  onPropertyChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onImageDelete: (imageId: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (data: PropertyFormData) => Promise<void>;
+  initialData?: Partial<PropertyFormData>;
   isSubmitting?: boolean;
-  submitLabel?: string;
+  userId: number;
+  submitButtonText?: string;
 }
 
 export const PropertyForm: React.FC<PropertyFormProps> = ({
-  property,
-  images,
-  onPropertyChange,
-  onImageUpload,
-  onImageDelete,
   onSubmit,
+  initialData = {},
   isSubmitting = false,
-  submitLabel = '登録する'
+  userId,
+  submitButtonText = '登録する',
 }) => {
-  return (
-    <form onSubmit={onSubmit} className="divide-y divide-gray-100">
-      {/* 画像アップロードセクション */}
-      <div className="p-4">
-        <div className="mb-2 flex items-center justify-between">
-          <label className="text-sm font-medium text-gray-700">
-            物件写真
-          </label>
-          <Camera className="h-5 w-5 text-gray-400" />
-        </div>
-        <ImageUploader
-          images={images}
-          onUpload={onImageUpload}
-          onDelete={onImageDelete}
-        />
-      </div>
+  const [formData, setFormData] = useState<PropertyFormData>({
+    user_id: userId,
+    name: '',
+    description: '',
+    property_type: 'house',
+    prefecture: '',
+    layout: '',
+    construction_year: undefined,
+    construction_month: undefined,
+    site_area: undefined,
+    building_area: undefined,
+    floor_count: undefined,
+    structure: '',
+    design_company_id: undefined,
+    construction_company_id: undefined,
+    ...initialData,
+  });
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit(formData);
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+    
+    // 数値フィールドの処理
+    if (type === 'number') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value ? Number(value) : undefined,
+      }));
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="divide-y divide-gray-200">
       {/* 基本情報セクション */}
       <div className="p-4 space-y-4">
         <div>
@@ -52,27 +71,11 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
             type="text"
             id="name"
             name="name"
+            value={formData.name}
+            onChange={handleInputChange}
             required
-            value={property.name}
-            onChange={onPropertyChange}
-            className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
             placeholder="例：グランドメゾン青山"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-            所在地 <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="location"
-            name="location"
-            required
-            value={property.location}
-            onChange={onPropertyChange}
-            className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
-            placeholder="例：東京都港区南青山1-1-1"
           />
         </div>
 
@@ -83,15 +86,46 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
           <select
             id="property_type"
             name="property_type"
+            value={formData.property_type}
+            onChange={handleInputChange}
             required
-            value={property.property_type}
-            onChange={onPropertyChange}
-            className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
           >
-            <option value="house">一戸建て</option>
+            <option value="house">戸建</option>
             <option value="apartment">マンション</option>
             <option value="other">その他</option>
           </select>
+        </div>
+
+        <div>
+          <label htmlFor="prefecture" className="block text-sm font-medium text-gray-700">
+            都道府県 <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="prefecture"
+            name="prefecture"
+            value={formData.prefecture}
+            onChange={handleInputChange}
+            required
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+            placeholder="例：東京都"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+            物件説明
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={4}
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+            placeholder="物件の特徴や魅力を入力してください"
+          />
         </div>
       </div>
 
@@ -99,55 +133,39 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       <div className="p-4 space-y-4">
         <h3 className="font-medium text-gray-900">詳細情報</h3>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="layout" className="block text-sm font-medium text-gray-700">
-              間取り
-            </label>
-            <input
-              type="text"
-              id="layout"
-              name="layout"
-              value={property.layout || ''}
-              onChange={onPropertyChange}
-              className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
-              placeholder="例：3LDK"
-            />
-          </div>
-          <div>
-            <label htmlFor="structure" className="block text-sm font-medium text-gray-700">
-              構造
-            </label>
-            <input
-              type="text"
-              id="structure"
-              name="structure"
-              value={property.structure || ''}
-              onChange={onPropertyChange}
-              className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
-              placeholder="例：RC造"
-            />
-          </div>
+        <div>
+          <label htmlFor="layout" className="block text-sm font-medium text-gray-700">
+            間取り
+          </label>
+          <input
+            type="text"
+            id="layout"
+            name="layout"
+            value={formData.layout || ''}
+            onChange={handleInputChange}
+            className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+            placeholder="例：3LDK"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="construction_year" className="block text-sm font-medium text-gray-700">
-              築年
+              竣工年
             </label>
             <input
               type="number"
               id="construction_year"
               name="construction_year"
-              value={property.construction_year || ''}
-              onChange={onPropertyChange}
-              className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
+              value={formData.construction_year || ''}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
               placeholder="例：2020"
             />
           </div>
           <div>
             <label htmlFor="construction_month" className="block text-sm font-medium text-gray-700">
-              築月
+              竣工月
             </label>
             <input
               type="number"
@@ -155,9 +173,9 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
               name="construction_month"
               min="1"
               max="12"
-              value={property.construction_month || ''}
-              onChange={onPropertyChange}
-              className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
+              value={formData.construction_month || ''}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
               placeholder="例：4"
             />
           </div>
@@ -173,58 +191,27 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
               id="site_area"
               name="site_area"
               step="0.01"
-              value={property.site_area || ''}
-              onChange={onPropertyChange}
-              className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
+              value={formData.site_area || ''}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
               placeholder="例：120.50"
             />
           </div>
           <div>
             <label htmlFor="building_area" className="block text-sm font-medium text-gray-700">
-              専有面積（㎡）
+              建築面積（㎡）
             </label>
             <input
               type="number"
               id="building_area"
               name="building_area"
               step="0.01"
-              value={property.building_area || ''}
-              onChange={onPropertyChange}
-              className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
+              value={formData.building_area || ''}
+              onChange={handleInputChange}
+              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
               placeholder="例：95.20"
             />
           </div>
-        </div>
-
-        <div>
-          <label htmlFor="floor_count" className="block text-sm font-medium text-gray-700">
-            階数
-          </label>
-          <input
-            type="number"
-            id="floor_count"
-            name="floor_count"
-            min="1"
-            value={property.floor_count || ''}
-            onChange={onPropertyChange}
-            className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
-            placeholder="例：3"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            物件説明
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={property.description}
-            onChange={onPropertyChange}
-            rows={4}
-            className="mt-1 block w-full rounded-lg border-gray-200 bg-gray-50 focus:border-gray-900 focus:ring-gray-900"
-            placeholder="物件の特徴や魅力を入力してください"
-          />
         </div>
       </div>
 
@@ -239,7 +226,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
               : 'bg-gray-900 hover:bg-gray-800'
           }`}
         >
-          {submitLabel}
+          {isSubmitting ? '送信中...' : submitButtonText}
         </button>
       </div>
     </form>

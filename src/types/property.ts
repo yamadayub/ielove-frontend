@@ -1,10 +1,11 @@
 export type PropertyType = 'house' | 'apartment' | 'other';
 
-export interface PropertyForm {
+// 物件の基本データ（プロパティに閉じた定義）
+export interface PropertyBase {
   name: string;
-  location: string;
-  description: string;
+  description?: string;
   property_type: PropertyType;
+  prefecture: string;
   layout?: string;
   construction_year?: number;
   construction_month?: number;
@@ -12,11 +13,22 @@ export interface PropertyForm {
   building_area?: number;
   floor_count?: number;
   structure?: string;
-  images: string[];
+  design_company_id?: number;
+  construction_company_id?: number;
 }
 
-export interface Property extends PropertyForm {
+// 物件作成用
+export interface PropertyCreateData extends PropertyBase {
+  user_id: string;
+}
+
+// フォーム用（user_idを除外）
+export type PropertyFormData = PropertyBase;
+
+export interface Property {
   id: string;
-  created_at: string;
-  updated_at: string;
+  name: string;
+  location: string;
+  description: string;
+  thumbnail?: string;
 }

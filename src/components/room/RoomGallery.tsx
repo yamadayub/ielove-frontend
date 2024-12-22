@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { Image } from '../../types/image';
 
 interface RoomGalleryProps {
-  images: string[];
+  images: Image[];
 }
 
 export const RoomGallery: React.FC<RoomGalleryProps> = ({ images }) => {
@@ -42,7 +43,7 @@ export const RoomGallery: React.FC<RoomGalleryProps> = ({ images }) => {
             <div key={index} className="flex-none w-full snap-start">
               <div className="aspect-square md:aspect-[4/3]">
                 <img
-                  src={image}
+                  src={image.url}
                   alt={`Room image ${index + 1}`}
                   className="w-full h-full object-cover"
                 />

@@ -1,12 +1,12 @@
 import React from 'react';
 import { LayoutGrid, List } from 'lucide-react';
 
-interface MaterialViewTabsProps {
+interface ProductViewTabsProps {
   view: 'grid' | 'list';
   onViewChange: (view: 'grid' | 'list') => void;
 }
 
-export const MaterialViewTabs: React.FC<MaterialViewTabsProps> = ({ view, onViewChange }) => {
+export const ProductViewTabs: React.FC<ProductViewTabsProps> = ({ view, onViewChange }) => {
   return (
     <div className="flex items-center space-x-2">
       <button

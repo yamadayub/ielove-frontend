@@ -1,10 +1,12 @@
+import type { Product } from './product';
+
 export interface Room {
-  id: string;
-  propertyId: string;
+  id: number;
+  property_id: number;
   name: string;
-  description: string;
-  images: string[];
-  specifications: Record<string, Material>;
+  description?: string;
+  specifications?: Record<string, any>;
+  images?: any[];
   created_at: string;
   updated_at: string;
 }

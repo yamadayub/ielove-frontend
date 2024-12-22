@@ -1,19 +1,19 @@
 import React from 'react';
-import { Material } from '../../types';
+import { Product } from '../../types';
 import { Edit } from 'lucide-react';
 
-interface MaterialCardProps {
-  material: Material;
+interface ProductCardProps {
+  product: Product;
   onEdit: () => void;
 }
 
-export const MaterialCard: React.FC<MaterialCardProps> = ({ material, onEdit }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit }) => {
   return (
     <div className="relative group">
       <div className="aspect-square">
         <img
-          src={material.imageUrl || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
-          alt={material.name}
+          src={product.imageUrl || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
+          alt={product.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors">
@@ -29,7 +29,7 @@ export const MaterialCard: React.FC<MaterialCardProps> = ({ material, onEdit }) 
           {/* 材料名を中央に配置 */}
           <div className="absolute inset-0 flex items-center justify-center">
             <h3 className="font-medium text-white text-sm md:text-lg text-center px-2">
-              {material.name}
+              {product.name}
             </h3>
           </div>
         </div>

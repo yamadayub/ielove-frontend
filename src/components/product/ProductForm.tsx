@@ -1,21 +1,21 @@
 import React from 'react';
-import { MaterialForm as MaterialFormType } from '../../types';
+import { ProductForm as ProductFormType } from '../../types';
 import { ImageUploader } from '../property/ImageUploader';
 import { useImageUpload } from '../../hooks/useImageUpload';
 
-interface MaterialFormProps {
-  material?: MaterialFormType;
-  onSubmit: (data: MaterialFormType) => void;
+interface ProductFormProps {
+  product?: ProductFormType;
+  onSubmit: (data: ProductFormType) => void;
   onCancel: () => void;
 }
 
-export const MaterialForm: React.FC<MaterialFormProps> = ({
-  material,
+export const ProductForm: React.FC<ProductFormProps> = ({
+  product,
   onSubmit,
   onCancel,
 }) => {
-  const [formData, setFormData] = React.useState<MaterialFormType>(
-    material || {
+  const [formData, setFormData] = React.useState<ProductFormType>(
+    product || {
       name: '',
       type: '',
       manufacturer: '',
