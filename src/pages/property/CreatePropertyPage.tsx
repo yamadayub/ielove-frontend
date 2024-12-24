@@ -1,47 +1,67 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import axios from 'axios';
-import { ArrowLeft } from 'lucide-react';
-import { PropertyForm } from '../../components/property/PropertyForm';
-import type { PropertyFormData, PropertyCreateData } from '../../types/property';
-import { useUserProfile } from '../../api/queries/useUser';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import type { Property } from '../../features/property/types/property_types';
+import { useUser } from '../../features/user/hooks/useUser';
+import { useAuthenticatedAxios } from '../../features/shared/api/axios';
+import { PropertyForm } from '../../features/property/components/PropertyForm';
+import { AxiosError } from 'axios';
+
+interface ApiError {
+  message: string;
+  code: string;
+  details?: Record<string, string>;
+}
 
 export const CreatePropertyPage: React.FC = () => {
   const navigate = useNavigate();
   const { userId } = useAuth();
-  const { data: userProfile } = useUserProfile(userId);
+  const { data: userProfile } = useUser(userId);
+  const axios = useAuthenticatedAxios();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (formData: PropertyFormData) => {
+  if (!userId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">認証情報が見つかりません</p>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (formData: Property) => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
     setError(null);
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_APP_BACKEND_URL}/api/properties`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axios.post<Property>(
+        '/api/properties',
+        formData
       );
 
       navigate(`/property/${response.data.id}/edit`);
     } catch (error) {
       console.error('物件の作成に失敗しました:', error);
-      setError('物件の作成に失敗しました。もう一度お試しください。');
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`物件の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('物件の作成に失敗しました。もう一度お試しください。');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (!userProfile) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
   }
 
   return (
@@ -78,6 +98,7 @@ export const CreatePropertyPage: React.FC = () => {
           isSubmitting={isSubmitting}
           userId={userProfile.id}
           submitButtonText="登録する"
+          clerkUserId={userId}
         />
       </div>
     </div>

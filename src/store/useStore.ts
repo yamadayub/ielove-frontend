@@ -1,15 +1,39 @@
 import { create } from 'zustand';
-import { Store } from '../types';
+import type { User } from '../features/user/types/user_types';
+
+interface PurchaseHistory {
+  id: string;
+  propertyId: string;
+  purchaseDate: string;
+  totalAmount: number;
+}
+
+interface Store {
+  user: User & {
+    purchasedPropertyIds: string[];
+    purchaseHistory: PurchaseHistory[];
+  };
+  cart: any[]; // TODO: カートの型を定義
+  completePurchase: (propertyId: string) => void;
+  isPropertyPurchased: (propertyId: string) => boolean;
+  updateUserProfile: (name: string, email: string) => void;
+  clearCart: () => void;
+}
 
 export const useStore = create<Store>((set, get) => ({
   user: {
     id: 'u1',
     name: '',
     email: '',
+    user_type: 'individual',
+    role: 'buyer',
+    is_active: true,
     purchasedPropertyIds: [],
     purchaseHistory: [],
   },
   
+  cart: [],
+
   completePurchase: (propertyId) => {
     set((state) => {
       // Check if property is already purchased
@@ -17,7 +41,7 @@ export const useStore = create<Store>((set, get) => ({
         return state;
       }
 
-      const newPurchase = {
+      const newPurchase: PurchaseHistory = {
         id: `ph${Date.now()}`,
         propertyId,
         purchaseDate: new Date().toISOString(),
@@ -48,11 +72,9 @@ export const useStore = create<Store>((set, get) => ({
     }));
   },
 
-  // clearCart関数を追加
   clearCart: () => {
     set(() => ({
-      cart: [], // カートを空にする
+      cart: [],
     }));
   },
-
 }));

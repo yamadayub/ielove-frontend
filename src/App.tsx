@@ -1,28 +1,26 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
-import { Header } from './components/layout/Header';
-import { BottomNav } from './components/layout/BottomNav';
-import { Breadcrumb } from './components/navigation/Breadcrumb';
+import { Header } from './features/common/components/layout/Header';
+import { BottomNav } from './features/common/components/layout/BottomNav';
+import { Breadcrumb } from './features/common/components/navigation/Breadcrumb';
 import { HomePage } from './pages/HomePage';
-import { PropertyPage } from './pages/PropertyPage';
-import { RoomPage } from './pages/RoomPage';
-import { CheckoutPage } from './pages/CheckoutPage';
-import { CompletePage } from './pages/CompletePage';
-import { MyPage } from './pages/MyPage';
+import { PropertyPage } from './pages/property/PropertyPage';
+import { RoomPage } from './pages/room/RoomPage';
+import { CheckoutPage } from './pages/purchase/CheckoutPage';
+import { CompletePage } from './pages/purchase/CompletePage';
+import { MyPage } from './pages/user/MyPage';
 import { CreatePropertyPage } from './pages/property/CreatePropertyPage';
 import { EditPropertyPage } from './pages/property/EditPropertyPage';
-import { EditRoomPage } from './pages/property/EditRoomPage';
-import { EditProductPage } from './pages/property/EditProductPage';
-import { ProductDetailPage } from './pages/property/ProductDetailPage';
-import { QueryProvider } from './providers/QueryProvider'; // QueryProviderをインポート
-import { MockPropertyPage } from './pages/MockPropertyPage';
-import { AuthPage } from './pages/auth/AuthPage';
-import { ProtectedRoute } from './routes/ProtectedRoute'; // 追加
-import { SearchPage } from './pages/SearchPage';
+import { EditRoomPage } from './pages/room/EditRoomPage';
+import { EditProductPage } from './pages/product/EditProductPage';
+import { ProductDetailPage } from './pages/product/ProductDetailPage';
+import { QueryProvider } from './providers/QueryProvider';
+import { AuthPage } from './features/auth/pages/AuthPage';
+import { ProtectedRoute } from './features/auth/components/ProtectedRoute';
+import { SearchPage } from './pages/search/SearchPage';
 import { EditUserProfilePage } from './pages/user/EditUserProfilePage';
-import { PostRoomPage } from './pages/property/PostRoomPage';
-import { ScrollToTop } from './components/common/ScrollToTop';
+import { ScrollToTop } from './features/common/components/ScrollToTop';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -89,7 +87,7 @@ export const App = () => {
                 <Route path="/property/:propertyId/room/:roomId/product/:productId/edit" element={<EditProductPage />} />
                 <Route path="/property/:propertyId/room/:roomId/product/:productId" element={<ProductDetailPage />} />
                 <Route path="/property/:id" element={<PropertyPage />} />
-                <Route path="/property_mock/:id" element={<MockPropertyPage />} />
+                <Route path="/property_mock/:id" element={<div>Mock Property Page</div>} />
                 <Route path="/property/:propertyId/room/:roomId" element={<RoomPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/complete" element={<CompletePage />} />

@@ -8,16 +8,7 @@ export type CompanyType = "manufacturer" | "design" | "construction";
 export type ImageType = "main" | "sub" | "temp";
 export type SaleType = "property" | "room" | "product" | "consultation";
 
-// ユーザー関連
-export interface User {
-  id?: string;
-  email: string;
-  name: string;
-  user_type: UserType;
-  role: string;
-  is_active: boolean;
-  last_sign_in?: Date;
-}
+
 
 // 商品カテゴリー
 export interface ProductCategory {
@@ -97,72 +88,6 @@ export interface Company {
   website?: string;
 }
 
-// 画像関連
-export interface Image {
-  id?: number;
-  url: string;
-  description?: string;
-  image_type: ImageType;
-  property_id?: number;
-  room_id?: number;
-  product_id?: number;
-  s3_key?: string;
-}
-
-// 製品仕様
-export interface ProductSpecification {
-  id?: number;
-  product_id?: number;
-  spec_type: string;
-  spec_value: string;
-  manufacturer_id?: number;
-  model_number?: string;
-}
-
-// 製品寸法
-export interface ProductDimension {
-  id?: number;
-  product_id?: number;
-  dimension_type: string;
-  value: number;
-  unit: string;
-}
-
-// 製品
-export interface Product {
-  id?: number;
-  property_id?: number;
-  room_id?: number;
-  product_category_id: number;
-  manufacturer_id: number;
-  name: string;
-  product_code: string;
-  description?: string;
-  catalog_url?: string;
-  specifications?: ProductSpecification[];
-  dimensions?: ProductDimension[];
-  images?: Image[];
-}
-
-// 部屋
-export interface Room {
-  id?: number;
-  property_id?: number;
-  name: string;
-  description?: string;
-  products?: Product[];
-  images?: Image[];
-}
-
-// 物件詳細
-export interface Property extends PropertyCreateData {
-  id?: number;
-  user?: Partial<User>;
-  design_company?: Partial<Company>;
-  construction_company?: Partial<Company>;
-  rooms?: Room[];
-  images?: Image[];
-}
 
 // プリサインURL
 export interface PreSignedUrlResponse {
