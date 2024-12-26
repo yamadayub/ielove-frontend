@@ -21,13 +21,14 @@ export const RoomPage = () => {
   }
 
   const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
-  const { data: images, isLoading: isLoadingImages } = useImages({ propertyId, roomId });
   const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
-  const isPropertyPurchased = useStore((state: any) => state.isPropertyPurchased(propertyId));
+  const { data: images, isLoading: isLoadingImages } = useImages({ roomId });
+  const isPropertyPurchased = useStore((state) => state.isPropertyPurchased(propertyId));
 
-  const roomImages = images?.filter(img => img.room_id === Number(roomId) && !img.product_id) || [];
+  const filteredRoomImages = images?.filter(img => !img.product_id) || [];
+  const productImages = images?.filter(img => img.product_id) || [];
 
-  if (isLoadingRoom || isLoadingImages || isLoadingProducts) {
+  if (isLoadingRoom || isLoadingProducts || isLoadingImages) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -50,7 +51,7 @@ export const RoomPage = () => {
     <div>
       <Breadcrumb />
       <div className="bg-white">
-        <RoomGallery images={roomImages} roomName={room.name} />
+        <RoomGallery images={filteredRoomImages} roomName={room.name} />
         
         <div className="px-4">
           <RoomInfo room={room} />
@@ -69,6 +70,7 @@ export const RoomPage = () => {
                 propertyId={propertyId}
                 roomId={roomId}
                 products={products || []}
+                images={productImages}
                 isPurchased={isPropertyPurchased}
               />
             ) : (
@@ -77,6 +79,7 @@ export const RoomPage = () => {
                   propertyId={propertyId}
                   roomId={roomId}
                   products={products || []}
+                  images={productImages}
                   isPurchased={isPropertyPurchased}
                 />
               </div>

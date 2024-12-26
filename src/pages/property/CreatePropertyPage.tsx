@@ -45,9 +45,21 @@ export const CreatePropertyPage: React.FC = () => {
       navigate(`/property/${response.data.id}/edit`);
     } catch (error) {
       console.error('物件の作成に失敗しました:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const apiError = error.response.data as ApiError;
-        setError(`物件の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      if (error instanceof AxiosError) {
+        if (error.response?.data) {
+          const apiError = error.response.data as ApiError;
+          setError(`物件の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+        } else if (error.code === 'ERR_NETWORK') {
+          setError('ネットワークエラー: サーバーに接続できません。インターネット接続を確認してください。');
+        } else {
+          setError(`エラー: ${error.message}`);
+        }
+        console.error('詳細なエラー情報:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          headers: error.response?.headers,
+          data: error.response?.data
+        });
       } else {
         setError('物件の作成に失敗しました。もう一度お試しください。');
       }

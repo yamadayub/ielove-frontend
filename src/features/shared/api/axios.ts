@@ -21,8 +21,10 @@ export const useAuthenticatedAxios = (): AxiosInstance => {
     async (config: InternalAxiosRequestConfig) => {
       try {
         const token = await getToken();
+        console.log('Auth Token:', token ? 'Present' : 'Missing');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('Request Headers:', config.headers);
         }
         return config;
       } catch (error) {

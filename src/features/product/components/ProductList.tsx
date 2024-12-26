@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../types/product_types';
+import type { Image } from '../../image/types/image_types';
 
 interface ProductListProps {
   propertyId: string;
   roomId: string;
   products: Product[];
+  images: Image[];
   isPurchased?: boolean;
 }
 
@@ -13,6 +15,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   propertyId,
   roomId,
   products,
+  images,
   isPurchased = false
 }) => {
   const navigate = useNavigate();
@@ -25,41 +28,41 @@ export const ProductList: React.FC<ProductListProps> = ({
     );
   }
 
-  const handleProductClick = (productId: number | undefined) => {
-    if (productId === undefined) return;
+  const handleProductClick = (productId: number) => {
     navigate(`/property/${propertyId}/room/${roomId}/product/${productId}`);
   };
 
+  const getMainImage = (productId: number): Image | undefined => {
+    return images.find(img => 
+      img.product_id === productId && 
+      img.image_type === 'main'
+    );
+  };
+
   return (
-    <div className="py-6 px-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+    <div className="grid grid-cols-3 gap-2 p-2">
+      {products.map((product) => {
+        const mainImage = getMainImage(product.id || 0);
+        
+        return (
           <div
             key={product.id}
-            onClick={() => handleProductClick(product.id)}
-            className="bg-white rounded-lg shadow-md p-4 cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            onClick={() => product.id && handleProductClick(product.id)}
+            className="relative bg-white overflow-hidden cursor-pointer"
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{product.name}</h3>
-            {product.description && (
-              <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-            )}
-            <div className="text-sm text-gray-500">
-              <p>商品コード: {product.product_code}</p>
-              {product.catalog_url && (
-                <a
-                  href={product.catalog_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  カタログを見る
-                </a>
-              )}
+            <div className="absolute top-0 left-0 right-0 bg-black bg-opacity-50 text-white px-2 py-1 z-10">
+              <p className="text-xs font-medium truncate">{product.product_category_name || '未分類'}</p>
+            </div>
+            <div className="aspect-square">
+              <img
+                src={mainImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 };
