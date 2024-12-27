@@ -14,17 +14,24 @@ export const axiosInstance: AxiosInstance = axios.create({
 
 // 認証付きのaxiosインスタンスを取得するカスタムフック
 export const useAuthenticatedAxios = (): AxiosInstance => {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
 
   // インターセプターの参照を保持
   const interceptorId = axiosInstance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       try {
+        // GETリクエストの場合は認証ヘッダーを付けない
+        if (config.method?.toLowerCase() === 'get') {
+          return config;
+        }
+
         const token = await getToken();
-        console.log('Auth Token:', token ? 'Present' : 'Missing');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('Request Headers:', config.headers);
+          // x-clerk-user-idヘッダーを追加
+          if (userId) {
+            config.headers['x-clerk-user-id'] = userId;
+          }
         }
         return config;
       } catch (error) {

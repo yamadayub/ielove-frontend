@@ -11,6 +11,7 @@ import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import type { Product, ProductSpecification, ProductDimension } from '../../features/product/types/product_types';
 import type { Image } from '../../features/image/types/image_types';
 import { AxiosError } from 'axios';
+import { useCompanies } from '../../features/company/hooks/useCompanies';
 
 // 型定義の追加
 type QueryKeys = 
@@ -90,24 +91,10 @@ export const EditProductPage: React.FC = () => {
   const queryClient = useQueryClient();
   const { userId } = useAuth();
   const axios = useAuthenticatedAxios();
+
+  // State hooks
   const [error, setError] = useState<string | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string; status: 'uploading' | 'completed' }>>([]);
-
-  // nullチェックの追加
-  if (!productId || !roomId || !propertyId) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
-        <p className="text-gray-500">Product ID, Room ID, and Property ID are required</p>
-      </div>
-    );
-  }
-
-  const { data: product, isLoading: isLoadingProduct } = useProductDetails(productId);
-  const { data: productImages, isLoading: isLoadingImages } = useImages({
-    entity_type: 'product',
-    entity_id: parseInt(productId)
-  });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [productForm, setProductForm] = useState<Omit<Product, 'id' | 'created_at'>>({
     name: '',
     product_code: '',
@@ -115,86 +102,155 @@ export const EditProductPage: React.FC = () => {
     catalog_url: '',
     manufacturer_id: 0,
     product_category_id: 0,
-    room_id: parseInt(roomId)
+    room_id: parseInt(roomId || '0')
   });
-
   const [specifications, setSpecifications] = useState<ProductSpecification[]>([]);
   const [dimensions, setDimensions] = useState<ProductDimension[]>([]);
-  const [isSubmittingProduct, setIsSubmittingProduct] = useState(false);
-  const [isSubmittingSpecs, setIsSubmittingSpecs] = useState(false);
-  const [isSubmittingDimensions, setIsSubmittingDimensions] = useState(false);
 
-  const [deleteModalState, setDeleteModalState] = useState<{
-    isOpen: boolean;
-    type: 'specification' | 'dimension' | null;
-    id: number | null;
-    index: number | null;
-  }>({
-    isOpen: false,
-    type: null,
-    id: null,
-    index: null
+  // Query hooks
+  const { data: product, isLoading: isLoadingProduct } = useProductDetails(productId || '');
+  const { 
+    data: productImages, 
+    isLoading: isLoadingImages,
+    refetch: refetchImages 
+  } = useImages({
+    productId: productId || ''
+  });
+  const { data: manufacturers, isLoading: isLoadingManufacturers } = useCompanies({
+    company_type: 'manufacturer'
   });
 
+  // 製品の画像のみをフィルタリング
+  const filteredProductImages = productImages?.filter(img => img.product_id === Number(productId));
+
+  // Effect hooks
   React.useEffect(() => {
     if (product) {
       setProductForm({
         name: product.name,
         product_code: product.product_code,
-        description: product.description || '',
-        catalog_url: product.catalog_url || '',
+        description: product.description ?? '',
+        catalog_url: product.catalog_url ?? '',
         manufacturer_id: product.manufacturer_id,
         product_category_id: product.product_category_id,
         room_id: product.room_id
       });
-        
-        // 既存の画像をセット
-      if (productImages && productImages.length > 0) {
-        setUploadedImages(
-          productImages.map((image: Image) => ({
-            id: image.id.toString(),
-            url: image.url,
-            status: 'completed' as const
-          }))
-        );
+      if ('specifications' in product) {
+        setSpecifications(product.specifications || []);
       }
-
-      // 仕様情報のセット
-      if (product.specifications) {
-        setSpecifications(product.specifications.map((spec: ProductSpecification) => ({
-          id: spec.id,
-          spec_type: spec.spec_type,
-          spec_value: spec.spec_value,
-          manufacturer_id: spec.manufacturer_id,
-          model_number: spec.model_number
-        })));
-      }
-
-      // 寸法情報のセット
-      if (product.dimensions) {
-        setDimensions(product.dimensions.map((dim: ProductDimension) => ({
-          id: dim.id,
-          dimension_type: dim.dimension_type,
-          value: dim.value,
-          unit: dim.unit
-        })));
+      if ('dimensions' in product) {
+        setDimensions(product.dimensions || []);
       }
     }
-  }, [product, productImages]);
+  }, [product]);
 
-  // キャッシュを更新する関数
-  const invalidateProductQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ['product', productId] });
+  // 必要な情報が不足している場合の表示
+  if (!productId || !roomId || !propertyId || !userId) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
+        <p className="text-gray-500">必要な情報が不足しています</p>
+      </div>
+    );
+  }
+
+  const handleAddSpecification = async () => {
+    try {
+      const newSpec = {
+        product_id: Number(productId),
+        spec_type: '',
+        spec_value: ''
+      };
+
+      const response = await axios.post(
+        ENDPOINTS.CREATE_PRODUCT_SPECIFICATION(productId),
+        newSpec
+      );
+
+      setSpecifications(prev => [...prev, response.data]);
+    } catch (error) {
+      console.error('仕様の追加に失敗しました:', error);
+      setError('仕様の追加に失敗しました');
+    }
   };
 
-  const handleProductSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmittingProduct) return;
+  const handleRemoveSpecification = async (specId: number | undefined) => {
+    if (specId === undefined) return;
 
-    setIsSubmittingProduct(true);
+    try {
+      await axios.delete(ENDPOINTS.DELETE_PRODUCT_SPECIFICATION(specId));
+      setSpecifications(prev => prev.filter(spec => spec.id !== specId));
+      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
+    } catch (error) {
+      console.error('仕様の削除に失敗しました:', error);
+      setError('仕様の削除に失敗しました');
+    }
+  };
+
+  const handleAddDimension = async () => {
+    try {
+      const newDimension = {
+        product_id: Number(productId),
+        dimension_type: '',
+        value: 0,
+        unit: 'mm'
+      };
+
+      const response = await axios.post(
+        ENDPOINTS.CREATE_PRODUCT_DIMENSION(productId),
+        newDimension
+      );
+
+      setDimensions(prev => [...prev, response.data]);
+    } catch (error) {
+      console.error('寸法の追加に失敗しました:', error);
+      setError('寸法の削除に失敗しました');
+    }
+  };
+
+  const handleRemoveDimension = async (dimensionId: number | undefined) => {
+    if (dimensionId === undefined) return;
+
+    try {
+      await axios.delete(ENDPOINTS.DELETE_PRODUCT_DIMENSION(dimensionId));
+      setDimensions(prev => prev.filter(dim => dim.id !== dimensionId));
+      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
+    } catch (error) {
+      console.error('寸法の削除に失敗しました:', error);
+      setError('寸法の削除に失敗しました');
+    }
+  };
+
+  const handleUpdateSpecification = (specId: number | undefined, field: keyof ProductSpecification, value: string) => {
+    if (specId === undefined) return;
+    
+    setSpecifications(prev => prev.map(spec => {
+      if (spec.id === specId) {
+        return { ...spec, [field]: value };
+      }
+      return spec;
+    }));
+  };
+
+  const handleUpdateDimension = (dimensionId: number | undefined, field: keyof ProductDimension, value: string | number) => {
+    if (dimensionId === undefined) return;
+    
+    setDimensions(prev => prev.map(dim => {
+      if (dim.id === dimensionId) {
+        return { ...dim, [field]: value };
+      }
+      return dim;
+    }));
+  };
+
+  const handleSubmitBasicInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     setError(null);
 
     try {
+      // 基本情報の更新
       await axios.patch(
         ENDPOINTS.UPDATE_PRODUCT(productId),
         {
@@ -203,275 +259,159 @@ export const EditProductPage: React.FC = () => {
         }
       );
 
-      await invalidateProductQueries();
-      setError('基本情報を更新しました');
+      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
+      setError('製品情報を更新しました');
     } catch (error) {
       console.error('Failed to update product:', error);
       if (error instanceof AxiosError && error.response?.data) {
         const apiError = error.response.data as ApiError;
-        setError(`仕上げ材の更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+        setError(`製品の更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
-      setError('仕上げ材の更新に失敗しました');
+        setError('製品の更新に失敗しました');
       }
     } finally {
-      setIsSubmittingProduct(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleSpecificationsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmittingSpecs) return;
+  const handleSubmitSpecifications = async () => {
+    if (isSubmitting) return;
 
-    setIsSubmittingSpecs(true);
+    setIsSubmitting(true);
     setError(null);
 
     try {
+      // バリデーション
+      const isValid = specifications.every(spec => 
+        spec.spec_type && 
+        spec.spec_value
+      );
+
+      if (!isValid) {
+        setError('すべての仕様情報を入力してください');
+        return;
+      }
+
+      // 一時的なIDを除外してAPIに送信
+      const specificationsToSubmit = specifications.map(({ id, product_id, spec_type, spec_value }) => ({
+        ...(typeof id === 'number' ? { id } : {}),
+        product_id,
+        spec_type,
+        spec_value
+      }));
+
       await axios.put(
         ENDPOINTS.UPDATE_PRODUCT_SPECIFICATIONS(productId),
-        { specifications }
+        specificationsToSubmit
       );
-      
-      await invalidateProductQueries();
+
+      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
       setError('仕様情報を更新しました');
     } catch (error) {
       console.error('Failed to update specifications:', error);
       if (error instanceof AxiosError && error.response?.data) {
         const apiError = error.response.data as ApiError;
-        setError(`仕様情報の更新に失敗しました: ${apiError.message || '不明なエラー'}`);
+        setError(`仕様情報の更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
-      setError('仕様情報の更新に失敗しました');
+        setError('仕様情報の更新に失敗しました');
       }
     } finally {
-      setIsSubmittingSpecs(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleDimensionsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmittingDimensions) return;
+  const handleSubmitDimensions = async () => {
+    if (isSubmitting) return;
 
-    setIsSubmittingDimensions(true);
+    setIsSubmitting(true);
     setError(null);
 
     try {
+      // バリデーション
+      const isValid = dimensions.every(dim => 
+        dim.dimension_type && 
+        (dim.value !== undefined && dim.value !== null) && 
+        dim.unit
+      );
+
+      if (!isValid) {
+        setError('すべての寸法情報を入力してください');
+        return;
+      }
+
+      // 一時的なIDを除外してAPIに送信
+      const dimensionsToSubmit = dimensions.map(({ id, product_id, dimension_type, value, unit }) => ({
+        ...(typeof id === 'number' ? { id } : {}),
+        product_id,
+        dimension_type,
+        value,
+        unit
+      }));
+
       await axios.put(
         ENDPOINTS.UPDATE_PRODUCT_DIMENSIONS(productId),
-        { dimensions }
+        dimensionsToSubmit
       );
-      
-      await invalidateProductQueries();
-      setError('寸法情報を更新しました');
+
+      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
+      setError('サイズ情報を更新しました');
     } catch (error) {
       console.error('Failed to update dimensions:', error);
       if (error instanceof AxiosError && error.response?.data) {
         const apiError = error.response.data as ApiError;
-        setError(`寸法情報の更新に失敗しました: ${apiError.message || '不明なエラー'}`);
+        setError(`サイズ情報の更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
-      setError('寸法情報の更新に失敗しました');
+        setError('サイズ情報の更新に失敗しました');
       }
     } finally {
-      setIsSubmittingDimensions(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleAddSpecification = async () => {
+  const handleImageUploaded = () => {
+    refetchImages();
+  };
+
+  const handleImageDelete = async (imageId: number) => {
+    if (!userId) return;
+
     try {
-      const { data } = await axios.post(
-        ENDPOINTS.CREATE_PRODUCT_SPECIFICATION(productId),
+      await axios.delete(
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.DELETE_IMAGE(imageId)}`,
         {
-          spec_type: "仕様タイプ",
-          spec_value: "",
-          manufacturer_id: 0,
-          model_number: ""
-        }
-      );
-
-      setSpecifications(prev => [...prev, data]);
-      await invalidateProductQueries();
-    } catch (error) {
-      console.error('Failed to create specification:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const apiError = error.response.data as ApiError;
-        setError(`仕様情報の追加に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
-      } else {
-        setError('仕様情報の追加に失敗しました');
-      }
-    }
-  };
-
-  const handleAddDimension = async () => {
-    try {
-      const { data } = await axios.post(
-        ENDPOINTS.CREATE_PRODUCT_DIMENSION(productId),
-        {
-          dimension_type: "寸法タイプ",
-          value: 0,
-          unit: "mm"
-        }
-      );
-      
-      setDimensions(prev => [...prev, data]);
-      await invalidateProductQueries();
-    } catch (error) {
-      console.error('Failed to create dimension:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const apiError = error.response.data as ApiError;
-        setError(`寸法情報の追加に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
-      } else {
-        setError('寸法情報の追加に失敗しました');
-      }
-    }
-  };
-
-  const handleDelete = async () => {
-    const { type, id, index } = deleteModalState;
-    if (!type || id === null || index === null) return;
-
-    try {
-      if (type === 'specification') {
-        await axios.delete(ENDPOINTS.DELETE_PRODUCT_SPECIFICATION(id));
-        setSpecifications(prev => prev.filter((_, i) => i !== index));
-      } else {
-        await axios.delete(ENDPOINTS.DELETE_PRODUCT_DIMENSION(id));
-        setDimensions(prev => prev.filter((_, i) => i !== index));
-      }
-
-      await invalidateProductQueries();
-      setDeleteModalState({
-        isOpen: false,
-        type: null,
-        id: null,
-        index: null
-      });
-    } catch (error) {
-      console.error('Failed to delete:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const apiError = error.response.data as ApiError;
-        setError(`${type === 'specification' ? '仕様情報' : '寸法情報'}の削除に失敗しました: ${apiError.message || '不明なエラー'}`);
-      } else {
-        setError(`${type === 'specification' ? '仕様情報' : '寸法情報'}の削除に失敗しました`);
-      }
-    }
-  };
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    for (const file of Array.from(files)) {
-      try {
-        const { data: presignedData } = await axios.post(
-          ENDPOINTS.GET_PRESIGNED_URL,
-          {
-            content_type: file.type,
-            file_name: file.name
-          }
-        );
-
-        const tempImage = {
-          id: presignedData.image_id,
-          url: '',
-          status: 'uploading' as const
-        };
-        setUploadedImages(prev => [...prev, tempImage]);
-
-        await axios.put(presignedData.presigned_url, file, {
           headers: {
-            'Content-Type': file.type
+            'x-clerk-user-id': userId
           }
-        });
-
-        await axios.post(
-          ENDPOINTS.COMPLETE_IMAGE_UPLOAD(presignedData.image_id),
-          {
-            entity_type: 'product',
-            entity_id: Number(productId)
-          }
-        );
-
-        setUploadedImages(prev =>
-          prev.map(img =>
-            img.id === presignedData.image_id
-              ? { ...img, url: presignedData.url, status: 'completed' as const }
-              : img
-          )
-        );
-
-        await queryClient.invalidateQueries({
-          queryKey: ['images', { entity_type: 'product', entity_id: productId }]
-        });
-      } catch (error) {
-        console.error('Failed to upload image:', error);
-        if (error instanceof AxiosError && error.response?.data) {
-          const apiError = error.response.data as ApiError;
-          setError(`画像のアップロードに失敗しました: ${apiError.message || '不明なエラー'}`);
-        } else {
-        setError('画像のアップロードに失敗しました');
         }
-      }
-    }
-  };
-
-  const handleImageDelete = async (imageId: string) => {
-    try {
-      await axios.delete(ENDPOINTS.DELETE_IMAGE(imageId));
-      setUploadedImages(prev => prev.filter(img => img.id !== imageId));
-      
-      await queryClient.invalidateQueries({
-        queryKey: ['images', { entity_type: 'product', entity_id: productId }]
-      });
+      );
+      refetchImages();
     } catch (error) {
-      console.error('Failed to delete image:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const apiError = error.response.data as ApiError;
-        setError(`画像の削除に失敗しました: ${apiError.message || '不明なエラー'}`);
-      } else {
+      console.error('画像の削除に失敗しました:', error);
       setError('画像の削除に失敗しました');
-      }
     }
   };
 
-  const handleDeleteSpecification = (spec: ProductSpecification, index: number) => {
-    if (!spec.id) {
-      setSpecifications(prev => prev.filter((_, i) => i !== index));
-      return;
+  const handleImageTypeChange = async (imageId: number, newType: 'main' | 'sub') => {
+    if (!userId) return;
+
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.UPDATE_IMAGE(imageId)}`,
+        { image_type: newType },
+        {
+          headers: {
+            'x-clerk-user-id': userId
+          }
+        }
+      );
+      refetchImages();
+    } catch (error) {
+      console.error('画像タイプの更新に失敗しました:', error);
+      setError('画像タイプの更新に失敗しました');
     }
-
-    setDeleteModalState({
-      isOpen: true,
-      type: 'specification',
-      id: spec.id,
-      index
-    });
   };
 
-  const handleDeleteDimension = (dim: ProductDimension, index: number) => {
-    if (!dim.id) {
-      setDimensions(prev => prev.filter((_, i) => i !== index));
-      return;
-    }
-
-    setDeleteModalState({
-      isOpen: true,
-      type: 'dimension',
-      id: dim.id,
-      index
-    });
-  };
-
-  const updateSpecification = (index: number, field: keyof ProductSpecification, value: string | number) => {
-    setSpecifications(prev => prev.map((spec, i) => 
-      i === index ? { ...spec, [field]: value } : spec
-    ));
-  };
-
-  const updateDimension = (index: number, field: keyof ProductDimension, value: string | number) => {
-    setDimensions(prev => prev.map((dim, i) => 
-      i === index ? { ...dim, [field]: value } : dim
-    ));
-  };
-
-  if (isLoadingProduct || isLoadingImages) {
+  if (isLoadingProduct || isLoadingImages || isLoadingManufacturers) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -498,7 +438,7 @@ export const EditProductPage: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="ml-2 text-lg font-semibold">{product.name}の編集</h1>
+          <h1 className="ml-2 text-lg font-semibold">{product.name}編集</h1>
         </div>
       </div>
 
@@ -515,20 +455,61 @@ export const EditProductPage: React.FC = () => {
         </div>
       )}
 
-      <div className="md:max-w-2xl md:mx-auto space-y-8">
-        {/* 基本情報フォーム */}
+      <div className="md:max-w-2xl md:mx-auto">
         <div className="bg-white md:rounded-lg md:shadow-sm">
-          <form onSubmit={handleProductSubmit} className="space-y-6 p-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              写真
-            </label>
-            <ImageUploader
-                images={uploadedImages}
-                onUpload={handleUpload}
-                onDelete={handleImageDelete}
-            />
-          </div>
+          <form onSubmit={handleSubmitBasicInfo} className="space-y-6 p-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                写真
+              </label>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  {filteredProductImages?.map((image) => (
+                    <div key={image.id} className="relative">
+                      <div className="relative aspect-square">
+                        <img
+                          src={image.url}
+                          alt="製品画像"
+                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleImageDelete(image.id)}
+                          className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                          aria-label="画像を削除"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="mt-2">
+                        <select
+                          value={image.image_type || 'sub'}
+                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'main' | 'sub')}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                        >
+                          <option value="main">メイン画像</option>
+                          <option value="sub">サブ画像</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <ImageUploader
+                  onImageUploaded={handleImageUploaded}
+                  onError={(message: string) => setError(message)}
+                  clerkUserId={userId}
+                  productId={Number(productId)}
+                  roomId={Number(roomId)}
+                  propertyId={Number(propertyId)}
+                  existingImages={filteredProductImages?.map(img => ({
+                    id: img.id,
+                    image_type: img.image_type || 'sub',
+                    url: img.url
+                  })) || []}
+                />
+              </div>
+            </div>
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -543,6 +524,33 @@ export const EditProductPage: React.FC = () => {
                 required
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
               />
+            </div>
+
+            <div>
+              <label htmlFor="manufacturer_id" className="block text-sm font-medium text-gray-700">
+                メーカー <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="manufacturer_id"
+                name="manufacturer_id"
+                value={productForm.manufacturer_id || ''}
+                onChange={(e) => {
+                  console.log('Selected manufacturer:', e.target.value);
+                  setProductForm(prev => ({ ...prev, manufacturer_id: Number(e.target.value) }));
+                }}
+                required
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+              >
+                <option value="">選択してください</option>
+                {manufacturers?.map((manufacturer) => {
+                  console.log('Manufacturer option:', manufacturer);
+                  return (
+                    <option key={manufacturer.id} value={manufacturer.id}>
+                      {manufacturer.name}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
 
             <div>
@@ -588,173 +596,158 @@ export const EditProductPage: React.FC = () => {
               />
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t p-4 -mx-4 -mb-4">
+            <div className="sticky bottom-0 bg-white border-t p-4 -mx-4">
               <button
                 type="submit"
-                disabled={isSubmittingProduct}
+                disabled={isSubmitting}
                 className={`w-full py-3 px-4 rounded-full text-white font-medium transition-colors ${
-                  isSubmittingProduct 
+                  isSubmitting 
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-gray-900 hover:bg-gray-800'
                 }`}
               >
-                {isSubmittingProduct ? '保存中...' : '基本情報を保存'}
+                {isSubmitting ? '保存中...' : '基本情報を更新する'}
               </button>
             </div>
           </form>
-        </div>
 
-        {/* 仕様情報フォーム */}
-        <div className="bg-white md:rounded-lg md:shadow-sm">
-          <form onSubmit={handleSpecificationsSubmit} className="space-y-6 p-4 border-t">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">仕様情報</h2>
+          <div className="p-4 border-t">
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                仕様情報
+              </label>
               <button
                 type="button"
                 onClick={handleAddSpecification}
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 追加
               </button>
             </div>
-
+            <div className="space-y-4">
               {specifications.map((spec, index) => (
-              <div key={spec.id || index} className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-grow space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        仕様タイプ
-                      </label>
-                      <input
-                        type="text"
-                        value={spec.spec_type}
-                        onChange={(e) => updateSpecification(index, 'spec_type', e.target.value)}
-                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        仕様値
-                      </label>
-                      <input
-                        type="text"
-                        value={spec.spec_value}
-                        onChange={(e) => updateSpecification(index, 'spec_value', e.target.value)}
-                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
+                <div key={index} className="flex items-start space-x-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={spec.spec_type}
+                      onChange={(e) => handleUpdateSpecification(spec.id, 'spec_type', e.target.value)}
+                      placeholder="仕様項目"
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={spec.spec_value}
+                      onChange={(e) => handleUpdateSpecification(spec.id, 'spec_value', e.target.value)}
+                      placeholder="仕様値"
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                    />
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDeleteSpecification(spec, index)}
-                    className="ml-2 p-1 text-gray-400 hover:text-gray-500"
+                    onClick={() => handleRemoveSpecification(spec.id)}
+                    className="p-2 text-gray-400 hover:text-gray-500"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </button>
-                  </div>
                 </div>
               ))}
-
-            <div className="sticky bottom-0 bg-white border-t p-4 -mx-4 -mb-4">
+            </div>
+            <div className="mt-6">
               <button
-                type="submit"
-                disabled={isSubmittingSpecs}
-                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-400"
+                type="button"
+                onClick={handleSubmitSpecifications}
+                disabled={isSubmitting}
+                className={`w-full py-3 px-4 rounded-full text-white font-medium transition-colors ${
+                  isSubmitting 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gray-900 hover:bg-gray-800'
+                }`}
               >
-                {isSubmittingSpecs ? '更新中...' : '仕様情報を更新'}
+                {isSubmitting ? '保存中...' : '詳細仕様を更新する'}
               </button>
             </div>
-          </form>
-        </div>
+          </div>
 
-        {/* 寸法情報フォーム */}
-        <div className="bg-white md:rounded-lg md:shadow-sm">
-          <form onSubmit={handleDimensionsSubmit} className="space-y-6 p-4 border-t">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">寸法情報</h2>
+          <div className="p-4 border-t">
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                寸法情報
+              </label>
               <button
                 type="button"
                 onClick={handleAddDimension}
-                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 追加
               </button>
             </div>
-
+            <div className="space-y-4">
               {dimensions.map((dim, index) => (
-              <div key={dim.id || index} className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-grow space-y-4">
-                    <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        寸法タイプ
-                      </label>
-                      <input
-                        type="text"
-                        value={dim.dimension_type}
-                        onChange={(e) => updateDimension(index, 'dimension_type', e.target.value)}
-                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                          値
-                      </label>
-                      <input
-                        type="number"
-                        value={dim.value}
-                        onChange={(e) => updateDimension(index, 'value', parseFloat(e.target.value))}
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
-                    <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                        単位
-                      </label>
-                        <input
-                          type="text"
-                        value={dim.unit}
-                        onChange={(e) => updateDimension(index, 'unit', e.target.value)}
-                          className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-                        />
-                      </div>
-                    </div>
+                <div key={index} className="flex items-start space-x-4">
+                  <div className="flex-1">
+                    <select
+                      value={dim.dimension_type || ''}
+                      onChange={(e) => handleUpdateDimension(dim.id, 'dimension_type', e.target.value)}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                    >
+                      <option value="">選択してください</option>
+                      <option value="width">幅</option>
+                      <option value="height">高さ</option>
+                      <option value="depth">奥行</option>
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      value={dim.value ?? ''}
+                      onChange={(e) => handleUpdateDimension(dim.id, 'value', e.target.value)}
+                      placeholder="寸法値"
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                    />
+                  </div>
+                  <div className="w-24">
+                    <select
+                      value={dim.unit || 'mm'}
+                      onChange={(e) => handleUpdateDimension(dim.id, 'unit', e.target.value)}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                    >
+                      <option value="mm">mm</option>
+                      <option value="cm">cm</option>
+                      <option value="m">m</option>
+                    </select>
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDeleteDimension(dim, index)}
-                    className="ml-2 p-1 text-gray-400 hover:text-gray-500"
+                    onClick={() => handleRemoveDimension(dim.id)}
+                    className="p-2 text-gray-400 hover:text-gray-500"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </button>
-                  </div>
                 </div>
               ))}
-
-          <div className="sticky bottom-0 bg-white border-t p-4 -mx-4 -mb-4">
-            <button
-              type="submit"
-                disabled={isSubmittingDimensions}
-                className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-400"
+            </div>
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={handleSubmitDimensions}
+                disabled={isSubmitting}
+                className={`w-full py-3 px-4 rounded-full text-white font-medium transition-colors ${
+                  isSubmitting 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gray-900 hover:bg-gray-800'
+                }`}
               >
-                {isSubmittingDimensions ? '更新中...' : '寸法情報を更新'}
-            </button>
+                {isSubmitting ? '保存中...' : 'サイズを更新する'}
+              </button>
+            </div>
           </div>
-        </form>
+        </div>
       </div>
-      </div>
-
-      <DeleteConfirmationModal
-        isOpen={deleteModalState.isOpen}
-        onClose={() => setDeleteModalState({ isOpen: false, type: null, id: null, index: null })}
-        onConfirm={handleDelete}
-        title="削除の確認"
-        message={`この${deleteModalState.type === 'specification' ? '仕様情報' : '寸法情報'}を削除してもよろしいですか？`}
-      />
     </div>
   );
 };

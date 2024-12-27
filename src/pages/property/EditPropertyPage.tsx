@@ -37,10 +37,19 @@ export const EditPropertyPage: React.FC = () => {
 
   const { data: property, isLoading: isLoadingProperty, error: propertyError } = useProperty(propertyId);
   const { data: rooms, isLoading: isLoadingRooms, error: roomsError } = useRooms({ propertyId });
-  const { data: propertyImages, isLoading: isLoadingImages } = useImages({
-    entity_type: 'property',
-    entity_id: parseInt(propertyId)
+  const { 
+    data: propertyImages, 
+    isLoading: isLoadingImages,
+    refetch: refetchImages 
+  } = useImages({
+    propertyId: propertyId
   });
+
+  // 物件に関連する画像のみをフィルタリング（部屋や製品に紐付いていない画像）
+  const filteredImages = propertyImages?.filter(image => 
+    !image.room_id && !image.product_id
+  );
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -162,6 +171,8 @@ export const EditPropertyPage: React.FC = () => {
           submitButtonText="更新する"
           propertyId={propertyId}
           clerkUserId={userId}
+          existingImages={filteredImages}
+          onImageChange={() => refetchImages()}
         />
       </div>
 

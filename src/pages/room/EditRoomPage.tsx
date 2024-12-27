@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Plus, PlusCircle } from 'lucide-react';
 import { ImageUploader } from '../../features/image/components/ImageUploader';
 import { useRoom } from '../../features/room/hooks/useRoom';
 import { useImages } from '../../features/image/hooks/useImages';
@@ -11,14 +11,11 @@ import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import type { Room } from '../../features/room/types/room_types';
 import { AxiosError } from 'axios';
 
-// 型定義の追加
-type QueryKeys = 
-  | { queryKey: ['room', string] }
-  | { queryKey: ['images', { entity_type: string; entity_id: string | number }] };
-
 interface RoomFormData {
   name: string;
   description: string;
+  product_category_id: number | null;
+  product_code: string | null;
 }
 
 interface ApiError {
@@ -34,7 +31,7 @@ export const EditRoomPage: React.FC = () => {
   const { userId } = useAuth();
   const axios = useAuthenticatedAxios();
   const [error, setError] = useState<string | null>(null);
-  const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string; status: 'uploading' | 'completed' }>>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // nullチェックの追加
   if (!roomId || !propertyId) {
@@ -46,36 +43,34 @@ export const EditRoomPage: React.FC = () => {
   }
 
   const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
-  const { data: roomImages, isLoading: isLoadingImages } = useImages({
-    entity_type: 'room',
-    entity_id: parseInt(roomId)
+  const { 
+    data: roomImages, 
+    isLoading: isLoadingImages,
+    refetch: refetchImages 
+  } = useImages({
+    roomId: roomId
   });
+
+  // 部屋の画像のみをフィルタリング（製品に紐付いていない画像）
+  const filteredRoomImages = roomImages?.filter(img => !img.product_id);
 
   const [roomForm, setRoomForm] = useState<RoomFormData>({
     name: '',
-    description: ''
+    description: '',
+    product_category_id: null,
+    product_code: null
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (room) {
       setRoomForm({
         name: room.name,
-        description: room.description || ''
+        description: room.description || '',
+        product_category_id: room.product_category_id,
+        product_code: room.product_code
       });
     }
-
-    if (roomImages && roomImages.length > 0) {
-      setUploadedImages(
-        roomImages.map(image => ({
-          id: image.id.toString(),
-          url: image.url,
-          status: 'completed'
-        }))
-      );
-    }
-  }, [room, roomImages]);
+  }, [room]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +88,6 @@ export const EditRoomPage: React.FC = () => {
         }
       );
 
-      // 型付きのクエリ無効化
       await queryClient.invalidateQueries({ queryKey: ['room', roomId] });
       setError('部屋情報を更新しました');
     } catch (error) {
@@ -109,87 +103,63 @@ export const EditRoomPage: React.FC = () => {
     }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    for (const file of Array.from(files)) {
-      try {
-        const { data: presignedData } = await axios.post(
-          ENDPOINTS.GET_PRESIGNED_URL,
-          {
-            content_type: file.type,
-            file_name: file.name
-          }
-        );
-
-        // 一時的な状態として画像を追加
-        const tempImage = {
-          id: presignedData.image_id,
-          url: '',
-          status: 'uploading' as const
-        };
-        setUploadedImages(prev => [...prev, tempImage]);
-
-        // 2. S3に画像をアップロード
-        await axios.put(presignedData.presigned_url, file, {
-          headers: {
-            'Content-Type': file.type
-          }
-        });
-
-        // 3. アップロード完了を通知
-        await axios.post(
-          ENDPOINTS.COMPLETE_IMAGE_UPLOAD(presignedData.image_id),
-          {
-            entity_type: 'room',
-            entity_id: Number(roomId)
-          }
-        );
-
-        // 4. 状態を更新
-        setUploadedImages(prev =>
-          prev.map(img =>
-            img.id === presignedData.image_id
-              ? { ...img, url: presignedData.url, status: 'completed' }
-              : img
-          )
-        );
-
-        // 型付きのクエリ無効化
-        await queryClient.invalidateQueries({
-          queryKey: ['images', { entity_type: 'room', entity_id: roomId }]
-        });
-      } catch (error) {
-        console.error('Failed to upload image:', error);
-        if (error instanceof AxiosError && error.response?.data) {
-          const apiError = error.response.data as ApiError;
-          setError(`画像のアップロードに失敗しました: ${apiError.message || '不明なエラー'}`);
-        } else {
-          setError('画像のアップロードに失敗しました');
-        }
-      }
-    }
+  const handleImageUploaded = () => {
+    refetchImages();
   };
 
-  const handleImageDelete = async (imageId: string) => {
+  const handleImageDelete = async (imageId: number) => {
     try {
-      await axios.delete(
-        `${ENDPOINTS.DELETE_IMAGE(imageId)}?clerk_user_id=${userId}`
-      );
-      setUploadedImages(prev => prev.filter(img => img.id !== imageId));
-      
-      // 型付きのクエリ無効化
-      await queryClient.invalidateQueries({
-        queryKey: ['images', { entity_type: 'room', entity_id: roomId }]
-      });
+      await axios.delete(ENDPOINTS.DELETE_IMAGE(imageId));
+      refetchImages();
     } catch (error) {
       console.error('Failed to delete image:', error);
       if (error instanceof AxiosError && error.response?.data) {
         const apiError = error.response.data as ApiError;
-        setError(`画像の削除に失敗しました: ${apiError.message || '不明なエラー'}`);
+        setError(`画像の削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
         setError('画像の削除に失敗しました');
+      }
+    }
+  };
+
+  const handleImageTypeChange = async (imageId: number, newType: 'main' | 'sub') => {
+    try {
+      await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), { image_type: newType });
+      refetchImages();
+    } catch (error) {
+      console.error('Failed to update image type:', error);
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`画像タイプの更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('画像タイプの更新に失敗しました');
+      }
+    }
+  };
+
+  const handleCreateProduct = async () => {
+    try {
+      const response = await axios.post<{ id: number }>(
+        '/api/products',
+        {
+          name: '新規内装仕様',
+          description: '',
+          product_category_id: roomForm.product_category_id,
+          product_code: roomForm.product_code,
+          room_id: Number(roomId)
+        },
+        {
+          params: { room_id: Number(roomId) }
+        }
+      );
+      navigate(`/property/${propertyId}/room/${roomId}/product/${response.data.id}/edit`);
+    } catch (error) {
+      console.error('内装仕様の作成に失敗しました:', error);
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`内装仕様の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('内装仕様の作成に失敗しました。もう一度お試しください');
       }
     }
   };
@@ -245,11 +215,52 @@ export const EditRoomPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 写真
               </label>
-              <ImageUploader
-                images={uploadedImages}
-                onUpload={handleUpload}
-                onDelete={handleImageDelete}
-              />
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  {filteredRoomImages?.map((image) => (
+                    <div key={image.id} className="relative">
+                      <div className="relative aspect-square">
+                        <img
+                          src={image.url}
+                          alt="部屋画像"
+                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleImageDelete(image.id)}
+                          className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                          aria-label="画像を削除"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="mt-2">
+                        <select
+                          value={image.image_type || 'sub'}
+                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'main' | 'sub')}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                        >
+                          <option value="main">メイン画像</option>
+                          <option value="sub">サブ画像</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <ImageUploader
+                  onImageUploaded={handleImageUploaded}
+                  onError={setError}
+                  roomId={Number(roomId)}
+                  clerkUserId={userId || undefined}
+                  existingImages={filteredRoomImages
+                    ?.filter(img => img.image_type === 'main' || img.image_type === 'sub')
+                    .map(img => ({
+                      id: img.id,
+                      image_type: img.image_type as 'main' | 'sub',
+                      url: img.url
+                    }))}
+                />
+              </div>
             </div>
 
             <div>
@@ -281,6 +292,34 @@ export const EditRoomPage: React.FC = () => {
               />
             </div>
 
+            <div>
+              <label htmlFor="product_category_id" className="block text-sm font-medium text-gray-700">
+                製品カテゴリID (任意)
+              </label>
+              <input
+                type="number"
+                id="product_category_id"
+                name="product_category_id"
+                value={roomForm.product_category_id || ''}
+                onChange={(e) => setRoomForm(prev => ({ ...prev, product_category_id: e.target.value ? Number(e.target.value) : null }))}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="product_code" className="block text-sm font-medium text-gray-700">
+                製品コード (任意)
+              </label>
+              <input
+                type="text"
+                id="product_code"
+                name="product_code"
+                value={roomForm.product_code || ''}
+                onChange={(e) => setRoomForm(prev => ({ ...prev, product_code: e.target.value || null }))}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+              />
+            </div>
+
             <div className="sticky bottom-0 bg-white border-t p-4 -mx-4 -mb-4">
               <button
                 type="submit"
@@ -291,6 +330,29 @@ export const EditRoomPage: React.FC = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* Product一覧セクション */}
+      <div className="md:max-w-2xl md:mx-auto mt-8">
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="flex items-center justify-between p-4 md:p-6">
+            <h2 className="text-lg font-semibold text-gray-900">内装仕様一覧</h2>
+            <button
+              onClick={handleCreateProduct}
+              className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              内装仕様を追加
+            </button>
+          </div>
+
+          {/* 製品がない場合の表示 */}
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">内装仕様が登録されていません</h3>
+            <p className="text-gray-600">「内装仕様を追加」ボタンから製品を登録してください</p>
+          </div>
         </div>
       </div>
     </div>

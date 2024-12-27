@@ -9,9 +9,8 @@ import { PropertyForm } from '../../features/property/components/PropertyForm';
 import { AxiosError } from 'axios';
 
 interface ApiError {
-  message: string;
-  code: string;
-  details?: Record<string, string>;
+  status_code: number;
+  detail: string;
 }
 
 export const CreatePropertyPage: React.FC = () => {
@@ -36,10 +35,24 @@ export const CreatePropertyPage: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
 
+    console.log('送信するデータ:', {
+      ...formData,
+      user_id: userProfile.id,
+    });
+
     try {
       const response = await axios.post<Property>(
         '/api/properties',
-        formData
+        {
+          ...formData,
+          user_id: userProfile.id,
+        },
+        {
+          headers: {
+            'X-Clerk-User-Id': userId,
+            'Content-Type': 'application/json'
+          }
+        }
       );
 
       navigate(`/property/${response.data.id}/edit`);
@@ -48,7 +61,8 @@ export const CreatePropertyPage: React.FC = () => {
       if (error instanceof AxiosError) {
         if (error.response?.data) {
           const apiError = error.response.data as ApiError;
-          setError(`物件の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+          setError(`物件の作成に失敗しました: ${apiError.detail || '不明なエラーが発生しました'}`);
+          console.error('APIエラーの詳細:', error.response.data);
         } else if (error.code === 'ERR_NETWORK') {
           setError('ネットワークエラー: サーバーに接続できません。インターネット接続を確認してください。');
         } else {

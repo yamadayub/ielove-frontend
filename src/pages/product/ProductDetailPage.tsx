@@ -34,10 +34,12 @@ export const ProductDetailPage: React.FC = () => {
   
   const { data: product, isLoading: isLoadingProduct } = useProductDetails(productId);
   const { data: images, isLoading: isLoadingImages } = useImages({
-    entity_type: 'product',
-    entity_id: parseInt(productId)
+    productId
   });
   const isPropertyPurchased = useStore((state: Store) => state.isPropertyPurchased(propertyId));
+
+  const mainImage = images?.find(img => img.image_type === 'main');
+  const displayImage = mainImage || images?.[0];
 
   // ブラー処理が必要かどうかを判定
   // 未購入の場合にブラー表示（ログイン状態に関係なく）
@@ -84,7 +86,7 @@ export const ProductDetailPage: React.FC = () => {
           {/* メイン画像 */}
           <div className="aspect-square md:aspect-video w-full">
             <img
-              src={images?.[0]?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
+              src={displayImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
               alt={product.name || '製品画像'}
               className="w-full h-full object-cover"
             />

@@ -4,6 +4,8 @@ import type { Image } from '../../image/types/image_types';
 import { ImageUploader } from '../../image/components/ImageUploader';
 import { useAuthenticatedAxios } from '../../shared/api/axios';
 import { ENDPOINTS } from '../../shared/api/endpoints';
+import { AxiosError } from 'axios';
+import { X } from 'lucide-react';
 
 interface PropertyFormProps {
   onSubmit: (data: Property) => Promise<void>;
@@ -13,6 +15,8 @@ interface PropertyFormProps {
   submitButtonText?: string;
   propertyId?: string;
   clerkUserId?: string;
+  existingImages?: Image[];
+  onImageChange: () => void;
 }
 
 export const PropertyForm: React.FC<PropertyFormProps> = ({
@@ -23,6 +27,8 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   submitButtonText = '登録する',
   propertyId,
   clerkUserId,
+  existingImages = [],
+  onImageChange,
 }) => {
   const [formData, setFormData] = useState<Property>({
     user_id: userId,
@@ -44,10 +50,20 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
 
   const [uploadedImages, setUploadedImages] = useState<Image[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const axios = useAuthenticatedAxios();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      console.error('保存エラー:', error);
+      if (error instanceof Error) {
+        setError(`保存に失敗しました: ${error.message}`);
+      } else {
+        setError('保存に失敗しました');
+      }
+    }
   };
 
   const handleInputChange = (
@@ -55,7 +71,6 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   ) => {
     const { name, value, type } = e.target;
     
-    // 数値フィールドの処理
     if (type === 'number') {
       setFormData((prev: Property) => ({
         ...prev,
@@ -70,78 +85,50 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     }));
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !clerkUserId || !propertyId) return;
-
-    for (const file of Array.from(files)) {
-      try {
-        // 1. プリサインドURLを取得（POSTメソッドでクエリパラメータとして送信）
-        const { data: presignedData } = await axios.post(
-          `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.GET_PRESIGNED_URL}`,
-          null,
-          {
-            params: {
-              file_name: file.name,
-              content_type: file.type
-            },
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        // 一時的な状態として画像を追加
-        const tempImage = {
-          id: presignedData.image_id,
-          url: '',
-          status: 'uploading' as const
-        };
-        setUploadedImages((prev: Image[]) => [...prev, tempImage]);
-
-        // 2. S3に画像をアップロード
-        await axios.put(presignedData.presigned_url, file, {
-          headers: {
-            'Content-Type': file.type
-          }
-        });
-
-        // 3. アップロード完了を通知
-        await axios.post(
-          `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.COMPLETE_IMAGE_UPLOAD(presignedData.image_id)}?clerk_user_id=${clerkUserId}`,
-          {
-            entity_type: 'property',
-            property_id: Number(propertyId)
-          }
-        );
-
-        // 4. 状態を更新
-        setUploadedImages((prev: Image[]) =>
-          prev.map((img: Image) =>
-            img.id === presignedData.image_id
-              ? { ...img, url: presignedData.url, status: 'completed' as const }
-              : img
-          )
-        );
-      } catch (error) {
-        console.error('Failed to upload image:', error);
-        setError('画像のアップロードに失敗しました');
-      }
-    }
-  };
-
-  const handleImageDelete = async (imageId: string) => {
+  const handleImageDelete = async (imageId: number) => {
     if (!clerkUserId) return;
 
     try {
       await axios.delete(
-        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.DELETE_IMAGE(imageId)}?clerk_user_id=${clerkUserId}`
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.DELETE_IMAGE(imageId)}`,
+        {
+          headers: {
+            'x-clerk-user-id': clerkUserId
+          }
+        }
       );
-      setUploadedImages((prev: Image[]) => prev.filter((img: Image) => img.id !== imageId));
+      // 親コンポーネントに画像の変更を通知
+      onImageChange();
     } catch (error) {
-      console.error('Failed to delete image:', error);
+      console.error('画像の削除に失敗しました:', error);
       setError('画像の削除に失敗しました');
     }
+  };
+
+  const handleImageTypeChange = async (imageId: number, newType: 'main' | 'sub') => {
+    if (!clerkUserId) return;
+
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.UPDATE_IMAGE(imageId)}`,
+        { image_type: newType },
+        {
+          headers: {
+            'x-clerk-user-id': clerkUserId
+          }
+        }
+      );
+      // 親コンポーネントに画像の変更を通知
+      onImageChange();
+    } catch (error) {
+      console.error('画像タイプの更新に失敗しました:', error);
+      setError('画像タイプの更新に失敗しました');
+    }
+  };
+
+  const handleImageUploaded = () => {
+    // 親コンポーネントに画像の変更を通知
+    onImageChange();
   };
 
   return (
@@ -155,18 +142,59 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       )}
 
       {/* 画像アップロードセクション */}
-      {propertyId && (
-        <div className="p-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            写真
-          </label>
+      <div className="p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          写真
+        </label>
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            {existingImages.map((image) => (
+              <div key={image.id} className="relative">
+                <div className="relative aspect-square">
+                  <img
+                    src={image.url}
+                    alt="物件画像"
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleImageDelete(image.id)}
+                    className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
+                    aria-label="画像を削除"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="mt-2">
+                  <select
+                    value={image.image_type || 'sub'}
+                    onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'main' | 'sub')}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                  >
+                    <option value="main">メイン画像</option>
+                    <option value="sub">サブ画像</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <ImageUploader
-            images={uploadedImages}
-            onUpload={handleUpload}
-            onDelete={handleImageDelete}
+            onImageUploaded={handleImageUploaded}
+            onError={setError}
+            propertyId={propertyId ? Number(propertyId) : undefined}
+            clerkUserId={clerkUserId}
+            existingImages={existingImages
+              .filter((img): img is Image & { image_type: 'main' | 'sub' } => 
+                img.image_type === 'main' || img.image_type === 'sub'
+              )
+              .map(img => ({
+                id: img.id,
+                image_type: img.image_type
+              }))}
           />
         </div>
-      )}
+      </div>
 
       {/* 基本情報セクション */}
       <div className="p-4 space-y-4">
@@ -242,7 +270,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         
         <div>
           <label htmlFor="layout" className="block text-sm font-medium text-gray-700">
-            間取り
+            間取
           </label>
           <input
             type="text"
@@ -333,7 +361,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
               : 'bg-gray-900 hover:bg-gray-800'
           }`}
         >
-          {isSubmitting ? '送信中...' : submitButtonText}
+          {isSubmitting ? '保存中...' : submitButtonText}
         </button>
       </div>
     </form>
