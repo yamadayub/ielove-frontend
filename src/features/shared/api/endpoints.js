@@ -31,7 +31,6 @@ export const ENDPOINTS = {
     CREATE_PRODUCT_SPECIFICATION: (productId) => `/api/products/${productId}/specifications`,
     UPDATE_PRODUCT_SPECIFICATIONS: (productId) => `/api/products/${productId}/specifications`,
     GET_PRODUCT_SPECIFICATIONS: (productId) => `/api/products/${productId}/specifications`,
-    UPDATE_PRODUCT_SPECIFICATION: (specId) => `/api/specifications/${specId}`,
     DELETE_PRODUCT_SPECIFICATION: (specId) => `/api/specifications/${specId}`,
     GET_PRODUCT_SPECIFICATION: (specId) => `/api/specifications/${specId}`,
 
@@ -39,7 +38,6 @@ export const ENDPOINTS = {
     CREATE_PRODUCT_DIMENSION: (productId) => `/api/products/${productId}/dimensions`,
     UPDATE_PRODUCT_DIMENSIONS: (productId) => `/api/products/${productId}/dimensions`,
     GET_PRODUCT_DIMENSIONS: (productId) => `/api/products/${productId}/dimensions`,
-    UPDATE_PRODUCT_DIMENSION: (dimensionId) => `/api/dimensions/${dimensionId}`,
     DELETE_PRODUCT_DIMENSION: (dimensionId) => `/api/dimensions/${dimensionId}`,
     GET_PRODUCT_DIMENSION: (dimensionId) => `/api/dimensions/${dimensionId}`,
 
@@ -47,9 +45,9 @@ export const ENDPOINTS = {
     GET_PRESIGNED_URL: '/api/images/presigned-url',
     DELETE_IMAGE: (imageId) => `/api/images/${imageId}`,
     GET_IMAGE: (imageId) => `/api/images/${imageId}`,
-    COMPLETE_IMAGE_UPLOAD: (imageId) => `/api/images/${imageId}/complete`,
-    GET_IMAGES: '/api/images',
     UPDATE_IMAGE_STATUS: (imageId) => `/api/images/${imageId}/status`,
+    GET_IMAGES: '/api/images',
+    SET_MAIN_IMAGE: (imageId) => `/api/images/${imageId}/set-main`,
 
     // Users
     USER: {
@@ -59,5 +57,15 @@ export const ENDPOINTS = {
         UPDATE_SELLER: '/api/users/me/seller',
         CREATE_SELLER: '/api/users/me/seller',
         CREATE: '/api/users'
+    },
+
+    // Sellers
+    SELLER: {
+        REGISTER: '/api/sellers/register',
+        START_ONBOARDING: '/api/sellers/onboarding/start',
+        GET_ONBOARDING_STATUS: '/api/sellers/onboarding/status',
+        WEBHOOK: '/api/sellers/webhook',
+        RESET_STRIPE: '/api/sellers/reset-stripe',
+        GET_DASHBOARD_URL: '/api/sellers/stripe-dashboard'
     }
 }; 

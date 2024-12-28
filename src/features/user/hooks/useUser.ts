@@ -1,36 +1,38 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-import { User, UserUpdate, SellerProfile, SellerProfileUpdate } from '../../types/user';
+import { useAuthenticatedAxios } from '../../shared/api/axios';
+import { ENDPOINTS } from '../../shared/api/endpoints';
+import { User } from '../types/user_types';
+
+interface UserUpdate {
+  username?: string;
+  email?: string;
+  role?: 'buyer' | 'seller' | 'both';
+}
+
+interface SellerProfileUpdate {
+  company_name?: string;
+  representative_name?: string;
+  postal_code?: string;
+  address?: string;
+  phone_number?: string;
+  business_registration_number?: string;
+  tax_registration_number?: string;
+}
 
 /**
  * 現在のユーザー情報を取得するカスタムフック
  */
-export const useUser = (clerkUserId) => {
+export const useUser = (clerkUserId: string | null | undefined) => {
+  const axios = useAuthenticatedAxios();
+
   return useQuery({
     queryKey: ['user', clerkUserId],
     queryFn: async () => {
-      const { data } = await axios.get(`/api/users/me`, {
-        params: { clerk_user_id: clerkUserId }
-      });
+      if (!clerkUserId) throw new Error('Clerk User ID is required');
+      const { data } = await axios.get<User>(ENDPOINTS.USER.ME);
       return data;
     },
-    retry: false,
-  });
-};
-
-/**
- * 販売者プロフィールを取得するカスタムフック
- */
-export const useSellerProfile = (userId) => {
-  return useQuery({
-    queryKey: ['seller-profile', userId],
-    queryFn: async () => {
-      const { data } = await axios.get(`/api/users/me/seller`, {
-        params: { user_id: userId }
-      });
-      return data;
-    },
-    retry: false,
+    enabled: !!clerkUserId,
   });
 };
 
@@ -39,12 +41,11 @@ export const useSellerProfile = (userId) => {
  */
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
+  const axios = useAuthenticatedAxios();
 
   return useMutation({
-    mutationFn: async ({ userId, userData }) => {
-      const { data } = await axios.patch(`/api/users/me`, userData, {
-        params: { user_id: userId }
-      });
+    mutationFn: async ({ userId, userData }: { userId: number; userData: UserUpdate }) => {
+      const { data } = await axios.patch<User>(ENDPOINTS.USER.UPDATE_ME, userData);
       return data;
     },
     onSuccess: (data, { userId }) => {
@@ -58,12 +59,11 @@ export const useUpdateUser = () => {
  */
 export const useUpdateSellerProfile = () => {
   const queryClient = useQueryClient();
+  const axios = useAuthenticatedAxios();
 
   return useMutation({
-    mutationFn: async ({ userId, profileData }) => {
-      const { data } = await axios.patch(`/api/users/me/seller`, profileData, {
-        params: { user_id: userId }
-      });
+    mutationFn: async ({ userId, profileData }: { userId: number; profileData: SellerProfileUpdate }) => {
+      const { data } = await axios.patch(ENDPOINTS.USER.UPDATE_SELLER, profileData);
       return data;
     },
     onSuccess: (data, { userId }) => {
@@ -77,12 +77,11 @@ export const useUpdateSellerProfile = () => {
  */
 export const useCreateSellerProfile = () => {
   const queryClient = useQueryClient();
+  const axios = useAuthenticatedAxios();
 
   return useMutation({
-    mutationFn: async ({ userId, profileData }) => {
-      const { data } = await axios.post(`/api/users/me/seller`, profileData, {
-        params: { user_id: userId }
-      });
+    mutationFn: async ({ userId, profileData }: { userId: number; profileData: SellerProfileUpdate }) => {
+      const { data } = await axios.post(ENDPOINTS.USER.CREATE_SELLER, profileData);
       return data;
     },
     onSuccess: (data, { userId }) => {

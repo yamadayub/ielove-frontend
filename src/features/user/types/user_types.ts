@@ -1,8 +1,11 @@
 export interface User {
-  id: string;
+  id: number;
+  clerk_user_id: string;
   email: string;
   name: string;
   user_type: 'individual';
-  role: 'buyer';
+  role: 'buyer' | 'seller' | 'both';
   is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
 } 
