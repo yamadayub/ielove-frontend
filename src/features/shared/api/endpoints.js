@@ -67,5 +67,19 @@ export const ENDPOINTS = {
         WEBHOOK: '/api/sellers/webhook',
         RESET_STRIPE: '/api/sellers/reset-stripe',
         GET_DASHBOARD_URL: '/api/sellers/stripe-dashboard'
-    }
+    },
+
+    LISTING: {
+        GET_ALL: '/api/listings',
+        GET_ONE: (id) => `/api/listings/${id}`,
+        CREATE: '/api/listings',
+        UPDATE: (id) => `/api/listings/${id}`,
+        DELETE: (id) => `/api/listings/${id}`,
+    },
+
+    CONSTANTS: {
+        GET_ALL: '/api/constants'
+    },
+
+    GET_USER_PROPERTIES: (userId) => `/api/properties/by-user/${userId}`,
 }; 

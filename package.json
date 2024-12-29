@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/clerk-react": "^4.32.4",
     "@headlessui/react": "^2.2.0",
+    "@shadcn/ui": "^0.0.4",
     "@tanstack/react-query": "^5.62.8",
     "@tanstack/react-query-devtools": "^5.62.8",
     "axios": "^1.7.9",

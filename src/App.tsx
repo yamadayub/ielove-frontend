@@ -21,6 +21,7 @@ import { ProtectedRoute } from './features/auth/components/ProtectedRoute';
 import { SearchPage } from './pages/search/SearchPage';
 import { EditUserProfilePage } from './pages/user/EditUserProfilePage';
 import { ScrollToTop } from './features/common/components/ScrollToTop';
+import { EditListingPage } from './pages/listing/EditListingPage';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -97,6 +98,7 @@ export const App = () => {
                     <EditUserProfilePage />
                   </ProtectedRoute>
                 } />
+                <Route path="/listings/:id/edit" element={<EditListingPage />} />
               </Routes>
             </div>
             <BottomNav />

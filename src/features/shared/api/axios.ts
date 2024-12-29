@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 const baseURL = import.meta.env.VITE_APP_BACKEND_URL;
 
@@ -53,36 +53,25 @@ export const axiosInstance: AxiosInstance = axios.create({
 });
 
 // 認証付きのaxiosインスタンスを取得するカスタムフック
-export const useAuthenticatedAxios = (): AxiosInstance => {
+export const useAuthenticatedAxios = () => {
   const { userId } = useAuth();
 
-  // インターセプターの参照を保持
-  const interceptorId = axiosInstance.interceptors.request.use(
-    async (config: InternalAxiosRequestConfig) => {
-      try {
-        const path = config.url || '';
-        const method = config.method || 'GET';
-        // 認証が必要なエンドポイントの場合のみヘッダーを設定
-        if (isAuthRequired(path, method) && config.headers && userId) {
-          config.headers['x-clerk-user-id'] = userId;
-        }
-        return config;
-      } catch (error) {
-        console.error('Failed to set user id:', error);
-        return Promise.reject(error);
+  return useMemo(() => {
+    const api = axios.create({
+      baseURL
+    });
+
+    // リクエストインターセプター
+    api.interceptors.request.use((config) => {
+      // 全てのリクエストに認証ヘッダーを追加
+      if (userId) {
+        config.headers['x-clerk-user-id'] = userId;
       }
-    },
-    (error) => Promise.reject(error)
-  );
+      return config;
+    });
 
-  // クリーンアップ関数
-  useEffect(() => {
-    return () => {
-      axiosInstance.interceptors.request.eject(interceptorId);
-    };
-  }, [interceptorId]);
-
-  return axiosInstance;
+    return api;
+  }, [userId]);
 };
 
 // Seller API用の認証付きaxiosインスタンスを取得するカスタムフック

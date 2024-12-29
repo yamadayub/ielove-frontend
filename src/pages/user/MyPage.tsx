@@ -1,14 +1,19 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useUser } from '../../features/user/hooks/useUser';
 import { useSellerProfile, useStripeStatus } from '../../features/seller/hooks/useSeller';
+import { useUserProperties } from '../../features/property/hooks/useProperties';
+import { Property } from '../../features/property/types/property_types';
 import { UserProfile } from '../../features/user/components/UserProfile';
 import { InitialUserSetup } from '../../features/user/components/InitialUserSetup';
 import { BecomeSeller } from '../../features/seller/components/BecomeSeller';
 import { SellerDashboard } from '../../features/seller/components/SellerDashboard';
 import { AxiosError } from 'axios';
-import { Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2, Plus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { StripeConnect } from '../../features/seller/components/StripeConnect';
+import { ListingList } from '../../features/listing/components/ListingList';
+import { useAuthenticatedAxios } from '../../features/shared/api/axios';
+import { ENDPOINTS } from '../../features/shared/api/endpoints';
 
 export const MyPage: React.FC = () => {
   const { userId: clerkUserId } = useAuth();
@@ -59,18 +64,39 @@ export const MyPage: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-8">マイページ</h1>
       <div className="space-y-8">
         <UserProfile user={userProfile} />
-        <SellerSection userId={userProfile.id} />
+        <SellerSection userId={userProfile.id} clerkUserId={clerkUserId} />
       </div>
     </div>
   );
 };
 
-const SellerSection: React.FC<{ userId: number }> = ({ userId }) => {
+const SellerSection: React.FC<{ userId: number; clerkUserId: string | null | undefined }> = ({ userId, clerkUserId }) => {
   const { data: sellerProfile, isLoading: isLoadingProfile } = useSellerProfile(userId);
   const { data: stripeStatus, isLoading: isLoadingStripe } = useStripeStatus(
     userId,
     sellerProfile?.stripe_account_id
   );
+  const { data: properties, isLoading: isLoadingProperties } = useUserProperties(userId);
+  const axios = useAuthenticatedAxios();
+  const navigate = useNavigate();
+
+  const handleCreateListing = async (propertyId: number) => {
+    try {
+      const property = properties?.find(p => p.id === propertyId);
+      if (!property) return;
+
+      const { data } = await axios.post(ENDPOINTS.LISTING.CREATE, {
+        title: property.name,
+        price: 5000,
+        listing_type: 'PROPERTY_SPECS',
+        property_id: propertyId
+      });
+      navigate(`/listings/${data.id}/edit`);
+    } catch (error) {
+      console.error('Failed to create listing:', error);
+      alert('出品の作成に失敗しました。');
+    }
+  };
 
   if (isLoadingProfile) {
     return (
@@ -141,21 +167,70 @@ const SellerSection: React.FC<{ userId: number }> = ({ userId }) => {
       />
 
       {sellerProfile.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
-        <div className="bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
-              出品商品
-            </h3>
-            <div className="mt-2">
-              <Link
-                to="/products/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                新規出品
-              </Link>
+        <>
+          <div className="bg-white shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-medium leading-6 text-gray-900">
+                登録済み物件
+              </h3>
+              <div className="mt-4 space-y-4">
+                {isLoadingProperties ? (
+                  <div className="animate-pulse space-y-4">
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                  </div>
+                ) : !properties?.length ? (
+                  <p className="text-gray-500">
+                    物件が登録されていません。
+                    <Link to="/properties/new" className="text-blue-600 hover:text-blue-500 ml-2">
+                      物件を登録する
+                    </Link>
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {properties.map((property) => (
+                      <div
+                        key={property.id}
+                        className="border rounded-lg p-4 flex justify-between items-center"
+                      >
+                        <div>
+                          <h4 className="font-medium">{property.name}</h4>
+                          <p className="text-sm text-gray-500">{property.prefecture}</p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Link
+                            to={`/property/${property.id}/edit`}
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            編集
+                          </Link>
+                          <button
+                            onClick={() => property.id && handleCreateListing(property.id)}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            出品する
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+
+          <div className="bg-white shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-medium leading-6 text-gray-900">
+                出品商品
+              </h3>
+              <div className="mt-4">
+                <ListingList />
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

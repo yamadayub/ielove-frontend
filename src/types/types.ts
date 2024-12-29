@@ -3,10 +3,10 @@ import { PropertyCreateData } from "./property";
 
 // 基本的な型定義
 export type UserType = "individual" | "business";
-export type PropertyType = "house" | "apartment" | "other";
-export type CompanyType = "manufacturer" | "design" | "construction";
-export type ImageType = "main" | "sub" | "temp";
-export type SaleType = "property" | "room" | "product" | "consultation";
+export type PropertyType = "HOUSE" | "APARTMENT" | "OTHER";
+export type CompanyType = "MANUFACTURER" | "DESIGN" | "CONSTRUCTION";
+export type ImageType = "MAIN" | "SUB" | "PAID";
+export type SaleType = "PROPERTY_SPECS" | "ROOM_SPECS" | "PRODUCT_SPECS" | "CONSULTATION" | "PROPERTY_VIEWING";
 
 
 
