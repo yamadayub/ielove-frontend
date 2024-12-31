@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { RoomGallery } from '../../features/room/components/RoomGallery';
 import { RoomInfo } from '../../features/room/components/RoomInfo';
 import { ProductList } from '../../features/product/components/ProductList';
@@ -11,6 +11,7 @@ import { useImages } from '../../features/image/hooks/useImages';
 import { useProducts } from '../../features/product/hooks/useProducts';
 import { useRoom } from '../../features/room/hooks/useRoom';
 import { Breadcrumb } from '../../features/common/components/navigation/Breadcrumb';
+import { usePropertyPurchaseStatus } from '../../features/transaction/hooks/usePropertyPurchaseStatus';
 
 export const RoomPage = () => {
   const { propertyId = '', roomId = '' } = useParams<{ propertyId: string; roomId: string }>();
@@ -23,7 +24,8 @@ export const RoomPage = () => {
   const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
   const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
   const { data: images, isLoading: isLoadingImages } = useImages({ roomId });
-  const isPropertyPurchased = useStore((state) => state.isPropertyPurchased(propertyId));
+  const { data: purchaseStatus } = usePropertyPurchaseStatus(Number(propertyId));
+  const isPurchased = purchaseStatus?.isPurchased;
 
   const filteredRoomImages = images?.filter(img => !img.product_id) || [];
   const productImages = images?.filter(img => img.product_id) || [];
@@ -71,7 +73,7 @@ export const RoomPage = () => {
                 roomId={roomId}
                 products={products || []}
                 images={productImages}
-                isPurchased={isPropertyPurchased}
+                isPurchased={isPurchased}
               />
             ) : (
               <div className="px-4">
@@ -80,7 +82,7 @@ export const RoomPage = () => {
                   roomId={roomId}
                   products={products || []}
                   images={productImages}
-                  isPurchased={isPropertyPurchased}
+                  isPurchased={isPurchased}
                 />
               </div>
             )}

@@ -1,14 +1,15 @@
 import React from 'react';
 import { Heart, Share2 } from 'lucide-react';
 import type { Room } from '../types/room_types';
-import { useStore } from '../../../store/useStore';
+import { usePropertyPurchaseStatus } from '../../transaction/hooks/usePropertyPurchaseStatus';
+import { PurchaseButton } from '../../purchase/components/PurchaseButton';
 
 interface RoomInfoProps {
   room: Room;
 }
 
 export const RoomInfo: React.FC<RoomInfoProps> = ({ room }) => {
-  const isPropertyPurchased = useStore((state) => state.isPropertyPurchased(room.propertyId));
+  const { data: purchaseStatus, isLoading } = usePropertyPurchaseStatus(room.property_id);
 
   return (
     <div className="py-4 border-b">
@@ -27,21 +28,11 @@ export const RoomInfo: React.FC<RoomInfoProps> = ({ room }) => {
         </div>
       </div>
       <div className="mt-4">
-        <button
-          onClick={() => window.location.href = `/checkout?propertyId=${room.propertyId}`}
-          disabled={isPropertyPurchased}
-          className={`w-full py-2.5 md:py-3 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm md:text-base ${
-            isPropertyPurchased
-              ? 'bg-green-500 text-white cursor-not-allowed'
-              : 'bg-gray-900 text-white hover:bg-gray-800'
-          } transition-colors`}
-        >
-          {isPropertyPurchased ? (
-            <span className="font-medium">購入済み</span>
-          ) : (
-            <span className="font-medium">物件仕様を購入する</span>
-          )}
-        </button>
+        <PurchaseButton
+          propertyId={room.property_id}
+          isPurchased={purchaseStatus?.isPurchased}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

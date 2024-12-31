@@ -72,6 +72,7 @@ export const ENDPOINTS = {
     LISTING: {
         GET_ALL: '/api/listings',
         GET_ONE: (id) => `/api/listings/${id}`,
+        GET_BY_PROPERTY: (propertyId) => `/api/listings/by-property/${propertyId}`,
         CREATE: '/api/listings',
         UPDATE: (id) => `/api/listings/${id}`,
         DELETE: (id) => `/api/listings/${id}`,
@@ -82,4 +83,17 @@ export const ENDPOINTS = {
     },
 
     GET_USER_PROPERTIES: (userId) => `/api/properties/by-user/${userId}`,
+
+    PROPERTY: {
+        GET: (id) => `/api/properties/${id}`,
+        GET_ALL: '/api/properties',
+        GET_USER_PROPERTIES: (userId) => `/api/properties/by-user/${userId}`,
+    },
+
+    TRANSACTIONS: {
+        CHECKOUT: '/api/transactions/checkout',
+        GET: (sessionId) => `/api/transactions/${sessionId}`,
+        PURCHASED: '/api/transactions/purchased',
+        CHECK: '/api/transactions/check'
+    },
 }; 

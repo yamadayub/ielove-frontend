@@ -14,6 +14,7 @@ import { StripeConnect } from '../../features/seller/components/StripeConnect';
 import { ListingList } from '../../features/listing/components/ListingList';
 import { useAuthenticatedAxios } from '../../features/shared/api/axios';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
+import { PurchasedProperties } from '../../features/purchase/components/PurchasedProperties';
 
 export const MyPage: React.FC = () => {
   const { userId: clerkUserId } = useAuth();
@@ -65,6 +66,10 @@ export const MyPage: React.FC = () => {
       <div className="space-y-8">
         <UserProfile user={userProfile} />
         <SellerSection userId={userProfile.id} clerkUserId={clerkUserId} />
+      </div>
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">購入済み物件</h2>
+        <PurchasedProperties />
       </div>
     </div>
   );
