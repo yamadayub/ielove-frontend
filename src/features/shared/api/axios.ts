@@ -54,7 +54,7 @@ export const axiosInstance: AxiosInstance = axios.create({
 
 // 認証付きのaxiosインスタンスを取得するカスタムフック
 export const useAuthenticatedAxios = () => {
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
 
   return useMemo(() => {
     const api = axios.create({
@@ -62,16 +62,20 @@ export const useAuthenticatedAxios = () => {
     });
 
     // リクエストインターセプター
-    api.interceptors.request.use((config) => {
+    api.interceptors.request.use(async (config) => {
       // 全てのリクエストに認証ヘッダーを追加
       if (userId) {
         config.headers['x-clerk-user-id'] = userId;
+        const token = await getToken();
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
       }
       return config;
     });
 
     return api;
-  }, [userId]);
+  }, [userId, getToken]);
 };
 
 // Seller API用の認証付きaxiosインスタンスを取得するカスタムフック
@@ -96,6 +100,8 @@ export const useSellerAxios = (): AxiosInstance => {
   });
 
   return instance;
-};// デフォルトエクスポートを追加
+};
+
+// デフォルトエクスポートを追加
 export default axiosInstance;
 
