@@ -193,7 +193,7 @@ const SellerSection: React.FC<{ userId: number; clerkUserId: string | null | und
                 ) : !properties?.length ? (
                   <p className="text-gray-500">
                     物件が登録されていません。
-                    <Link to="/properties/new" className="text-blue-600 hover:text-blue-500 ml-2">
+                    <Link to="/properties/create" className="text-blue-600 hover:text-blue-500 ml-2">
                       物件を登録する
                     </Link>
                   </p>

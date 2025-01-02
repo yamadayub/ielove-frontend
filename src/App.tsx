@@ -61,6 +61,9 @@ export const App = () => {
         publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
         localization={jaJP}
         signInUrl="/sign-in"
+        signUpUrl="/sign-up"     // サインアップページのパス
+        afterSignInUrl="/"       // ログイン後のリダイレクト先
+        afterSignUpUrl="/"       // サインアップ後のリダイレクト先
         debug={true}
       >
         <Router>
