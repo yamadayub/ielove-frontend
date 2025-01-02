@@ -16,7 +16,7 @@ interface Store {
   };
   cart: any[]; // TODO: カートの型を定義
   currentCheckoutListingId: number | null;
-  setCheckoutListingId: (listingId: number | null) => void;
+  setCurrentCheckoutListingId: (id: number) => void;
   completePurchase: (propertyId: string) => void;
   isPropertyPurchased: (propertyId: string) => boolean;
   updateUserProfile: (name: string, email: string) => void;
@@ -42,7 +42,7 @@ export const useStore = create<Store>()(
       cart: [],
 
       currentCheckoutListingId: null,
-      setCheckoutListingId: (listingId) => set({ currentCheckoutListingId: listingId }),
+      setCurrentCheckoutListingId: (id) => set({ currentCheckoutListingId: id }),
 
       completePurchase: (propertyId) => {
         set((state) => {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useStore } from '../../../store/useStore';
 
 interface PurchaseButtonProps {
   propertyId: number;
@@ -23,6 +24,7 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
+  const setCurrentCheckoutListingId = useStore((state) => state.setCurrentCheckoutListingId);
 
   const handlePurchaseClick = () => {
     if (!isSignedIn) {
@@ -32,7 +34,8 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
     }
 
     if (listingId) {
-      navigate(`/checkout/${listingId}`);
+      setCurrentCheckoutListingId(listingId);
+      navigate('/checkout');
     } else {
       toast.error('この物件は現在購入できません');
     }
@@ -81,7 +84,7 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
       className="w-full py-2.5 md:py-3 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm md:text-base bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:bg-blue-400"
     >
       <span className="font-medium">
-        {price ? `¥${price.toLocaleString()}で詳細仕様を購入` : '物件仕様を購入する'}
+        {price ? `¥${price.toLocaleString()}で詳細情報を購入する` : '物件情報を購入する'}
       </span>
     </button>
   );
