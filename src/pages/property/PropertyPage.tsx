@@ -41,6 +41,10 @@ export const PropertyPage = () => {
     enabled: !!id
   });
 
+  // 最初のリスティングのIDと価格を取得
+  const listingId = listingData?.items?.[0]?.id;
+  const price = listingData?.items?.[0]?.price;
+
   // 物件の所有者かどうかを判定
   const isOwner = userProfile?.id && property?.user_id ? property.user_id === userProfile.id : false;
 
@@ -87,8 +91,8 @@ export const PropertyPage = () => {
             property={property}
             isPurchased={purchaseStatus?.isPurchased}
             isLoading={isPurchaseStatusLoading}
-            listingId={listingData?.listing?.id}
-            price={listingData?.listing?.price}
+            listingId={listingId}
+            price={price}
             isOwner={isOwner}
           />
           <div className="mt-8">
