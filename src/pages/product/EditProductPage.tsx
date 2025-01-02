@@ -117,7 +117,7 @@ export const EditProductPage: React.FC = () => {
     productId: productId || ''
   });
   const { data: manufacturers, isLoading: isLoadingManufacturers } = useCompanies({
-    company_type: 'manufacturer'
+    company_type: 'MANUFACTURER'
   });
 
   // 製品の画像のみをフィルタリング
@@ -368,7 +368,12 @@ export const EditProductPage: React.FC = () => {
     }
   };
 
-  const handleImageUploaded = () => {
+  const handleImageUploaded = (imageData: {
+    id: number;
+    url: string;
+    image_type: 'MAIN' | 'SUB';
+    status: 'pending' | 'completed';
+  }) => {
     refetchImages();
   };
 
@@ -391,7 +396,7 @@ export const EditProductPage: React.FC = () => {
     }
   };
 
-  const handleImageTypeChange = async (imageId: number, newType: 'main' | 'sub') => {
+  const handleImageTypeChange = async (imageId: number, newType: 'MAIN' | 'SUB') => {
     if (!userId) return;
 
     try {
@@ -483,12 +488,12 @@ export const EditProductPage: React.FC = () => {
                       </div>
                       <div className="mt-2">
                         <select
-                          value={image.image_type || 'sub'}
-                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'main' | 'sub')}
+                          value={image.image_type || 'SUB'}
+                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'MAIN' | 'SUB')}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
                         >
-                          <option value="main">メイン画像</option>
-                          <option value="sub">サブ画像</option>
+                          <option value="MAIN">メイン画像</option>
+                          <option value="SUB">サブ画像</option>
                         </select>
                       </div>
                     </div>
@@ -504,7 +509,7 @@ export const EditProductPage: React.FC = () => {
                   propertyId={Number(propertyId)}
                   existingImages={filteredProductImages?.map(img => ({
                     id: img.id,
-                    image_type: img.image_type || 'sub',
+                    image_type: img.image_type || 'SUB',
                     url: img.url
                   })) || []}
                 />

@@ -65,11 +65,17 @@ export const MyPage: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900 mb-8">マイページ</h1>
       <div className="space-y-8">
         <UserProfile user={userProfile} />
+        
+        <div className="bg-white shadow sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+              購入済み物件
+            </h2>
+            <PurchasedProperties />
+          </div>
+        </div>
+
         <SellerSection userId={userProfile.id} clerkUserId={clerkUserId} />
-      </div>
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">購入済み物件</h2>
-        <PurchasedProperties />
       </div>
     </div>
   );

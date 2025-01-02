@@ -38,7 +38,7 @@ export const EditPropertyPage: React.FC = () => {
   const { data: property, isLoading: isLoadingProperty, error: propertyError } = useProperty(propertyId);
   const { data: rooms, isLoading: isLoadingRooms, error: roomsError } = useRooms({ propertyId });
   const { 
-    data: propertyImages, 
+    data: images, 
     isLoading: isLoadingImages,
     refetch: refetchImages 
   } = useImages({
@@ -46,9 +46,20 @@ export const EditPropertyPage: React.FC = () => {
   });
 
   // 物件に関連する画像のみをフィルタリング（部屋や製品に紐付いていない画像）
-  const filteredImages = propertyImages?.filter(image => 
+  const propertyImages = images?.filter(image => 
     !image.room_id && !image.product_id
   );
+
+  // 部屋の画像のみをフィルタリング（製品に紐付いていない画像）
+  const roomImages = images?.filter(img => img.room_id && !img.product_id) || [];
+
+  // 各部屋のメイン画像を取得
+  const getRoomMainImage = (roomId: number) => {
+    return roomImages.find(img => 
+      img.room_id === roomId && 
+      img.image_type === 'MAIN'
+    );
+  };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -74,7 +85,8 @@ export const EditPropertyPage: React.FC = () => {
         formData
       );
 
-      navigate(`/property/${propertyId}`);
+      // 成功メッセージを設定
+      setSubmitError('物件情報を更新しました');
     } catch (error) {
       console.error('物件の更新に失敗しました:', error);
       if (error instanceof AxiosError && error.response?.data) {
@@ -171,7 +183,7 @@ export const EditPropertyPage: React.FC = () => {
           submitButtonText="更新する"
           propertyId={propertyId}
           clerkUserId={userId}
-          existingImages={filteredImages}
+          existingImages={propertyImages}
           onImageChange={() => refetchImages()}
         />
       </div>
@@ -202,8 +214,9 @@ export const EditPropertyPage: React.FC = () => {
                 <RoomTile
                   key={room.id}
                   room={room}
-                  onClick={() => navigate(`/property/${propertyId}/room/${room.id}/edit`)}
+                  image={getRoomMainImage(room.id)}
                   showImage={true}
+                  onClick={() => navigate(`/property/${propertyId}/room/${room.id}/edit`)}
                 />
               ))}
             </div>

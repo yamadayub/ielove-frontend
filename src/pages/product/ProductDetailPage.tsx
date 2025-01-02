@@ -11,6 +11,9 @@ import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import { Loader2 } from 'lucide-react';
 import { ProductHeader } from '../../features/product/components/ProductHeader';
 import { ProductBasicInfo } from '../../features/product/components/ProductBasicInfo';
+import { useAuth } from '@clerk/clerk-react';
+import { useUser } from '../../features/user/hooks/useUser';
+import { useProperty } from '../../features/property/hooks/useProperty';
 
 export const ProductDetailPage: React.FC = () => {
   const { propertyId, roomId, productId } = useParams<{
@@ -19,6 +22,9 @@ export const ProductDetailPage: React.FC = () => {
     productId: string;
   }>();
   const axios = useAuthenticatedAxios();
+  const { userId: clerkUserId } = useAuth();
+  const { data: userProfile } = useUser(clerkUserId);
+  const { data: property } = useProperty(propertyId);
 
   if (!productId || !propertyId || !roomId) {
     return (
@@ -42,12 +48,15 @@ export const ProductDetailPage: React.FC = () => {
     enabled: !!propertyId
   });
 
-  const mainImage = images?.find(img => img.image_type === 'main');
+  // 物件の所有者かどうかを判定
+  const isOwner = userProfile?.id && property?.user_id ? property.user_id === userProfile.id : false;
+
+  const mainImage = images?.find(img => img.image_type === 'MAIN');
   const displayImage = mainImage || images?.[0];
 
   // ブラー処理が必要かどうかを判定
-  // 未購入の場合にブラー表示（ログイン状態に関係なく）
-  const shouldBlur = !purchaseStatus?.isPurchased;
+  // 未購入かつ所有者でない場合にブラー表示
+  const shouldBlur = !purchaseStatus?.isPurchased && !isOwner;
 
   // ブラー用のクラス
   const blurClass = shouldBlur ? 'blur-[6px]' : '';
@@ -86,6 +95,7 @@ export const ProductDetailPage: React.FC = () => {
             isPurchased={purchaseStatus?.isPurchased}
             isLoading={isLoading}
             price={listingData?.listing?.price}
+            isOwner={isOwner}
           />
 
           <ProductBasicInfo
@@ -103,6 +113,7 @@ export const ProductDetailPage: React.FC = () => {
           dimensions={product.dimensions}
           isPurchased={purchaseStatus?.isPurchased}
           shouldBlur={shouldBlur}
+          isOwner={isOwner}
         />
       </div>
     </div>

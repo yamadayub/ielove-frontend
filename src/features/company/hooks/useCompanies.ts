@@ -5,12 +5,12 @@ import { ENDPOINTS } from '../../shared/api/endpoints';
 export interface Company {
   id: number;
   name: string;
-  company_type: 'manufacturer' | 'design' | 'construction';
+  company_type: 'MANUFACTURER' | 'DESIGN' | 'CONSTRUCTION';
   created_at: string;
 }
 
 interface UseCompaniesParams {
-  company_type: 'manufacturer' | 'design' | 'construction';
+  company_type: 'MANUFACTURER' | 'DESIGN' | 'CONSTRUCTION';
 }
 
 export const useCompanies = ({ company_type }: UseCompaniesParams) => {

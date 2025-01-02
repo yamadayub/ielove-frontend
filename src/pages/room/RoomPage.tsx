@@ -12,10 +12,16 @@ import { useProducts } from '../../features/product/hooks/useProducts';
 import { useRoom } from '../../features/room/hooks/useRoom';
 import { Breadcrumb } from '../../features/common/components/navigation/Breadcrumb';
 import { usePropertyPurchaseStatus } from '../../features/transaction/hooks/usePropertyPurchaseStatus';
+import { useAuth } from '@clerk/clerk-react';
+import { useUser } from '../../features/user/hooks/useUser';
+import { useProperty } from '../../features/property/hooks/useProperty';
 
 export const RoomPage = () => {
   const { propertyId = '', roomId = '' } = useParams<{ propertyId: string; roomId: string }>();
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const { userId: clerkUserId } = useAuth();
+  const { data: userProfile } = useUser(clerkUserId);
+  const { data: property } = useProperty(propertyId);
 
   if (!propertyId || !roomId) {
     return <Navigate to="/" replace />;
@@ -25,7 +31,9 @@ export const RoomPage = () => {
   const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
   const { data: images, isLoading: isLoadingImages } = useImages({ roomId });
   const { data: purchaseStatus } = usePropertyPurchaseStatus(Number(propertyId));
-  const isPurchased = purchaseStatus?.isPurchased;
+
+  // 物件の所有者かどうかを判定
+  const isOwner = userProfile?.id && property?.user_id ? property.user_id === userProfile.id : false;
 
   const filteredRoomImages = images?.filter(img => !img.product_id) || [];
   const productImages = images?.filter(img => img.product_id) || [];
@@ -56,7 +64,10 @@ export const RoomPage = () => {
         <RoomGallery images={filteredRoomImages} roomName={room.name} />
         
         <div className="px-4">
-          <RoomInfo room={room} />
+          <RoomInfo 
+            room={room}
+            isOwner={isOwner}
+          />
         </div>
 
         <div className="bg-white">
@@ -73,7 +84,8 @@ export const RoomPage = () => {
                 roomId={roomId}
                 products={products || []}
                 images={productImages}
-                isPurchased={isPurchased}
+                isPurchased={purchaseStatus?.isPurchased}
+                isOwner={isOwner}
               />
             ) : (
               <div className="px-4">
@@ -82,7 +94,8 @@ export const RoomPage = () => {
                   roomId={roomId}
                   products={products || []}
                   images={productImages}
-                  isPurchased={isPurchased}
+                  isPurchased={purchaseStatus?.isPurchased}
+                  isOwner={isOwner}
                 />
               </div>
             )}

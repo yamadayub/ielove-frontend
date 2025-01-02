@@ -7,20 +7,16 @@ interface RoomTileProps {
   room: Room;
   onClick: () => void;
   showImage?: boolean;
-  images?: Image[];
+  image?: Image;
 }
 
 export const RoomTile: React.FC<RoomTileProps> = ({ 
   room, 
   onClick,
   showImage = false,
-  images = []
+  image
 }) => {
-  const mainImage = images.find(img => 
-    img.room_id === room.id && 
-    img.image_type === 'main'
-  );
-  const imageUrl = mainImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800';
+  const imageUrl = image?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800';
 
   if (showImage) {
     return (

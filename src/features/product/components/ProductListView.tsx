@@ -9,6 +9,7 @@ interface ProductListViewProps {
   products: Product[];
   images: Image[];
   isPurchased?: boolean;
+  isOwner?: boolean;
 }
 
 export const ProductListView: React.FC<ProductListViewProps> = ({ 
@@ -28,7 +29,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
   const getMainImage = (productId: number): Image | undefined => {
     return images.find(img => 
       img.product_id === productId && 
-      img.image_type === 'main'
+      img.image_type === 'MAIN'
     );
   };
 

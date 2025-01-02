@@ -6,9 +6,10 @@ import { PurchaseButton } from '../../purchase/components/PurchaseButton';
 
 interface RoomInfoProps {
   room: Room;
+  isOwner?: boolean;
 }
 
-export const RoomInfo: React.FC<RoomInfoProps> = ({ room }) => {
+export const RoomInfo: React.FC<RoomInfoProps> = ({ room, isOwner }) => {
   const { data: purchaseStatus, isLoading } = usePropertyPurchaseStatus(room.property_id);
 
   return (
@@ -32,6 +33,7 @@ export const RoomInfo: React.FC<RoomInfoProps> = ({ room }) => {
           propertyId={room.property_id}
           isPurchased={purchaseStatus?.isPurchased}
           isLoading={isLoading}
+          isOwner={isOwner}
         />
       </div>
     </div>

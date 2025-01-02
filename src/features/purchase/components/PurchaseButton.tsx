@@ -10,6 +10,7 @@ interface PurchaseButtonProps {
   isPurchased?: boolean;
   isLoading?: boolean;
   price?: number;
+  isOwner?: boolean;
 }
 
 export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
@@ -17,7 +18,8 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
   listingId,
   isPurchased,
   isLoading,
-  price
+  price,
+  isOwner
 }) => {
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
@@ -41,6 +43,19 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
       <div className="w-full py-3 px-4 rounded-lg bg-gray-50 border border-gray-200">
         <div className="flex items-center justify-center">
           <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isOwner) {
+    return (
+      <div className="w-full py-3 px-4 rounded-lg bg-blue-100 border border-blue-200">
+        <div className="flex items-center justify-center space-x-2">
+          <CheckCircle className="h-5 w-5 text-blue-600" />
+          <span className="text-blue-800 font-medium">
+            登録済物件
+          </span>
         </div>
       </div>
     );

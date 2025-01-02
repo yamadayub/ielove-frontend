@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2, X, Plus, PlusCircle } from 'lucide-react';
 import { ImageUploader } from '../../features/image/components/ImageUploader';
 import { useRoom } from '../../features/room/hooks/useRoom';
 import { useImages } from '../../features/image/hooks/useImages';
+import { useProducts } from '../../features/product/hooks/useProducts';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
 import { useAuthenticatedAxios } from '../../features/shared/api/axios';
@@ -14,8 +15,6 @@ import { AxiosError } from 'axios';
 interface RoomFormData {
   name: string;
   description: string;
-  product_category_id: number | null;
-  product_code: string | null;
 }
 
 interface ApiError {
@@ -50,24 +49,23 @@ export const EditRoomPage: React.FC = () => {
   } = useImages({
     roomId: roomId
   });
+  const { data: products, isLoading: isLoadingProducts } = useProducts({
+    roomId: roomId
+  });
 
   // 部屋の画像のみをフィルタリング（製品に紐付いていない画像）
   const filteredRoomImages = roomImages?.filter(img => !img.product_id);
 
   const [roomForm, setRoomForm] = useState<RoomFormData>({
     name: '',
-    description: '',
-    product_category_id: null,
-    product_code: null
+    description: ''
   });
 
   useEffect(() => {
     if (room) {
       setRoomForm({
         name: room.name,
-        description: room.description || '',
-        product_category_id: room.product_category_id,
-        product_code: room.product_code
+        description: room.description || ''
       });
     }
   }, [room]);
@@ -103,7 +101,12 @@ export const EditRoomPage: React.FC = () => {
     }
   };
 
-  const handleImageUploaded = () => {
+  const handleImageUploaded = (imageData: {
+    id: number;
+    url: string;
+    image_type: 'MAIN' | 'SUB';
+    status: 'pending' | 'completed';
+  }) => {
     refetchImages();
   };
 
@@ -122,7 +125,7 @@ export const EditRoomPage: React.FC = () => {
     }
   };
 
-  const handleImageTypeChange = async (imageId: number, newType: 'main' | 'sub') => {
+  const handleImageTypeChange = async (imageId: number, newType: 'MAIN' | 'SUB') => {
     try {
       await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), { image_type: newType });
       refetchImages();
@@ -144,8 +147,6 @@ export const EditRoomPage: React.FC = () => {
         {
           name: '新規内装仕様',
           description: '',
-          product_category_id: roomForm.product_category_id,
-          product_code: roomForm.product_code,
           room_id: Number(roomId)
         },
         {
@@ -164,7 +165,7 @@ export const EditRoomPage: React.FC = () => {
     }
   };
 
-  if (isLoadingRoom || isLoadingImages) {
+  if (isLoadingRoom || isLoadingImages || isLoadingProducts) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -236,12 +237,12 @@ export const EditRoomPage: React.FC = () => {
                       </div>
                       <div className="mt-2">
                         <select
-                          value={image.image_type || 'sub'}
-                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'main' | 'sub')}
+                          value={image.image_type || 'SUB'}
+                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'MAIN' | 'SUB')}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
                         >
-                          <option value="main">メイン画像</option>
-                          <option value="sub">サブ画像</option>
+                          <option value="MAIN">メイン画像</option>
+                          <option value="SUB">サブ画像</option>
                         </select>
                       </div>
                     </div>
@@ -253,10 +254,10 @@ export const EditRoomPage: React.FC = () => {
                   roomId={Number(roomId)}
                   clerkUserId={userId || undefined}
                   existingImages={filteredRoomImages
-                    ?.filter(img => img.image_type === 'main' || img.image_type === 'sub')
+                    ?.filter(img => img.image_type === 'MAIN' || img.image_type === 'SUB')
                     .map(img => ({
                       id: img.id,
-                      image_type: img.image_type as 'main' | 'sub',
+                      image_type: img.image_type as 'MAIN' | 'SUB',
                       url: img.url
                     }))}
                 />
@@ -292,34 +293,6 @@ export const EditRoomPage: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label htmlFor="product_category_id" className="block text-sm font-medium text-gray-700">
-                製品カテゴリID (任意)
-              </label>
-              <input
-                type="number"
-                id="product_category_id"
-                name="product_category_id"
-                value={roomForm.product_category_id || ''}
-                onChange={(e) => setRoomForm(prev => ({ ...prev, product_category_id: e.target.value ? Number(e.target.value) : null }))}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="product_code" className="block text-sm font-medium text-gray-700">
-                製品コード (任意)
-              </label>
-              <input
-                type="text"
-                id="product_code"
-                name="product_code"
-                value={roomForm.product_code || ''}
-                onChange={(e) => setRoomForm(prev => ({ ...prev, product_code: e.target.value || null }))}
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-              />
-            </div>
-
             <div className="sticky bottom-0 bg-white border-t p-4 -mx-4 -mb-4">
               <button
                 type="submit"
@@ -347,12 +320,37 @@ export const EditRoomPage: React.FC = () => {
             </button>
           </div>
 
-          {/* 製品がない場合の表示 */}
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">内装仕様が登録されていません</h3>
-            <p className="text-gray-600">「内装仕様を追加」ボタンから製品を登録してください</p>
-          </div>
+          {products && products.length > 0 ? (
+            <div className="border-t border-gray-200">
+              {products.map((product) => (
+                <div
+                  key={product.id}
+                  className="border-b border-gray-200 last:border-b-0"
+                >
+                  <button
+                    onClick={() => navigate(`/property/${propertyId}/room/${roomId}/product/${product.id}/edit`)}
+                    className="w-full text-left p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
+                        {product.description && (
+                          <p className="mt-1 text-sm text-gray-500">{product.description}</p>
+                        )}
+                      </div>
+                      <ArrowLeft className="h-4 w-4 text-gray-400 transform rotate-180" />
+                    </div>
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">内装仕様が登録されていません</h3>
+              <p className="text-gray-600">「内装仕様を追加」ボタンから製品を登録してください</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,14 +8,14 @@ interface ImageUploaderProps {
   onImageUploaded: (imageData: {
     id: number;
     url: string;
-    image_type: 'main' | 'sub';
+    image_type: 'MAIN' | 'SUB';
     status: 'pending' | 'completed';
   }) => void;
   onError: (error: string) => void;
   propertyId?: number;
   roomId?: number;
   productId?: number;
-  existingImages?: Array<{ id: number; image_type: 'main' | 'sub'; url: string }>;
+  existingImages?: Array<{ id: number; image_type: 'MAIN' | 'SUB'; url: string }>;
   clerkUserId?: string;
 }
 
@@ -45,7 +45,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const axios = useAuthenticatedAxios();
 
-  const hasMainImage = existingImages.some(img => img.image_type === 'main');
+  const hasMainImage = existingImages.some(img => img.image_type === 'MAIN');
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -55,7 +55,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     property_id?: number;
     room_id?: number;
     product_id?: number;
-    image_type: 'main' | 'sub' | 'temp';
+    image_type: 'MAIN' | 'SUB' | 'TEMP';
   }) => {
     if (!clerkUserId) {
       throw new Error('ユーザーIDが設定されていません');
@@ -150,7 +150,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         property_id: propertyId,
         room_id: roomId,
         product_id: productId,
-        image_type: hasMainImage ? 'sub' : 'main'
+        image_type: hasMainImage ? 'SUB' : 'MAIN'
       });
 
       // 2. S3へのアップロード（リトライロジック付き）
@@ -191,7 +191,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       onImageUploaded({
         id: presignedData.image_id,
         url: presignedData.image_url,
-        image_type: hasMainImage ? 'sub' : 'main',
+        image_type: hasMainImage ? 'SUB' : 'MAIN',
         status: 'completed'
       });
 

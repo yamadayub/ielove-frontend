@@ -2,10 +2,11 @@ import React from 'react';
 import type { ProductSpecification, ProductDimension } from '../types/product_types';
 
 interface ProductDetailViewProps {
-  specifications?: ProductSpecification[];
-  dimensions?: ProductDimension[];
+  specifications: ProductSpecification[];
+  dimensions: ProductDimension[];
   isPurchased?: boolean;
-  shouldBlur: boolean;
+  shouldBlur?: boolean;
+  isOwner?: boolean;
 }
 
 export const ProductDetailView: React.FC<ProductDetailViewProps> = ({

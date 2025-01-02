@@ -8,6 +8,7 @@ interface PropertyInfoProps {
   isLoading?: boolean;
   listingId?: number;
   price?: number;
+  isOwner?: boolean;
 }
 
 export const PropertyInfo: React.FC<PropertyInfoProps> = ({ 
@@ -15,7 +16,8 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   isPurchased,
   isLoading,
   listingId,
-  price
+  price,
+  isOwner
 }) => {
   return (
     <div className="bg-white shadow-sm rounded-lg overflow-hidden">
@@ -32,6 +34,7 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
           isPurchased={isPurchased}
           isLoading={isLoading}
           price={price}
+          isOwner={isOwner}
         />
       </div>
     </div>

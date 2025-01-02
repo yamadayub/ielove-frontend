@@ -12,7 +12,7 @@ export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, proper
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const mainImageIndex = images.findIndex(img => img.image_type === 'main');
+    const mainImageIndex = images.findIndex(img => img.image_type === 'MAIN');
     if (mainImageIndex !== -1) {
       setCurrentIndex(mainImageIndex);
       scrollTo(mainImageIndex);
@@ -53,7 +53,7 @@ export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, proper
               <div className="aspect-square md:aspect-[4/3]">
                 <img
                   src={image.url}
-                  alt={image.description || `${propertyName} - ${image.image_type === 'main' ? 'メイン画像' : `画像 ${index + 1}`}`}
+                  alt={image.description || `${propertyName} - ${image.image_type === 'MAIN' ? 'メイン画像' : `画像 ${index + 1}`}`}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -70,7 +70,7 @@ export const PropertyGallery: React.FC<PropertyGalleryProps> = ({ images, proper
                 onClick={() => scrollTo(index)}
                 className={`w-1.5 h-1.5 rounded-full transition-colors ${
                   index === currentIndex ? 'bg-white' : 'bg-white/50'
-                } ${img.image_type === 'main' ? 'ring-2 ring-white ring-offset-1 ring-offset-black/50' : ''}`}
+                } ${img.image_type === 'MAIN' ? 'ring-2 ring-white ring-offset-1 ring-offset-black/50' : ''}`}
               />
             ))}
             <span className="ml-2 text-xs text-white bg-black/50 px-2 py-1 rounded-full">

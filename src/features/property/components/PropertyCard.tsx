@@ -23,7 +23,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const propertyImages = images?.filter(img => !img.room_id && !img.product_id) || [];
 
   useEffect(() => {
-    const mainImageIndex = propertyImages.findIndex(img => img.image_type === 'main');
+    const mainImageIndex = propertyImages.findIndex(img => img.image_type === 'MAIN');
     if (mainImageIndex !== -1) {
       setCurrentImageIndex(mainImageIndex);
     }
