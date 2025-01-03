@@ -11,17 +11,17 @@ export const CheckoutSuccess: React.FC = () => {
   const currentCheckoutListingId = useStore((state) => state.currentCheckoutListingId);
 
   useEffect(() => {
+    // 購入完了を記録（IDがある場合のみ）
     if (currentCheckoutListingId) {
-      // 購入完了を記録
       completePurchase(currentCheckoutListingId.toString());
-      
-      // 3秒後にマイページに遷移
-      const timer = setTimeout(() => {
-        navigate('/mypage');
-      }, 3000);
-
-      return () => clearTimeout(timer);
     }
+    
+    // 3秒後にマイページに遷移（IDの有無に関わらず）
+    const timer = setTimeout(() => {
+      navigate('/mypage');
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, [currentCheckoutListingId, completePurchase, navigate]);
 
   if (!isSignedIn) {
