@@ -48,15 +48,15 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
+    <div className="bg-white">
       <div className="relative aspect-[4/3]">
         {propertyImages.length > 0 ? (
           <>
             <Link to={`/property/${property.id}`}>
               <img
                 src={propertyImages[currentImageIndex].url}
-                alt={`${property.name} - ${propertyImages[currentImageIndex].image_type === 'main' ? 'メイン画像' : `画像 ${currentImageIndex + 1}`}`}
-                className="w-full h-full object-cover rounded-t-lg"
+                alt={`${property.name} - ${propertyImages[currentImageIndex].image_type === 'MAIN' ? 'メイン画像' : `画像 ${currentImageIndex + 1}`}`}
+                className="w-full h-full object-cover"
               />
             </Link>
             {propertyImages.length > 1 && (
@@ -79,7 +79,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
                       key={index}
                       className={`w-1.5 h-1.5 rounded-full ${
                         index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                      } ${img.image_type === 'main' ? 'ring-2 ring-white ring-offset-1 ring-offset-black/50' : ''}`}
+                      } ${img.image_type === 'MAIN' ? 'ring-2 ring-white ring-offset-1 ring-offset-black/50' : ''}`}
                     />
                   ))}
                 </div>
@@ -97,13 +97,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         )}
       </div>
-      <Link to={`/properties/${property.id}`}>
-        <div className="p-4">
+      <Link to={`/property/${property.id}`}>
+        <div className="p-3">
           <h3 className="font-bold text-gray-900">{property.name}</h3>
-          <div className="flex items-center text-gray-600 mt-2">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span className="text-sm">{property.prefecture}</span>
-          </div>
+          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{property.description}</p>
         </div>
       </Link>
     </div>

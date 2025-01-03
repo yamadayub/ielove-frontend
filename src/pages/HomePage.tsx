@@ -36,11 +36,10 @@ export const HomePage = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">物件一覧</h1>
+    <div className="max-w-7xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties.map((property) => (
-          <div key={property.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+          <div key={property.id} className="bg-white">
             <PropertyCard property={property} />
           </div>
         ))}
