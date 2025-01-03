@@ -24,6 +24,8 @@ import { ScrollToTop } from './features/common/components/ScrollToTop';
 import { EditListingPage } from './pages/listing/EditListingPage';
 import { Toaster } from 'react-hot-toast';
 import { CheckoutResult } from './pages/purchase/CheckoutResult';
+import { CheckoutSuccess } from './pages/purchase/CheckoutSuccess';
+import { CheckoutCancel } from './pages/purchase/CheckoutCancel';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -107,6 +109,8 @@ export const App = () => {
                     </ProtectedRoute>
                   } />
                   <Route path="/listings/:id/edit" element={<EditListingPage />} />
+                  <Route path="/checkout/success" element={<CheckoutSuccess />} />
+                  <Route path="/checkout/cancel" element={<CheckoutCancel />} />
                 </Routes>
               </div>
               <BottomNav />
