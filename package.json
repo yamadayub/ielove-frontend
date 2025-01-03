@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start:prod": "serve -s dist"
+    "start:prod": "bin/start-nginx-static"
   },
   "dependencies": {
     "@clerk/clerk-react": "^4.32.4",

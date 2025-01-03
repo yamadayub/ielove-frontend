@@ -36,33 +36,32 @@ http {
 
         # JavaScriptモジュールのMIMEタイプを追加
         types {
-            application/javascript js;
-            application/javascript mjs;
+            application/javascript js mjs;
+            text/css css;
+            image/x-icon ico;
+            image/svg+xml svg;
+            image/png png;
+            image/jpeg jpg jpeg;
+            image/gif gif;
         }
 
-        location / {
-            try_files $uri $uri/ /index.html;
-            expires -1;
-            add_header Cache-Control no-store;
-        }
-
-        # アセットへのアクセスを修正
-        location ^~ /assets/ {
-            alias dist/assets/;
+        # 静的ファイルのキャッシュ設定
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
             expires 1y;
-            add_header Cache-Control public;
-            add_header ETag "";
+            add_header Cache-Control "public, no-transform";
             try_files $uri =404;
         }
 
-        location = /index.html {
-            expires -1;
-            add_header Cache-Control no-store;
+        # SPAのルーティング
+        location / {
+            try_files $uri $uri/ /index.html;
+            add_header Cache-Control "no-store, no-cache, must-revalidate";
         }
 
-        # すべてのルートをindex.htmlにリダイレクト
-        location ~ ^/[^.]*$ {
-            try_files $uri $uri/ /index.html;
+        # index.htmlは常に再検証
+        location = /index.html {
+            add_header Cache-Control "no-store, no-cache, must-revalidate";
+            expires -1;
         }
     }
 }
