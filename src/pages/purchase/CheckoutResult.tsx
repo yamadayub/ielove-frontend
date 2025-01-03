@@ -17,8 +17,15 @@ export const CheckoutResult: React.FC = () => {
     if (status === 'success' && currentCheckoutListingId) {
       // 購入完了を記録
       completePurchase(currentCheckoutListingId.toString());
+      
+      // 3秒後にマイページに遷移
+      const timer = setTimeout(() => {
+        navigate('/mypage');
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
-  }, [status, currentCheckoutListingId, completePurchase]);
+  }, [status, currentCheckoutListingId, completePurchase, navigate]);
 
   if (!isSignedIn) {
     navigate('/sign-in');
@@ -58,20 +65,9 @@ export const CheckoutResult: React.FC = () => {
           <p className="mt-2 text-gray-600">
             物件仕様の詳細が確認できるようになりました。
           </p>
-          <div className="mt-8 space-y-4">
-            <button
-              onClick={() => navigate('/mypage')}
-              className="block w-full bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-            >
-              マイページへ移動
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className="block w-full bg-white border border-gray-300 text-gray-900 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              トップページへ戻る
-            </button>
-          </div>
+          <p className="mt-2 text-gray-500">
+            まもなくマイページに移動します...
+          </p>
         </div>
       </div>
     );
