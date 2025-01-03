@@ -34,21 +34,35 @@ http {
         root dist;
         index index.html;
 
+        # JavaScriptモジュールのMIMEタイプを追加
+        types {
+            application/javascript js;
+            application/javascript mjs;
+        }
+
         location / {
             try_files $uri $uri/ /index.html;
             expires -1;
             add_header Cache-Control no-store;
         }
 
-        location /assets {
+        # アセットへのアクセスを修正
+        location ^~ /assets/ {
+            alias dist/assets/;
             expires 1y;
             add_header Cache-Control public;
             add_header ETag "";
+            try_files $uri =404;
         }
 
         location = /index.html {
             expires -1;
             add_header Cache-Control no-store;
+        }
+
+        # すべてのルートをindex.htmlにリダイレクト
+        location ~ ^/[^.]*$ {
+            try_files $uri $uri/ /index.html;
         }
     }
 }
