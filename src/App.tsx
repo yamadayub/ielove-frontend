@@ -23,7 +23,6 @@ import { EditUserProfilePage } from './pages/user/EditUserProfilePage';
 import { ScrollToTop } from './features/common/components/ScrollToTop';
 import { EditListingPage } from './pages/listing/EditListingPage';
 import { Toaster } from 'react-hot-toast';
-import { CheckoutResult } from './pages/purchase/CheckoutResult';
 import { CheckoutSuccess } from './pages/purchase/CheckoutSuccess';
 import { CheckoutCancel } from './pages/purchase/CheckoutCancel';
 
@@ -100,7 +99,16 @@ export const App = () => {
                   <Route path="/property_mock/:id" element={<div>Mock Property Page</div>} />
                   <Route path="/property/:propertyId/room/:roomId" element={<RoomPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/checkout/result" element={<CheckoutResult />} />
+                  <Route path="/checkout/success" element={
+                    <ProtectedRoute>
+                      <CheckoutSuccess />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/checkout/cancel" element={
+                    <ProtectedRoute>
+                      <CheckoutCancel />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/complete" element={<CompletePage />} />
                   <Route path="/favorites" element={<div>お気に入り</div>} />
                   <Route path="/mypage/edit" element={
@@ -109,8 +117,6 @@ export const App = () => {
                     </ProtectedRoute>
                   } />
                   <Route path="/listings/:id/edit" element={<EditListingPage />} />
-                  <Route path="/checkout/success" element={<CheckoutSuccess />} />
-                  <Route path="/checkout/cancel" element={<CheckoutCancel />} />
                 </Routes>
               </div>
               <BottomNav />
