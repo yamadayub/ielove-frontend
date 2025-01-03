@@ -81,20 +81,20 @@ export const PropertyGalleryPage = () => {
   ) || [];
 
   const productImages = images?.filter(img => 
-    img.product_id && img.image_type === 'MAIN'
+    img.product_id
   ) || [];
 
-  // 全ての画像を結合
+  // 全ての画像を結合（物件のメイン画像は除外）
   const allImages = [...roomImages, ...productImages];
 
   // フィルタリングされた画像
   const filteredImages = selectedFilter 
     ? allImages.filter(img => {
         if (selectedFilter.startsWith('room_')) {
-          const roomId = selectedFilter.replace('room_', '');
+          const roomId = Number(selectedFilter.replace('room_', ''));
           return img.room_id === roomId;
         } else if (selectedFilter.startsWith('product_')) {
-          const productId = selectedFilter.replace('product_', '');
+          const productId = Number(selectedFilter.replace('product_', ''));
           return img.product_id === productId;
         }
         return false;
