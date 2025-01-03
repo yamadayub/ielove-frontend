@@ -33,29 +33,31 @@ export const Breadcrumb: React.FC = () => {
   }
 
   return (
-    <nav className="flex items-center space-x-2 px-4 py-3 bg-white border-b">
-      <button
-        onClick={() => navigate(-1)}
-        className="p-1 hover:bg-gray-100 rounded-full"
-      >
-        <ArrowLeft className="h-5 w-5 text-gray-600" />
-      </button>
-      <div className="flex items-center space-x-2">
-        {breadcrumbs.map(({ path, label }, index) => (
-          <React.Fragment key={path}>
-            {index > 0 && <ChevronRight className="h-4 w-4 text-gray-400" />}
-            {index === breadcrumbs.length - 1 ? (
-              <span className="text-gray-900 font-medium">{label}</span>
-            ) : (
-              <button 
-                onClick={() => navigate(path)}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                {label}
-              </button>
-            )}
-          </React.Fragment>
-        ))}
+    <nav className="flex items-center bg-white border-b">
+      <div className="flex items-center space-x-2 px-4 py-2 overflow-x-auto whitespace-nowrap">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex-shrink-0 p-1 hover:bg-gray-100 rounded-full"
+        >
+          <ArrowLeft className="h-5 w-5 text-gray-600" />
+        </button>
+        <div className="flex items-center space-x-2">
+          {breadcrumbs.map(({ path, label }, index) => (
+            <React.Fragment key={path}>
+              {index > 0 && <ChevronRight className="flex-shrink-0 h-4 w-4 text-gray-400" />}
+              {index === breadcrumbs.length - 1 ? (
+                <span className="text-gray-900 font-medium truncate">{label}</span>
+              ) : (
+                <button 
+                  onClick={() => navigate(path)}
+                  className="text-gray-600 hover:text-gray-900 truncate"
+                >
+                  {label}
+                </button>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
     </nav>
   );
