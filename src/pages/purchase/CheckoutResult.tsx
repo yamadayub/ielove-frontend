@@ -1,14 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { useStore } from '../../store/useStore';
 
 export const CheckoutResult: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
+  const completePurchase = useStore((state) => state.completePurchase);
+  const currentCheckoutListingId = useStore((state) => state.currentCheckoutListingId);
 
   const status = searchParams.get('status');
+
+  useEffect(() => {
+    if (status === 'success' && currentCheckoutListingId) {
+      // 購入完了を記録
+      completePurchase(currentCheckoutListingId.toString());
+    }
+  }, [status, currentCheckoutListingId, completePurchase]);
 
   if (!isSignedIn) {
     navigate('/sign-in');
@@ -37,30 +47,53 @@ export const CheckoutResult: React.FC = () => {
     );
   }
 
+  if (status === 'success') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="text-center">
+          <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+          <h1 className="mt-4 text-2xl font-bold text-gray-900">
+            ご購入ありがとうございます！
+          </h1>
+          <p className="mt-2 text-gray-600">
+            物件仕様の詳細が確認できるようになりました。
+          </p>
+          <div className="mt-8 space-y-4">
+            <button
+              onClick={() => navigate('/mypage')}
+              className="block w-full bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              マイページへ移動
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="block w-full bg-white border border-gray-300 text-gray-900 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              トップページへ戻る
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // status が不正な場合
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="text-center">
-        <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+        <XCircle className="h-12 w-12 text-red-500 mx-auto" />
         <h1 className="mt-4 text-2xl font-bold text-gray-900">
-          ご購入ありがとうございます！
+          エラーが発生しました
         </h1>
         <p className="mt-2 text-gray-600">
-          物件仕様の詳細が確認できるようになりました。
+          予期せぬエラーが発生しました。もう一度お試しください。
         </p>
-        <div className="mt-8 space-y-4">
-          <button
-            onClick={() => navigate('/mypage')}
-            className="block w-full bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            マイページへ移動
-          </button>
-          <button
-            onClick={() => navigate('/')}
-            className="block w-full bg-white border border-gray-300 text-gray-900 px-6 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            トップページへ戻る
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/')}
+          className="mt-6 bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          トップページへ戻る
+        </button>
       </div>
     </div>
   );
