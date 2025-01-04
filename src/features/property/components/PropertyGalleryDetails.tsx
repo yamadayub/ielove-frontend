@@ -72,7 +72,7 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
   return (
     <>
       {/* フィルターアイコン */}
-      <div className="mt-4 px-4">
+      <div className="mt-4">
         <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
           <FilterIcon
             image={propertyImages[0]}
