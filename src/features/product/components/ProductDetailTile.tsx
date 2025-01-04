@@ -47,7 +47,7 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
             <div className="mt-1 space-y-0.5">
               <p className="text-xs text-gray-600">
                 <span className="font-medium">メーカー:</span>{' '}
-                <span className={blurClass}>{product.manufacturer_name}</span>
+                <span className={blurClass}>{product.manufacturer_name || '不明'}</span>
               </p>
               <p className="text-xs text-gray-600">
                 <span className="font-medium">型番:</span>{' '}

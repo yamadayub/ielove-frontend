@@ -21,14 +21,13 @@ export interface Product {
   id?: number;
   room_id: number;
   product_category_id?: number;
-  manufacturer_id?: number;
   name?: string;
   product_code?: string;
   description?: string;
   catalog_url?: string;
   room_name?: string;
   product_category_name?: string;
-  manufacturer_name?: string;
+  manufacturer_name?: string | null;
   created_at?: string;
   updated_at?: string;
 }

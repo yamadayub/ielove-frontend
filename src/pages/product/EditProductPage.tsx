@@ -9,9 +9,8 @@ import { useAuth } from '@clerk/clerk-react';
 import { useAuthenticatedAxios } from '../../features/shared/api/axios';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import type { Product, ProductSpecification, ProductDimension } from '../../features/product/types/product_types';
-import type { Image } from '../../features/image/types/image_types';
+import type { Image } from '../../image/types/image_types';
 import { AxiosError } from 'axios';
-import { useCompanies } from '../../features/company/hooks/useCompanies';
 
 // 型定義の追加
 type QueryKeys = 
@@ -100,7 +99,7 @@ export const EditProductPage: React.FC = () => {
     product_code: '',
     description: '',
     catalog_url: '',
-    manufacturer_id: 0,
+    manufacturer_name: '',
     product_category_id: 0,
     room_id: parseInt(roomId || '0')
   });
@@ -116,9 +115,6 @@ export const EditProductPage: React.FC = () => {
   } = useImages({
     productId: productId || ''
   });
-  const { data: manufacturers, isLoading: isLoadingManufacturers } = useCompanies({
-    company_type: 'MANUFACTURER'
-  });
 
   // 製品の画像のみをフィルタリング
   const filteredProductImages = productImages?.filter(img => img.product_id === Number(productId));
@@ -131,7 +127,7 @@ export const EditProductPage: React.FC = () => {
         product_code: product.product_code,
         description: product.description ?? '',
         catalog_url: product.catalog_url ?? '',
-        manufacturer_id: product.manufacturer_id,
+        manufacturer_name: product.manufacturer_name ?? '',
         product_category_id: product.product_category_id,
         room_id: product.room_id
       });
@@ -416,7 +412,7 @@ export const EditProductPage: React.FC = () => {
     }
   };
 
-  if (isLoadingProduct || isLoadingImages || isLoadingManufacturers) {
+  if (isLoadingProduct || isLoadingImages) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -443,13 +439,13 @@ export const EditProductPage: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="ml-2 text-lg font-semibold">{product.name}編集</h1>
+          <h1 className="ml-2 text-lg font-semibold">{product.name}</h1>
         </div>
       </div>
 
       {/* デスクトップヘッダー */}
       <div className="hidden md:block max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900">仕上げ材の編集</h1>
+        <h1 className="text-2xl font-bold text-gray-900">新規内装仕様</h1>
       </div>
 
       {error && (
@@ -518,7 +514,7 @@ export const EditProductPage: React.FC = () => {
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                仕上げ材名 <span className="text-red-500">*</span>
+                インテリア名 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -532,30 +528,18 @@ export const EditProductPage: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="manufacturer_id" className="block text-sm font-medium text-gray-700">
-                メーカー <span className="text-red-500">*</span>
+              <label htmlFor="manufacturer_name" className="block text-sm font-medium text-gray-700">
+                メーカー
               </label>
-              <select
-                id="manufacturer_id"
-                name="manufacturer_id"
-                value={productForm.manufacturer_id || ''}
-                onChange={(e) => {
-                  console.log('Selected manufacturer:', e.target.value);
-                  setProductForm(prev => ({ ...prev, manufacturer_id: Number(e.target.value) }));
-                }}
-                required
+              <input
+                type="text"
+                id="manufacturer_name"
+                name="manufacturer_name"
+                value={productForm.manufacturer_name || ''}
+                onChange={(e) => setProductForm(prev => ({ ...prev, manufacturer_name: e.target.value }))}
+                placeholder="製造者名を入力してください"
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-              >
-                <option value="">選択してください</option>
-                {manufacturers?.map((manufacturer) => {
-                  console.log('Manufacturer option:', manufacturer);
-                  return (
-                    <option key={manufacturer.id} value={manufacturer.id}>
-                      {manufacturer.name}
-                    </option>
-                  );
-                })}
-              </select>
+              />
             </div>
 
             <div>
@@ -568,6 +552,7 @@ export const EditProductPage: React.FC = () => {
                 name="product_code"
                 value={productForm.product_code}
                 onChange={(e) => setProductForm(prev => ({ ...prev, product_code: e.target.value }))}
+                placeholder="製品コード・型番を入力して下さい"
                 required
                 className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
               />

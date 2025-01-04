@@ -59,6 +59,9 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                 )}
                 <div className="text-sm text-gray-500 mt-2">
                   <p>商品コード: {product.product_code}</p>
+                  {product.manufacturer_name && (
+                    <p>メーカー: {product.manufacturer_name}</p>
+                  )}
                   {product.catalog_url && (
                     <a
                       href={product.catalog_url}

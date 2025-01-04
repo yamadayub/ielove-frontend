@@ -61,7 +61,7 @@ export const ProductRow: React.FC<ProductRowProps> = ({
               </p>
               <div className={!isPurchased ? 'blur-sm' : ''}>
                 <p className="mt-1 text-xs text-gray-500">
-                  メーカー: {product.manufacturer}
+                  メーカー: {product.manufacturer_name || '不明'}
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500">
                   型番: {product.modelNumber}

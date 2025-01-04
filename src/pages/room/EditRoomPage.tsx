@@ -142,10 +142,13 @@ export const EditRoomPage: React.FC = () => {
 
   const handleCreateProduct = async () => {
     try {
+      // 現在のProductの数を取得して新しい番号を決定
+      const interiorNumber = (products?.length || 0) + 1;
+
       const response = await axios.post<{ id: number }>(
         '/api/products',
         {
-          name: '新規内装仕様',
+          name: `インテリア #${interiorNumber}`,
           description: '',
           room_id: Number(roomId)
         },

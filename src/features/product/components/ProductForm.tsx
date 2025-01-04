@@ -85,7 +85,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           }
         );
 
-        // 4. 状���を更新
+        // 4. 状態を更新
         setUploadingImages(prev =>
           prev.map(img =>
             img.id === presignedData.image_id
@@ -154,6 +154,19 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           className="mt-1 block w-full rounded-lg border-gray-200 focus:border-gray-900 focus:ring-gray-900"
           required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          製造者
+        </label>
+        <input
+          type="text"
+          value={formData.manufacturer_name || ''}
+          onChange={(e) => setFormData({ ...formData, manufacturer_name: e.target.value })}
+          className="mt-1 block w-full rounded-lg border-gray-200 focus:border-gray-900 focus:ring-gray-900"
+          placeholder="製造者名を入力してください"
         />
       </div>
 
