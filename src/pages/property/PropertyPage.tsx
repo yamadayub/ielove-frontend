@@ -89,7 +89,7 @@ export const PropertyPage = () => {
       <Breadcrumb />
       <div className="max-w-7xl mx-auto">
         <PropertyGallery images={propertyImages} propertyName={property.name} />
-        <div className="px-1 pt-1 pb-8">
+        <div className="pb-8">
           <PropertyInfo 
             property={property}
             isPurchased={purchaseStatus?.isPurchased}
