@@ -72,8 +72,8 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
   return (
     <>
       {/* フィルターアイコン */}
-      <div className="mt-8 px-4">
-        <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+      <div className="mt-4 px-4">
+        <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
           <FilterIcon
             image={propertyImages[0]}
             label="全て"
@@ -102,7 +102,7 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
       </div>
 
       {/* 画像グリッド */}
-      <div className="mt-4 -mx-4 md:mx-0">
+      <div className="mt-2 -mx-4 md:mx-0">
         <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-0.5 bg-gray-100">
           {filteredImages.map((image) => {
             const room = rooms?.find(r => r.id === image.room_id);

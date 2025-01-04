@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { useImages } from '../../image/hooks/useImages';
@@ -10,6 +10,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const isPropertyPurchased = useStore((state) => 
@@ -32,7 +33,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   if (!property.id) return null;
 
   const handlePrevImage = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => 
       prev === 0 ? propertyImages.length - 1 : prev - 1
@@ -40,11 +40,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   const handleNextImage = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => 
       prev === propertyImages.length - 1 ? 0 : prev + 1
     );
+  };
+
+  const handleImageClick = () => {
+    navigate(`/property/${property.id}`);
   };
 
   return (
@@ -52,13 +55,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       <div className="relative aspect-[4/3]">
         {propertyImages.length > 0 ? (
           <>
-            <Link to={`/property/${property.id}`}>
+            <div 
+              onClick={handleImageClick}
+              className="cursor-pointer"
+            >
               <img
                 src={propertyImages[currentImageIndex].url}
                 alt={`${property.name} - ${propertyImages[currentImageIndex].image_type === 'MAIN' ? 'メイン画像' : `画像 ${currentImageIndex + 1}`}`}
                 className="w-full h-full object-cover"
               />
-            </Link>
+            </div>
             {propertyImages.length > 1 && (
               <>
                 <button
@@ -97,12 +103,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         )}
       </div>
-      <Link to={`/property/${property.id}`}>
-        <div className="p-3">
-          <h3 className="font-bold text-gray-900">{property.name}</h3>
-          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{property.description}</p>
-        </div>
-      </Link>
+      <div 
+        onClick={handleImageClick}
+        className="p-3 cursor-pointer"
+      >
+        <h3 className="font-bold text-gray-900">{property.name}</h3>
+        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{property.description}</p>
+      </div>
     </div>
   );
 };
