@@ -1,42 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Image } from '../../image/types/image_types';
-
-interface Specification {
-  id: number;
-  product_id: number;
-  spec_type: string;
-  spec_value: string;
-  manufacturer_id: number;
-  model_number: string;
-}
-
-interface Dimension {
-  id: number;
-  product_id: number;
-  dimension_type: string;
-  value: number;
-  unit: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  product_code: string;
-  catalog_url: string;
-  room_id: number;
-  room_name: string;
-  product_category_id: number;
-  product_category_name: string;
-  manufacturer_id: number;
-  manufacturer_name: string;
-  specifications: Specification[];
-  dimensions: Dimension[];
-}
+import type { ProductDetails } from '../types/product_types';
 
 interface ProductDetailTileProps {
-  product: Product;
+  product: ProductDetails;
   mainImage: Image;
   propertyId: string;
 }

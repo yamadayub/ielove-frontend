@@ -26,8 +26,11 @@ export interface Product {
   product_code?: string;
   description?: string;
   catalog_url?: string;
-  product_category_name?: string; // カテゴリー名（APIレスポンスに含まれる場合）
-  manufacturer_name?: string; // メーカー名（APIレスポンスに含まれる場合）
+  room_name?: string;
+  product_category_name?: string;
+  manufacturer_name?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ProductDetails extends Product {

@@ -1,12 +1,14 @@
-import React from 'react';
-import { useParams, Navigate, useNavigate } from 'react-router-dom';
-import { Loader2, PlusCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { useParams, Navigate } from 'react-router-dom';
+import { Loader2, LayoutGrid, DoorOpen, FileText } from 'lucide-react';
 import { useProperty } from '../../features/property/hooks/useProperty';
 import { useImages } from '../../features/image/hooks/useImages';
 import { useRooms } from '../../features/room/hooks/useRooms';
 import { PropertyGallery } from '../../features/property/components/PropertyGallery';
 import { PropertyInfo } from '../../features/property/components/PropertyInfo';
-import { RoomTile } from '../../features/room/components/RoomTile';
+import { PropertyGalleryDetails } from '../../features/property/components/PropertyGalleryDetails';
+import { PropertyRoomDetails } from '../../features/property/components/PropertyRoomDetails';
+import { PropertyProductsDetails } from '../../features/property/components/PropertyProductsDetails';
 import { Breadcrumb } from '../../features/common/components/navigation/Breadcrumb';
 import { usePropertyPurchaseStatus } from '../../features/transaction/hooks/usePropertyPurchaseStatus';
 import { useQuery } from '@tanstack/react-query';
@@ -15,12 +17,14 @@ import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import { useAuth } from '@clerk/clerk-react';
 import { useUser } from '../../features/user/hooks/useUser';
 
+type TabType = 'gallery' | 'rooms' | 'products';
+
 export const PropertyPage = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const axios = useAuthenticatedAxios();
   const { userId: clerkUserId } = useAuth();
   const { data: userProfile } = useUser(clerkUserId);
+  const [activeTab, setActiveTab] = useState<TabType>('gallery');
 
   if (!id) {
     return <Navigate to="/" replace />;
@@ -41,6 +45,16 @@ export const PropertyPage = () => {
     enabled: !!id
   });
 
+  // 製品情報の取得
+  const { data: products, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['products', id],
+    queryFn: async () => {
+      const { data } = await axios.get(`/api/products/property/${id}`);
+      return data;
+    },
+    enabled: !!id
+  });
+
   // 最初のリスティングのIDと価格を取得
   const listingId = listingData?.items?.[0]?.id;
   const price = listingData?.items?.[0]?.price;
@@ -51,18 +65,7 @@ export const PropertyPage = () => {
   // 物件の画像のみをフィルタリング（部屋や製品に紐付いていない画像）
   const propertyImages = images?.filter(img => !img.room_id && !img.product_id) || [];
 
-  // 部屋の画像のみをフィルタリング（製品に紐付いていない画像）
-  const roomImages = images?.filter(img => img.room_id && !img.product_id) || [];
-
-  // 各部屋のメイン画像を取得
-  const getRoomMainImage = (roomId: number) => {
-    return roomImages.find(img => 
-      img.room_id === roomId && 
-      img.image_type === 'MAIN'
-    );
-  };
-
-  if (isLoadingProperty || isLoadingImages || isLoadingRooms || isPurchaseStatusLoading || isListingLoading) {
+  if (isLoadingProperty || isLoadingImages || isLoadingRooms || isPurchaseStatusLoading || isListingLoading || isLoadingProducts) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -95,27 +98,74 @@ export const PropertyPage = () => {
             price={price}
             isOwner={isOwner}
           />
-          <div className="mt-8">
-            {!rooms || rooms.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">部屋が登録されていません</h3>
-                <p className="text-gray-600">この物件にはまだ部屋が登録されていません</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-0.5 bg-gray-100">
-                {rooms.map((room) => (
-                  <RoomTile
-                    key={room.id}
-                    room={room}
-                    image={getRoomMainImage(room.id)}
-                    showImage={true}
-                    onClick={() => navigate(`/property/${id}/room/${room.id}`)}
-                  />
-                ))}
-              </div>
-            )}
+
+          {/* タブナビゲーション */}
+          <div className="mt-8 border-b border-gray-200">
+            <nav className="-mb-px flex">
+              <button
+                onClick={() => setActiveTab('gallery')}
+                className={`
+                  flex-1 flex justify-center pb-4 border-b-2 font-medium
+                  ${activeTab === 'gallery'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                aria-label="ギャラリー"
+              >
+                <LayoutGrid className="h-6 w-6" />
+              </button>
+              <button
+                onClick={() => setActiveTab('rooms')}
+                className={`
+                  flex-1 flex justify-center pb-4 border-b-2 font-medium
+                  ${activeTab === 'rooms'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                aria-label="部屋一覧"
+              >
+                <DoorOpen className="h-6 w-6" />
+              </button>
+              <button
+                onClick={() => setActiveTab('products')}
+                className={`
+                  flex-1 flex justify-center pb-4 border-b-2 font-medium
+                  ${activeTab === 'products'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                aria-label="製品一覧"
+              >
+                <FileText className="h-6 w-6" />
+              </button>
+            </nav>
           </div>
+
+          {/* タブコンテンツ */}
+          {activeTab === 'gallery' && (
+            <PropertyGalleryDetails
+              propertyId={id}
+              images={images || []}
+              rooms={rooms || []}
+            />
+          )}
+          {activeTab === 'rooms' && (
+            <PropertyRoomDetails
+              propertyId={id}
+              rooms={rooms || []}
+              images={images || []}
+            />
+          )}
+          {activeTab === 'products' && (
+            <PropertyProductsDetails
+              propertyId={id}
+              products={products || []}
+              images={images || []}
+            />
+          )}
         </div>
       </div>
     </div>
