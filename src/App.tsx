@@ -25,7 +25,6 @@ import { EditListingPage } from './pages/listing/EditListingPage';
 import { Toaster } from 'react-hot-toast';
 import { CheckoutSuccess } from './pages/purchase/CheckoutSuccess';
 import { CheckoutCancel } from './pages/purchase/CheckoutCancel';
-import { PropertyGalleryPage } from './pages/property/PropertyGalleryPage';
 import { PropertyDetailPage } from './pages/property/PropertyDetailPage';
 
 // ClerkのPublishable Keyが設定されいるか確認
@@ -98,7 +97,6 @@ export const App = () => {
                   <Route path="/property/:propertyId/room/:roomId/product/:productId/edit" element={<EditProductPage />} />
                   <Route path="/property/:propertyId/room/:roomId/product/:productId" element={<ProductDetailPage />} />
                   <Route path="/property/:id" element={<PropertyPage />} />
-                  <Route path="/property/:id/gallery" element={<PropertyGalleryPage />} />
                   <Route path="/property/:id/detail" element={<PropertyDetailPage />} />
                   <Route path="/property_mock/:id" element={<div>Mock Property Page</div>} />
                   <Route path="/property/:propertyId/room/:roomId" element={<RoomPage />} />
