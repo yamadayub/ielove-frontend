@@ -7,13 +7,17 @@ interface ProductDetailTileProps {
   product: ProductDetails;
   mainImage: Image;
   propertyId: string;
+  shouldBlur?: boolean;
 }
 
 export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
   product,
   mainImage,
   propertyId,
+  shouldBlur = false,
 }) => {
+  const blurClass = shouldBlur ? 'blur-[6px]' : '';
+
   return (
     <div className="w-full border-b border-gray-200 py-4">
       <div className="flex gap-4">
@@ -42,34 +46,40 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
             </h3>
             <div className="mt-1 space-y-0.5">
               <p className="text-xs text-gray-600">
-                <span className="font-medium">メーカー:</span> {product.manufacturer_name}
+                <span className="font-medium">メーカー:</span>{' '}
+                <span className={blurClass}>{product.manufacturer_name}</span>
               </p>
               <p className="text-xs text-gray-600">
-                <span className="font-medium">型番:</span> {product.product_code}
+                <span className="font-medium">型番:</span>{' '}
+                <span className={blurClass}>{product.product_code}</span>
               </p>
               {product.catalog_url && (
-                <p>
+                <p className="text-xs text-gray-600">
+                  <span className="font-medium">カタログURL:</span>{' '}
                   <a
-                    href={product.catalog_url}
+                    href={shouldBlur ? '#' : product.catalog_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className={`text-blue-600 hover:text-blue-800 ${shouldBlur ? 'pointer-events-none' : ''}`}
+                    onClick={(e) => shouldBlur && e.preventDefault()}
                   >
-                    カタログを見る
+                    <span className={blurClass}>カタログを見る</span>
                   </a>
                 </p>
               )}
               <p className="text-xs text-gray-600">
-                <span className="font-medium">設置場所:</span> {product.room_name}
+                <span className="font-medium">設置場所:</span>{' '}
+                <span className={blurClass}>{product.room_name}</span>
               </p>
               <p className="text-xs text-gray-600">
-                <span className="font-medium">カテゴリ:</span> {product.product_category_name}
+                <span className="font-medium">カテゴリ:</span>{' '}
+                <span className={blurClass}>{product.product_category_name}</span>
               </p>
             </div>
           </div>
 
           {/* 製品説明 */}
-          <p className="mt-2 text-xs text-gray-700">{product.description}</p>
+          <p className={`mt-2 text-xs text-gray-700 ${blurClass}`}>{product.description}</p>
 
           {/* 仕様情報 */}
           {product.specifications.length > 0 && (
@@ -79,7 +89,7 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
                 {product.specifications.map(spec => (
                   <div key={spec.id} className="text-xs">
                     <span className="font-medium text-gray-600">{spec.spec_type}:</span>{' '}
-                    <span className="text-gray-900">{spec.spec_value}</span>
+                    <span className={`text-gray-900 ${blurClass}`}>{spec.spec_value}</span>
                   </div>
                 ))}
               </div>
@@ -94,7 +104,7 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
                 {product.dimensions.map(dim => (
                   <div key={dim.id} className="text-xs">
                     <span className="font-medium text-gray-600">{dim.dimension_type}:</span>{' '}
-                    <span className="text-gray-900">{dim.value}{dim.unit}</span>
+                    <span className={`text-gray-900 ${blurClass}`}>{dim.value}{dim.unit}</span>
                   </div>
                 ))}
               </div>
