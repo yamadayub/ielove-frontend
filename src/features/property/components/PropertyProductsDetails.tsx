@@ -21,7 +21,7 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
 }) => {
   const { userId } = useAuth();
   const shouldBlur = !userId || !(isPurchased || isOwner);
-  const showMessage = !userId || (!isPurchased && !isOwner && userId);
+  const showMessage = !userId || (!isPurchased && !isOwner);
 
   return (
     <div className="mt-8">
