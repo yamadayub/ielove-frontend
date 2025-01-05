@@ -34,8 +34,8 @@ export const RoomTile: React.FC<RoomTileProps> = ({
               </button>
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm">
-                <h3 className="font-bold text-white text-base md:text-lg text-center">
+              <div className="px-4 py-2 rounded-lg">
+                <h3 className="font-bold text-white text-base md:text-lg text-center [text-shadow:_0_1px_2px_rgba(0,0,0,0.8)]">
                   {room.name}
                 </h3>
               </div>

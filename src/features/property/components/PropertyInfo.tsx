@@ -20,9 +20,12 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   isOwner
 }) => {
   return (
-    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+    <div className="bg-white shadow-sm overflow-hidden">
       <div className="px-4 py-5 sm:p-6">
         <h2 className="text-xl font-semibold text-gray-900">{property.name}</h2>
+        {property.description && (
+          <p className="mt-2 text-sm text-gray-600">{property.description}</p>
+        )}
         <div className="mt-4 space-y-4">
           {/* ... 他の物件情報 ... */}
         </div>

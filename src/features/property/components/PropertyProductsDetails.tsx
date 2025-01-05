@@ -20,7 +20,7 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   isOwner = false,
 }) => {
   const { userId } = useAuth();
-  const shouldBlur = !userId || (!isPurchased && !isOwner);
+  const shouldBlur = !userId || !(isPurchased || isOwner);
   const showMessage = !userId || (!isPurchased && !isOwner && userId);
 
   return (
@@ -31,6 +31,43 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
         </p>
       )}
       <div className="divide-y divide-gray-200">
+        {shouldBlur && (
+          <ProductDetailTile
+            key="sample"
+            product={{
+              id: 0,
+              name: 'Live Natural Premium Rustic',
+              manufacturer_name: '朝日ウッドテック',
+              product_code: 'PMT2KJ05RYS',
+              room_id: 0,
+              room_name: 'サンプル',
+              product_category_name: '床材',
+              specifications: [
+                {
+                  id: 1,
+                  product_id: 0,
+                  spec_type: '素材',
+                  spec_value: 'オーク N-45°'
+                }
+              ],
+              dimensions: [],
+              images: [{
+                id: 0,
+                url: 'https://www.woodtec.co.jp/cms/wp-content/uploads/2021/11/210917B14_dl_1024.jpg',
+                product_id: 0,
+                image_type: 'MAIN'
+              }]
+            }}
+            mainImage={{
+              id: 0,
+              url: 'https://www.woodtec.co.jp/cms/wp-content/uploads/2021/11/210917B14_dl_1024.jpg',
+              product_id: 0,
+              image_type: 'MAIN'
+            }}
+            propertyId={propertyId}
+            shouldBlur={false}
+          />
+        )}
         {products?.map(product => {
           const mainImage = images?.find(img => 
             img.product_id === product.id && 
