@@ -164,6 +164,8 @@ export const PropertyPage = () => {
               propertyId={id}
               products={products || []}
               images={images || []}
+              isPurchased={purchaseStatus?.isPurchased}
+              isOwner={isOwner}
             />
           )}
         </div>
