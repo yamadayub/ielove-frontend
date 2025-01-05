@@ -3,6 +3,7 @@ import { ProductDetailTile } from '../../product/components/ProductDetailTile';
 import { ProductDetails } from '../../product/types/product_types';
 import { Image } from '../../image/types/image_types';
 import { useAuth } from '@clerk/clerk-react';
+import { usePropertyPurchaseStatus } from '../../transaction/hooks/usePropertyPurchaseStatus';
 
 interface PropertyProductsDetailsProps {
   propertyId: string;
@@ -16,12 +17,13 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   propertyId,
   products,
   images,
-  isPurchased = false,
-  isOwner = false,
+  isPurchased,
+  isOwner,
 }) => {
   const { userId } = useAuth();
+
   const shouldBlur = !userId || !(isPurchased || isOwner);
-  const showMessage = !userId || (!isPurchased && !isOwner);
+  const showMessage = !userId || !(isPurchased || isOwner);
 
   return (
     <div className="mt-8">
