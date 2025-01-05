@@ -37,8 +37,6 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
             img.image_type === 'MAIN'
           );
 
-          if (!mainImage) return null;
-
           return (
             <ProductDetailTile
               key={product.id}

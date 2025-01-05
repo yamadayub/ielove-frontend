@@ -5,7 +5,7 @@ import type { ProductDetails } from '../types/product_types';
 
 interface ProductDetailTileProps {
   product: ProductDetails;
-  mainImage: Image;
+  mainImage?: Image;
   propertyId: string;
   shouldBlur?: boolean;
 }
@@ -26,11 +26,17 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
           to={`/property/${propertyId}/room/${product.room_id}/product/${product.id}`}
           className="block w-24 h-24 flex-shrink-0"
         >
-          <img
-            src={mainImage.url}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+          {mainImage ? (
+            <img
+              src={mainImage.url}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+              no image
+            </div>
+          )}
         </Link>
 
         {/* 製品情報 */}

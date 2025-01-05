@@ -8,12 +8,6 @@ import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
-interface FormData {
-  name: string;
-  email: string;
-  address: string;
-}
-
 interface ApiError {
   message: string;
   code: string;
@@ -24,11 +18,6 @@ export const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    email: '',
-    address: '',
-  });
   const axios = useAuthenticatedAxios();
   const listingId = useStore((state) => state.currentCheckoutListingId);
   const { data: listing, isLoading } = useListing(listingId);
@@ -39,12 +28,7 @@ export const CheckoutPage: React.FC = () => {
 
     try {
       const { data } = await axios.post(ENDPOINTS.TRANSACTIONS.CHECKOUT, {
-        listingId: listingId,
-        customerInfo: {
-          name: formData.name,
-          email: formData.email,
-          address: formData.address
-        }
+        listingId: listingId
       });
       window.location.href = data.url;
     } catch (error) {
@@ -56,14 +40,6 @@ export const CheckoutPage: React.FC = () => {
         setError('支払い処理に失敗しました。もう一度お試しください。');
       }
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   if (!isSignedIn) {
@@ -114,50 +90,6 @@ export const CheckoutPage: React.FC = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              お名前
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-              value={formData.name}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              メールアドレス
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-              value={formData.email}
-              onChange={handleChange}
-            />
-          </div>
-          <div>
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-              住所
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              required
-              className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
-              value={formData.address}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
