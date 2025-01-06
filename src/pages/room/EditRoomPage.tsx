@@ -217,7 +217,7 @@ export const EditRoomPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6 p-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                写真
+                部屋の写真
               </label>
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
@@ -296,13 +296,13 @@ export const EditRoomPage: React.FC = () => {
               />
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t p-4 -mx-4 -mb-4">
+            <div className="sticky bottom-0 bg-white p-4 -mx-4 -mb-4">
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-400"
               >
-                {isSubmitting ? '更新中...' : '更新する'}
+                {isSubmitting ? '更新中...' : '部屋情報を更新する'}
               </button>
             </div>
           </form>

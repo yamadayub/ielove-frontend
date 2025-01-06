@@ -134,7 +134,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       {productId && (
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            写真
+            内装・インテリアの写真
           </label>
           <ImageUploader
             images={uploadingImages}
