@@ -17,7 +17,7 @@ export const PurchasedProperties: React.FC = () => {
   if (!data?.transactions?.length) {
     return (
       <div className="text-center py-8 text-gray-500">
-        購入済みの物件がありません
+        購入済みの物件仕様がありません
       </div>
     );
   }

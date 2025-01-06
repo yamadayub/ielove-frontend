@@ -36,13 +36,24 @@ export const StripeConnect: React.FC<StripeConnectProps> = ({
   const startOnboarding = async () => {
     try {
       setIsStarting(true);
+
+      // まずSeller登録を行う
+      if (!stripeAccountId) {
+        await axios.post<SellerProfileSchema>(
+          ENDPOINTS.SELLER.REGISTER,
+          { user_id: userId }
+        );
+      }
+
+      // Stripeアカウント接続を開始
       const response = await axios.post<StripeAccountLink>(
         ENDPOINTS.SELLER.START_ONBOARDING,
         {
           display_name: userProfile?.name || 'Unknown User'
         }
       );
-      // オンボーディング開始後にプロフィールとステータスを更新
+
+      // プロフィールとステータスを更新
       await Promise.all([refetchProfile(), refetchStatus()]);
       window.location.href = response.data.url;
     } catch (error) {
@@ -100,23 +111,23 @@ export const StripeConnect: React.FC<StripeConnectProps> = ({
     <div className="bg-white shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
         <h3 className="text-lg font-medium leading-6 text-gray-900">
-          Stripe接続状況
+          出品者登録
         </h3>
         <div className="mt-2 max-w-xl text-sm text-gray-500">
           {!stripeAccountId ? (
             <p>
-              商品を出品するには、Stripeアカウントとの接続が必要です。
-              以下のボタンをクリックして、Stripeアカウントの接続を開始してください。
+              物件情報を商品として出品するには、Stripeアカウントの登録が必要です。
+              以下のボタンをクリックして、Stripeアカウントの登録を開始してください。
             </p>
           ) : !onboardingCompleted ? (
             <p>
-              Stripeアカウントの接続は開始されましたが、まだ完了していません。
-              以下のボタンをクリックして、接続作業を完了させてください。
+              Stripeアカウントの登録は開始されましたが、まだ完了していません。
+              以下のボタンをクリックして、登録作業を完了させてください。
             </p>
           ) : (
             <p>
-              Stripeアカウントが正常に接続されています。
-              商品の出品が可能です。
+              Stripeアカウントが正常に登録されています。
+              物件情報を商品として出品が可能です。
             </p>
           )}
         </div>
@@ -134,9 +145,9 @@ export const StripeConnect: React.FC<StripeConnectProps> = ({
                   処理中...
                 </>
               ) : !stripeAccountId ? (
-                'Stripeアカウントを接続'
+                'Stripeアカウントを登録する'
               ) : (
-                'Stripe接続を完了する'
+                'Stripe登録を完了する'
               )}
             </button>
           ) : (

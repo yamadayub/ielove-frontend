@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { useUser } from '../../features/user/hooks/useUser';
 import { UserProfileForm } from '../../features/user/components/UserProfileForm';
-import { SellerProfileForm } from '../../features/user/components/SellerProfileForm';
+import { StripeConnect } from '../../features/seller/components/StripeConnect';
+import { useSellerProfile, useStripeStatus } from '../../features/seller/hooks/useSeller';
 import { Loader2 } from 'lucide-react';
+import type { User } from '../../features/user/types/user_types';
 import { AxiosError } from 'axios';
 import { useAuthenticatedAxios } from '../../features/shared/api/axios';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
-import type { User } from '../../features/user/types/user_types';
-import type { SellerProfile } from '../../types/types';
 
 export const EditUserProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,8 +17,11 @@ export const EditUserProfilePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const axios = useAuthenticatedAxios();
   const { data: userProfile, isLoading: isLoadingUser } = useUser(userId);
-  // TODO: useSellerProfileを実装後に再度追加
-  const [sellerProfile, isLoadingSeller] = [undefined as SellerProfile | undefined, false];
+  const { data: sellerProfile, isLoading: isLoadingProfile } = useSellerProfile(userProfile?.id);
+  const { data: stripeStatus, isLoading: isLoadingStripe } = useStripeStatus(
+    userProfile?.id,
+    sellerProfile?.stripe_account_id
+  );
 
   const handleUserSubmit = async (formData: Partial<User>) => {
     try {
@@ -34,25 +37,7 @@ export const EditUserProfilePage: React.FC = () => {
     }
   };
 
-  const handleSellerSubmit = async (formData: Partial<SellerProfile>) => {
-    try {
-      if (sellerProfile) {
-        await axios.patch(ENDPOINTS.USER.UPDATE_SELLER, formData);
-      } else {
-        await axios.post(ENDPOINTS.USER.CREATE_SELLER, formData);
-      }
-      navigate('/mypage');
-    } catch (error) {
-      console.error('Failed to update seller profile:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        setError(`販売者情報の更新に失敗しました: ${error.response.data.message || JSON.stringify(error.response.data)}`);
-      } else {
-        setError('販売者情報の更新に失敗しました。もう一度お試しください。');
-      }
-    }
-  };
-
-  if (isLoadingUser || isLoadingSeller) {
+  if (isLoadingUser || isLoadingProfile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -84,13 +69,16 @@ export const EditUserProfilePage: React.FC = () => {
         />
       </div>
 
-      {/* 販売者情報フォーム（ユーザーがseller/bothの場合のみ表示） */}
+      {/* 出品者設定 */}
       {userProfile?.role !== 'buyer' && (
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">販売者情報</h2>
-          <SellerProfileForm
-            initialData={sellerProfile}
-            onSubmit={handleSellerSubmit}
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">出品者情報</h2>
+          <StripeConnect 
+            userId={userProfile.id}
+            stripeAccountId={sellerProfile?.stripe_account_id ?? null}
+            accountStatus={sellerProfile?.stripe_account_status ?? null}
+            onboardingCompleted={sellerProfile?.stripe_onboarding_completed ?? false}
+            isLoading={isLoadingStripe}
           />
         </div>
       )}
