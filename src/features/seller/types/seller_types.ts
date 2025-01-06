@@ -4,11 +4,6 @@ export type StripeAccountType = 'standard' | 'express' | 'custom';
 export interface SellerProfileSchema {
   id: number;
   user_id: number;
-  company_name: string | null;
-  representative_name: string | null;
-  postal_code: string | null;
-  address: string | null;
-  phone_number: string | null;
   stripe_account_id: string | null;
   stripe_account_status: string | null;
   stripe_onboarding_completed: boolean;

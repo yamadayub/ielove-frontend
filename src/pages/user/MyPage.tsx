@@ -92,6 +92,15 @@ export const MyPage: React.FC = () => {
 
         <div className="bg-white shadow sm:rounded-lg">
           <div className="px-4 py-5 sm:p-6">
+            <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+              購入済み物件
+            </h2>
+            <PurchasedProperties />
+          </div>
+        </div>
+
+        <div className="bg-white shadow sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
               登録済み物件
             </h3>
@@ -142,15 +151,6 @@ export const MyPage: React.FC = () => {
           </div>
         </div>
         
-        <div className="bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <h2 className="text-lg font-medium leading-6 text-gray-900 mb-4">
-              購入済み物件
-            </h2>
-            <PurchasedProperties />
-          </div>
-        </div>
-
         <SellerSection userId={userProfile.id} clerkUserId={clerkUserId} />
       </div>
     </div>
@@ -182,48 +182,6 @@ const SellerSection: React.FC<{ userId: number; clerkUserId: string | null | und
 
   return (
     <div className="space-y-6">
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900">
-            販売者情報
-          </h3>
-          <div className="mt-4 space-y-4">
-            <div>
-              <dt className="text-sm font-medium text-gray-500">会社名</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {sellerProfile.company_name || '未設定'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">代表者名</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {sellerProfile.representative_name || '未設定'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">住所</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {sellerProfile.address ? (
-                  <>
-                    〒{sellerProfile.postal_code}
-                    <br />
-                    {sellerProfile.address}
-                  </>
-                ) : (
-                  '未設定'
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm font-medium text-gray-500">電話番号</dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {sellerProfile.phone_number || '未設定'}
-              </dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <StripeConnect 
         userId={userId} 
         stripeAccountId={sellerProfile.stripe_account_id}

@@ -4,6 +4,7 @@ import { useSellerAxios } from '../../shared/api/axios';
 import { ENDPOINTS } from '../../shared/api/endpoints';
 import { isAxiosError } from 'axios';
 import { useSellerProfile, useStripeStatus } from '../hooks/useSeller';
+import { useUser } from '../../user/hooks/useUser';
 
 interface StripeConnectProps {
   userId: number;
@@ -28,6 +29,7 @@ export const StripeConnect: React.FC<StripeConnectProps> = ({
   const [isStarting, setIsStarting] = useState(false);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const axios = useSellerAxios();
+  const { data: userProfile } = useUser(userId);
   const { refetch: refetchProfile } = useSellerProfile(userId);
   const { refetch: refetchStatus } = useStripeStatus(userId, stripeAccountId);
 
@@ -35,7 +37,10 @@ export const StripeConnect: React.FC<StripeConnectProps> = ({
     try {
       setIsStarting(true);
       const response = await axios.post<StripeAccountLink>(
-        ENDPOINTS.SELLER.START_ONBOARDING
+        ENDPOINTS.SELLER.START_ONBOARDING,
+        {
+          display_name: userProfile?.name || 'Unknown User'
+        }
       );
       // オンボーディング開始後にプロフィールとステータスを更新
       await Promise.all([refetchProfile(), refetchStatus()]);
