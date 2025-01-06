@@ -91,34 +91,34 @@ export const CreatePropertyPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white md:bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* モバイルヘッダー */}
-      <div className="sticky top-0 z-50 bg-white border-b md:hidden">
+      <div className="sticky top-0 z-50 bg-white border-b">
         <div className="flex items-center h-14 px-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 -ml-2 hover:bg-gray-100 rounded-full"
+            className="p-2 -ml-2 text-gray-700 hover:text-gray-900"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="ml-2 text-lg font-semibold">新規物件登録</h1>
+          <h1 className="ml-2 text-lg">新規物件登録</h1>
         </div>
       </div>
 
       {/* デスクトップヘッダー */}
-      <div className="hidden md:block max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900">新規物件登録</h1>
+      <div className="hidden md:block max-w-2xl mx-auto px-4 py-6">
+        <h1 className="text-2xl">新規物件登録</h1>
       </div>
 
       {error && (
         <div className="mx-4 md:max-w-2xl md:mx-auto mb-4">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-red-600">{error}</p>
+          <div className="p-4 bg-red-50 rounded-lg">
+            <p className="text-red-600 text-sm">{error}</p>
           </div>
         </div>
       )}
 
-      <div className="md:max-w-2xl md:mx-auto md:bg-white md:rounded-lg md:shadow-sm md:my-8">
+      <div className="md:max-w-2xl md:mx-auto">
         <PropertyForm 
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}

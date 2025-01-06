@@ -174,13 +174,13 @@ export const EditPropertyPage: React.FC = () => {
         </div>
       )}
 
-      <div className="md:max-w-2xl md:mx-auto md:bg-white md:rounded-lg md:shadow-sm md:my-8">
+      <div className="md:max-w-2xl md:mx-auto md:bg-white md:rounded-lg md:my-8">
         <PropertyForm 
           onSubmit={handleSubmit}
           initialData={property}
           isSubmitting={isSubmitting}
           userId={userProfile.id}
-          submitButtonText="更新する"
+          submitButtonText="物件情報を更新する"
           propertyId={propertyId}
           clerkUserId={userId}
           existingImages={propertyImages}
@@ -190,9 +190,9 @@ export const EditPropertyPage: React.FC = () => {
 
       {/* Room一覧セクション */}
       <div className="md:max-w-2xl md:mx-auto mt-8">
-        <div className="bg-white rounded-lg shadow-sm">
-          <div className="flex items-center justify-between p-4 md:p-6">
-            <h2 className="text-lg font-semibold text-gray-900">部屋一覧</h2>
+        <div className="bg-white">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b">
+            <h2 className="text-base font-medium text-gray-900">部屋一覧</h2>
             <button
               onClick={handleCreateRoom}
               className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"

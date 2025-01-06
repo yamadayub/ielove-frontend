@@ -257,9 +257,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     <div className="space-y-4">
       {/* アップロードエリア */}
       <div
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
-          ${dragActive ? 'border-gray-900 bg-gray-50' : 'border-gray-300'}
-          transition-colors duration-200 ease-in-out`}
+        className={`relative border border-dashed rounded-lg p-2 text-center cursor-pointer
+          ${dragActive ? 'border-gray-900 bg-gray-50' : 'border-gray-200'}
+          transition-colors duration-200 ease-in-out hover:bg-gray-50`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}

@@ -123,12 +123,33 @@ export const MyPage: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-4">
               <h1 className="text-xl font-semibold">{userProfile.name}</h1>
-              <Link
-                to="/settings"
-                className="px-4 py-1.5 border rounded-md text-sm font-medium hover:bg-gray-50"
-              >
-                プロフィールを編集
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  to="/settings"
+                  className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600"
+                >
+                  プロフィールを編集
+                </Link>
+                {sellerProfile?.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
+                  <button
+                    onClick={openDashboard}
+                    disabled={isLoadingDashboard}
+                    className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 disabled:text-gray-400"
+                  >
+                    {isLoadingDashboard ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        読み込み中...
+                      </>
+                    ) : (
+                      <>
+                        Stripeダッシュボード
+                        <ArrowRight className="ml-2 h-4 w-4 inline" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-8 mb-4">
@@ -339,29 +360,6 @@ export const MyPage: React.FC = () => {
                   onboardingCompleted={sellerProfile?.stripe_onboarding_completed ?? false}
                   isLoading={isLoadingStripe}
                 />
-              </div>
-            )}
-
-            {/* Stripeダッシュボード */}
-            {sellerProfile?.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
-              <div className="flex justify-end">
-                <button
-                  onClick={openDashboard}
-                  disabled={isLoadingDashboard}
-                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 disabled:text-gray-400"
-                >
-                  {isLoadingDashboard ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      読み込み中...
-                    </>
-                  ) : (
-                    <>
-                      Stripeダッシュボードを開く
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </button>
               </div>
             )}
           </div>
