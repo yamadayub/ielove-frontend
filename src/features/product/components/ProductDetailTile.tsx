@@ -26,17 +26,28 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
           to={`/property/${propertyId}/room/${product.room_id}/product/${product.id}`}
           className="block w-24 h-24 flex-shrink-0"
         >
-          {mainImage ? (
-            <img
-              src={mainImage.url}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-              no image
+          <div className="flex items-start">
+            <div className="relative flex-shrink-0 w-24 h-24">
+              {mainImage ? (
+                <>
+                  <img
+                    src={mainImage.url}
+                    alt={product.name}
+                    className={`w-full h-full object-cover ${shouldBlur ? 'blur-sm' : ''}`}
+                  />
+                  {product.id === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                      <span className="text-white text-sm font-medium">サンプル</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <span className="text-gray-400 text-sm">No Image</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </Link>
 
         {/* 製品情報 */}
