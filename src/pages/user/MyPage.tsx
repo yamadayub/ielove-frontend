@@ -130,6 +130,58 @@ const SellerSection: React.FC<{ userId: number; clerkUserId: string | null | und
       <div className="bg-white shadow sm:rounded-lg">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium leading-6 text-gray-900">
+            登録済み物件
+          </h3>
+          <div className="mt-4 space-y-4">
+            {isLoadingProperties ? (
+              <div className="animate-pulse space-y-4">
+                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-20 bg-gray-200 rounded"></div>
+              </div>
+            ) : !properties?.length ? (
+              <p className="text-gray-500">
+                物件が登録されていません。
+                <Link to="/properties/create" className="text-blue-600 hover:text-blue-500 ml-2">
+                  物件を登録する
+                </Link>
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {properties.map((property) => (
+                  <div
+                    key={property.id}
+                    className="border rounded-lg p-4 flex justify-between items-center"
+                  >
+                    <div>
+                      <h4 className="font-medium">{property.name}</h4>
+                      <p className="text-sm text-gray-500">{property.prefecture}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Link
+                        to={`/property/${property.id}/edit`}
+                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        編集
+                      </Link>
+                      <button
+                        onClick={() => property.id && handleCreateListing(property.id)}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        出品する
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white shadow sm:rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg font-medium leading-6 text-gray-900">
             販売者情報
           </h3>
           <div className="mt-4 space-y-4">
@@ -178,70 +230,16 @@ const SellerSection: React.FC<{ userId: number; clerkUserId: string | null | und
       />
 
       {sellerProfile.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
-        <>
-          <div className="bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                登録済み物件
-              </h3>
-              <div className="mt-4 space-y-4">
-                {isLoadingProperties ? (
-                  <div className="animate-pulse space-y-4">
-                    <div className="h-20 bg-gray-200 rounded"></div>
-                    <div className="h-20 bg-gray-200 rounded"></div>
-                  </div>
-                ) : !properties?.length ? (
-                  <p className="text-gray-500">
-                    物件が登録されていません。
-                    <Link to="/properties/create" className="text-blue-600 hover:text-blue-500 ml-2">
-                      物件を登録する
-                    </Link>
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {properties.map((property) => (
-                      <div
-                        key={property.id}
-                        className="border rounded-lg p-4 flex justify-between items-center"
-                      >
-                        <div>
-                          <h4 className="font-medium">{property.name}</h4>
-                          <p className="text-sm text-gray-500">{property.prefecture}</p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Link
-                            to={`/property/${property.id}/edit`}
-                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            編集
-                          </Link>
-                          <button
-                            onClick={() => property.id && handleCreateListing(property.id)}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            出品する
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+        <div className="bg-white shadow sm:rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg font-medium leading-6 text-gray-900">
+              出品商品
+            </h3>
+            <div className="mt-4">
+              <ListingList />
             </div>
           </div>
-
-          <div className="bg-white shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                出品商品
-              </h3>
-              <div className="mt-4">
-                <ListingList />
-              </div>
-            </div>
-          </div>
-        </>
+        </div>
       )}
     </div>
   );
