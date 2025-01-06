@@ -73,36 +73,6 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ sellerProfile 
           </div>
         </div>
       </div>
-
-      <div className="bg-white shadow sm:rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium leading-6 text-gray-900">
-            ビジネス情報
-          </h3>
-          <div className="mt-5 border-t border-gray-200">
-            <dl className="divide-y divide-gray-200">
-              <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                <dt className="text-sm font-medium text-gray-500">ビジネス名</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {sellerProfile.business_name}
-                </dd>
-              </div>
-              <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                <dt className="text-sm font-medium text-gray-500">説明</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {sellerProfile.business_description}
-                </dd>
-              </div>
-              <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                <dt className="text-sm font-medium text-gray-500">登録日</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {new Date(sellerProfile.created_at).toLocaleDateString('ja-JP')}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }; 

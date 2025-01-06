@@ -14,47 +14,9 @@ export const SellerProfileForm: React.FC<Props> = ({ initialData, onSubmit }) =>
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">会社名</label>
-        <input
-          {...register('company_name')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">代表者名</label>
-        <input
-          {...register('representative_name')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">郵便番号</label>
-        <input
-          {...register('postal_code')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          placeholder="123-4567"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">住所</label>
-        <input
-          {...register('address')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">電話番号</label>
-        <input
-          {...register('phone_number')}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          placeholder="090-1234-5678"
-        />
-      </div>
+      <p className="text-sm text-gray-500">
+        出品者として登録すると、物件の仕様情報を出品できるようになります。
+      </p>
 
       <button
         type="submit"

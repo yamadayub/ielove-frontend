@@ -64,13 +64,6 @@ export interface ProductForSale {
 export interface SellerProfile {
   id?: number;
   user_id: string;
-  company_name?: string;
-  representative_name?: string;
-  postal_code?: string;
-  address?: string;
-  phone_number?: string;
-  business_registration_number?: string;
-  tax_registration_number?: string;
   stripe_account_id?: string;
   stripe_account_status?: string;
   stripe_account_type?: string;
