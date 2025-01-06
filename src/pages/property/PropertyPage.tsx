@@ -24,7 +24,7 @@ export const PropertyPage = () => {
   const axios = useAuthenticatedAxios();
   const { userId: clerkUserId } = useAuth();
   const { data: userProfile } = useUser(clerkUserId);
-  const [activeTab, setActiveTab] = useState<TabType>('gallery');
+  const [activeTab, setActiveTab] = useState<TabType>('products');
 
   if (!id) {
     return <Navigate to="/" replace />;
@@ -103,6 +103,19 @@ export const PropertyPage = () => {
           <div className="mt-8 border-b border-gray-200">
             <nav className="-mb-px flex">
               <button
+                onClick={() => setActiveTab('products')}
+                className={`
+                  flex-1 flex justify-center pb-4 border-b-2 font-medium
+                  ${activeTab === 'products'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                aria-label="製品一覧"
+              >
+                <FileText className="h-6 w-6" />
+              </button>
+              <button
                 onClick={() => setActiveTab('gallery')}
                 className={`
                   flex-1 flex justify-center pb-4 border-b-2 font-medium
@@ -128,23 +141,19 @@ export const PropertyPage = () => {
               >
                 <DoorOpen className="h-6 w-6" />
               </button>
-              <button
-                onClick={() => setActiveTab('products')}
-                className={`
-                  flex-1 flex justify-center pb-4 border-b-2 font-medium
-                  ${activeTab === 'products'
-                    ? 'border-indigo-500 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}
-                aria-label="製品一覧"
-              >
-                <FileText className="h-6 w-6" />
-              </button>
             </nav>
           </div>
 
           {/* タブコンテンツ */}
+          {activeTab === 'products' && (
+            <PropertyProductsDetails
+              propertyId={id}
+              products={products || []}
+              images={images || []}
+              isPurchased={purchaseStatus?.isPurchased}
+              isOwner={isOwner}
+            />
+          )}
           {activeTab === 'gallery' && (
             <PropertyGalleryDetails
               propertyId={id}
@@ -157,15 +166,6 @@ export const PropertyPage = () => {
               propertyId={id}
               rooms={rooms || []}
               images={images || []}
-            />
-          )}
-          {activeTab === 'products' && (
-            <PropertyProductsDetails
-              propertyId={id}
-              products={products || []}
-              images={images || []}
-              isPurchased={purchaseStatus?.isPurchased}
-              isOwner={isOwner}
             />
           )}
         </div>
