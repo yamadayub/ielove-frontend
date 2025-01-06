@@ -6,7 +6,7 @@ import { UserProfile } from '../../features/user/components/UserProfile';
 import { InitialUserSetup } from '../../features/user/components/InitialUserSetup';
 import { SellerDashboard } from '../../features/seller/components/SellerDashboard';
 import { AxiosError } from 'axios';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { StripeConnect } from '../../features/seller/components/StripeConnect';
 import { ListingList } from '../../features/listing/components/ListingList';
@@ -27,6 +27,22 @@ export const MyPage: React.FC = () => {
   const axios = useAuthenticatedAxios();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'buyer' | 'seller'>('buyer');
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+
+  const openDashboard = async () => {
+    try {
+      setIsLoadingDashboard(true);
+      const response = await axios.get<{ url: string }>(
+        ENDPOINTS.SELLER.GET_DASHBOARD_URL
+      );
+      window.open(response.data.url, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Failed to get dashboard URL:', error);
+      alert('ダッシュボードの取得に失敗しました。');
+    } finally {
+      setIsLoadingDashboard(false);
+    }
+  };
 
   if (isUserLoading) {
     return (
@@ -183,30 +199,38 @@ export const MyPage: React.FC = () => {
               </div>
 
               {isLoadingProperties ? (
-                <div className="grid grid-cols-3 gap-0.5">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="aspect-square bg-gray-100 animate-pulse" />
+                <div className="space-y-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="flex gap-6 p-4 animate-pulse">
+                      <div className="w-48 h-48 bg-gray-100 flex-shrink-0" />
+                      <div className="flex-1 space-y-4 py-2">
+                        <div className="h-4 bg-gray-100 w-1/4" />
+                        <div className="h-4 bg-gray-100 w-1/2" />
+                        <div className="h-4 bg-gray-100 w-3/4" />
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : !properties?.length ? (
-                <div className="text-center py-12 border rounded-lg bg-gray-50">
-                  <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
-                    <span className="text-3xl">🏠</span>
+                <div className="text-center py-12 bg-gray-50">
+                  <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-gray-100">
+                    <span className="text-3xl">🏷</span>
                   </div>
                   <p className="text-gray-500 mb-2">登録されている物件がありません</p>
                   <p className="text-sm text-gray-400">新規登録ボタンから物件を登録してください</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-0.5">
+                <div className="space-y-4">
                   {properties.map((property) => (
                     <div
                       key={property.id}
-                      className="aspect-square relative group cursor-pointer"
+                      className="flex gap-6 p-4 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="absolute inset-0 bg-gray-200">
-                        {property.image_url ? (
+                      {/* 物件画像 */}
+                      <div className="w-48 h-48 bg-gray-200 flex-shrink-0 overflow-hidden">
+                        {property.images?.find(img => img.image_type === 'MAIN')?.url ? (
                           <img
-                            src={property.image_url}
+                            src={property.images.find(img => img.image_type === 'MAIN')?.url}
                             alt={property.name}
                             className="w-full h-full object-cover"
                           />
@@ -216,17 +240,41 @@ export const MyPage: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                        <div className="flex gap-4 text-white">
+
+                      {/* 物件情報 */}
+                      <div className="flex-1 py-2">
+                        <h4 className="text-lg font-medium text-gray-900 mb-2">{property.name}</h4>
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <p>
+                            <span className="font-medium">所在地:</span> {property.prefecture}
+                          </p>
+                          {property.layout && (
+                            <p>
+                              <span className="font-medium">間取り:</span> {property.layout}
+                            </p>
+                          )}
+                          {property.construction_year && (
+                            <p>
+                              <span className="font-medium">築年数:</span> {property.construction_year}年
+                              {property.construction_month && `${property.construction_month}月`}
+                            </p>
+                          )}
+                          {property.structure && (
+                            <p>
+                              <span className="font-medium">構造:</span> {property.structure}
+                            </p>
+                          )}
+                        </div>
+                        <div className="mt-4 flex gap-3">
                           <Link
                             to={`/property/${property.id}/edit`}
-                            className="p-2 hover:text-blue-400"
+                            className="text-sm text-gray-700 hover:text-blue-600"
                           >
                             編集
                           </Link>
                           <button
                             onClick={() => property.id && handleCreateListing(property.id)}
-                            className="p-2 hover:text-blue-400"
+                            className="text-sm text-gray-700 hover:text-blue-600"
                           >
                             出品
                           </button>
@@ -245,8 +293,8 @@ export const MyPage: React.FC = () => {
               </div>
               {/* 出品情報がない場合 */}
               {!sellerProfile?.stripe_account_id ? (
-                <div className="text-center py-12 border rounded-lg bg-gray-50">
-                  <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
+                <div className="text-center py-12 bg-gray-50">
+                  <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-gray-100">
                     <span className="text-3xl">🏷️</span>
                   </div>
                   <p className="text-gray-500 mb-2">出品中の商品がありません</p>
@@ -260,17 +308,30 @@ export const MyPage: React.FC = () => {
             </div>
 
             {/* 出品者登録 */}
-            {!sellerProfile?.stripe_account_id && (
-              <div className="border rounded-lg p-8 text-center bg-gray-50">
-                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-gray-100">
+            {!sellerProfile?.stripe_onboarding_completed && (
+              <div className="p-8 text-center bg-gray-50">
+                <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-gray-100">
                   <span className="text-3xl">💳</span>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  出品者登録をして出品を始めましょう
-                </h3>
-                <p className="text-sm text-gray-500 mb-6">
-                  Stripeアカウントを接続して、物件情報の出品を始めることができます
-                </p>
+                {!sellerProfile?.stripe_account_id ? (
+                  <>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      出品者登録をして出品を始めましょう
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                      Stripeアカウントを接続して、物件情報の出品を始めることができます
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Stripeアカウントの登録を完了させてください
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                      登録作業を完了すると、物件情報の出品が可能になります
+                    </p>
+                  </>
+                )}
                 <StripeConnect 
                   userId={userProfile.id}
                   stripeAccountId={sellerProfile?.stripe_account_id ?? null}
@@ -278,6 +339,29 @@ export const MyPage: React.FC = () => {
                   onboardingCompleted={sellerProfile?.stripe_onboarding_completed ?? false}
                   isLoading={isLoadingStripe}
                 />
+              </div>
+            )}
+
+            {/* Stripeダッシュボード */}
+            {sellerProfile?.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
+              <div className="flex justify-end">
+                <button
+                  onClick={openDashboard}
+                  disabled={isLoadingDashboard}
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 disabled:text-gray-400"
+                >
+                  {isLoadingDashboard ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      読み込み中...
+                    </>
+                  ) : (
+                    <>
+                      Stripeダッシュボードを開く
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>

@@ -45,6 +45,7 @@ export interface Property {
   construction_company_id?: number;
   created_at?: string;
   updated_at?: string;
+  images?: Image[];
 }
 
 export interface PropertyDetails extends Property {
