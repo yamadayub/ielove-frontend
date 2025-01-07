@@ -23,6 +23,19 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   const shouldBlur = !userId || !(isPurchased || isOwner);
   const showMessage = !userId || !(isPurchased || isOwner);
 
+  // 部屋ごとに製品をグループ化
+  const productsByRoom = products?.reduce((acc, product) => {
+    const roomId = product.room_id;
+    if (!acc[roomId]) {
+      acc[roomId] = {
+        roomName: product.room_name,
+        products: []
+      };
+    }
+    acc[roomId].products.push(product);
+    return acc;
+  }, {} as { [key: number]: { roomName: string; products: ProductDetails[] } });
+
   return (
     <div className="mt-8">
       {showMessage && (
@@ -30,8 +43,9 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
           仕様の詳細情報は詳細情報を購入すると表示されます
         </p>
       )}
-      <div className="divide-y divide-gray-200">
-        {shouldBlur && (
+      
+      {shouldBlur ? (
+        <div className="divide-y divide-gray-200">
           <ProductDetailTile
             key="sample"
             product={{
@@ -67,24 +81,38 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
             propertyId={propertyId}
             shouldBlur={false}
           />
-        )}
-        {products?.map(product => {
-          const mainImage = images?.find(img => 
-            img.product_id === product.id && 
-            img.image_type === 'MAIN'
-          );
+        </div>
+      ) : (
+        <div className="space-y-8">
+          {Object.entries(productsByRoom || {}).map(([roomId, { roomName, products: roomProducts }]) => (
+            <div key={roomId} className="space-y-4">
+              <div className="border-b border-gray-900/10 pb-1 px-4">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {roomName || '部屋名なし'}
+                </h3>
+              </div>
+              <div className="pl-4 divide-y divide-gray-200">
+                {roomProducts.map(product => {
+                  const mainImage = images?.find(img => 
+                    img.product_id === product.id && 
+                    img.image_type === 'MAIN'
+                  );
 
-          return (
-            <ProductDetailTile
-              key={product.id}
-              product={product}
-              mainImage={mainImage}
-              propertyId={propertyId}
-              shouldBlur={shouldBlur}
-            />
-          );
-        })}
-      </div>
+                  return (
+                    <ProductDetailTile
+                      key={product.id}
+                      product={product}
+                      mainImage={mainImage}
+                      propertyId={propertyId}
+                      shouldBlur={shouldBlur}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }; 

@@ -72,10 +72,11 @@ export const ENDPOINTS = {
     LISTING: {
         GET_ALL: '/api/listings',
         GET_ONE: (id) => `/api/listings/${id}`,
-        GET_BY_PROPERTY: (propertyId) => `/api/listings/by-property/${propertyId}`,
+        GET_BY_PROPERTY: (propertyId) => `/api/listings/property/${propertyId}`,
         CREATE: '/api/listings',
         UPDATE: (id) => `/api/listings/${id}`,
         DELETE: (id) => `/api/listings/${id}`,
+        GET_MY_LISTINGS: '/api/listings/my-listings',
     },
 
     CONSTANTS: {

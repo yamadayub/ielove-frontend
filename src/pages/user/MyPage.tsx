@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, useUser as useClerkUser } from '@clerk/clerk-react';
 import { useUser } from '../../features/user/hooks/useUser';
 import { useSellerProfile, useStripeStatus } from '../../features/seller/hooks/useSeller';
 import { useUserProperties } from '../../features/property/hooks/useProperties';
@@ -14,11 +14,16 @@ import { useAuthenticatedAxios } from '../../features/shared/api/axios';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import { PurchasedProperties } from '../../features/purchase/components/PurchasedProperties';
 import { useState } from 'react';
+import { useMyPurchases } from '../../features/purchase/hooks/useMyPurchases';
+import { useMyListings } from '../../features/listing/hooks/useListing';
 
 export const MyPage: React.FC = () => {
   const { userId: clerkUserId } = useAuth();
+  const { user: clerkUser } = useClerkUser();
   const { data: userProfile, isLoading: isUserLoading, error: userError } = useUser(clerkUserId);
   const { data: properties, isLoading: isLoadingProperties } = useUserProperties(userProfile?.id);
+  const { data: purchaseData } = useMyPurchases();
+  const { data: listings } = useMyListings();
   const { data: sellerProfile, isLoading: isLoadingProfile } = useSellerProfile(userProfile?.id);
   const { data: stripeStatus, isLoading: isLoadingStripe } = useStripeStatus(
     userProfile?.id,
@@ -102,81 +107,84 @@ export const MyPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto bg-white">
       {/* プロフィールヘッダー */}
-      <div className="px-4 py-8 border-b">
-        <div className="flex items-start gap-8">
+      <div className="px-4 py-4 border-b">
+        <div className="flex items-start gap-4">
           {/* プロフィール画像 */}
-          <div className="w-32 h-32 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
-            {userProfile.image_url ? (
+          <div className="w-20 h-20 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden border-4 border-double border-gray-100">
+            {clerkUser?.imageUrl ? (
               <img
-                src={userProfile.image_url}
-                alt={userProfile.name}
+                src={clerkUser.imageUrl}
+                alt={clerkUser.firstName || 'プロフィール画像'}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
-                <span className="text-4xl">👤</span>
+                <span className="text-2xl">👤</span>
               </div>
             )}
           </div>
 
           {/* プロフィール情報 */}
           <div className="flex-1">
-            <div className="flex items-center gap-4 mb-4">
-              <h1 className="text-xl font-semibold">{userProfile.name}</h1>
-              <div className="flex gap-2">
-                <Link
-                  to="/settings"
-                  className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  プロフィールを編集
-                </Link>
-                {sellerProfile?.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
-                  <button
-                    onClick={openDashboard}
-                    disabled={isLoadingDashboard}
-                    className="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 disabled:text-gray-400"
-                  >
-                    {isLoadingDashboard ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        読み込み中...
-                      </>
-                    ) : (
-                      <>
-                        Stripeダッシュボード
-                        <ArrowRight className="ml-2 h-4 w-4 inline" />
-                      </>
-                    )}
-                  </button>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-lg font-semibold">{userProfile.name}</h1>
+              <Link
+                to="/settings"
+                className="p-1 text-gray-700 hover:text-blue-600"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </Link>
+            </div>
+
+            <p className="text-xs text-gray-600 mb-1">{userProfile.email}</p>
+
+            {sellerProfile?.stripe_account_id && sellerProfile.stripe_onboarding_completed && (
+              <button
+                onClick={openDashboard}
+                disabled={isLoadingDashboard}
+                className="inline-flex items-center text-xs font-medium text-gray-700 hover:text-blue-600 disabled:text-gray-400"
+              >
+                {isLoadingDashboard ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    読み込み中...
+                  </>
+                ) : (
+                  <>
+                    Stripeダッシュボード
+                    <ArrowRight className="ml-1 h-3 w-3 inline" />
+                  </>
                 )}
-              </div>
-            </div>
-
-            <div className="flex gap-8 mb-4">
-              <div className="text-center">
-                <span className="font-semibold">{properties?.length || 0}</span>
-                <span className="text-gray-500 text-sm block">登録物件</span>
-              </div>
-              <div className="text-center">
-                <span className="font-semibold">0</span>
-                <span className="text-gray-500 text-sm block">出品中</span>
-              </div>
-              <div className="text-center">
-                <span className="font-semibold">0</span>
-                <span className="text-gray-500 text-sm block">購入済み</span>
-              </div>
-            </div>
-
-            <p className="text-sm text-gray-600">{userProfile.email}</p>
+              </button>
+            )}
           </div>
+        </div>
+      </div>
+
+      {/* 統計情報 */}
+      <div className="grid grid-cols-3 gap-2 px-4 py-3 bg-gray-50">
+        <div className="text-center py-2">
+          <span className="block font-semibold text-2xl text-gray-900">{properties?.length || 0}</span>
+          <span className="text-gray-600 text-xs">登録物件</span>
+        </div>
+        <div className="text-center py-2">
+          <span className="block font-semibold text-2xl text-gray-900">{listings?.length || 0}</span>
+          <span className="text-gray-600 text-xs">出品中</span>
+        </div>
+        <div className="text-center py-2">
+          <span className="block font-semibold text-2xl text-gray-900">{purchaseData?.transactions?.length || 0}</span>
+          <span className="text-gray-600 text-xs">購入済み</span>
         </div>
       </div>
 
       {/* タブナビゲーション */}
       <div className="border-b">
-        <div className="flex justify-center gap-12">
+        <div className="flex justify-center gap-8">
           <button 
-            className={`px-4 py-4 text-sm font-medium ${
+            className={`px-4 py-2 text-sm font-medium ${
               activeTab === 'buyer' 
                 ? 'border-t-2 border-black text-black' 
                 : 'text-gray-500 hover:text-black'
@@ -186,7 +194,7 @@ export const MyPage: React.FC = () => {
             購入履歴
           </button>
           <button 
-            className={`px-4 py-4 text-sm font-medium ${
+            className={`px-4 py-2 text-sm font-medium ${
               activeTab === 'seller' 
                 ? 'border-t-2 border-black text-black' 
                 : 'text-gray-500 hover:text-black'

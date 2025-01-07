@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useListings } from '../hooks/useListing';
+import { useMyListings } from '../hooks/useListing';
 import { ListingItem } from '../types/listing_types';
 import { Loader2, X } from 'lucide-react';
 import { useAuthenticatedAxios } from '../../shared/api/axios';
@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 
 export const ListingList: React.FC = () => {
-  const { data: listings, isLoading, error } = useListings();
+  const { data: listings, isLoading, error } = useMyListings();
 
   if (isLoading) {
     return (
