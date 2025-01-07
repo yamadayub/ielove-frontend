@@ -12,6 +12,9 @@ export const CheckoutSuccess: React.FC = () => {
   const currentPropertyId = useStore((state) => state.currentPropertyId);
 
   useEffect(() => {
+    console.log('Current Property ID:', currentPropertyId);
+    console.log('Current Checkout Listing ID:', currentCheckoutListingId);
+    
     // 購入完了を記録（IDがある場合のみ）
     if (currentCheckoutListingId) {
       completePurchase(currentCheckoutListingId.toString());
@@ -19,9 +22,11 @@ export const CheckoutSuccess: React.FC = () => {
     
     // 3秒後に物件ページに遷移（ProductDetailsタブを表示）
     const timer = setTimeout(() => {
+      console.log('Redirecting with Property ID:', currentPropertyId);
       if (currentPropertyId) {
         navigate(`/property/${currentPropertyId}?tab=products`);
       } else {
+        console.log('No Property ID found, redirecting to mypage');
         navigate('/mypage');
       }
     }, 3000);

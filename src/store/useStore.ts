@@ -100,6 +100,8 @@ export const useStore = create<Store>()(
         user: state.user,
         cart: state.cart,
         isListView: state.isListView,
+        currentPropertyId: state.currentPropertyId,
+        currentCheckoutListingId: state.currentCheckoutListingId,
       }),
     }
   )
