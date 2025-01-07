@@ -62,6 +62,7 @@ export const useStore = create<Store>()(
           };
 
           return {
+            ...state,
             user: {
               ...state.user,
               purchasedPropertyIds: [...state.user.purchasedPropertyIds, propertyId],
