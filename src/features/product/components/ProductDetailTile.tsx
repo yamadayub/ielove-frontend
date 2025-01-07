@@ -30,6 +30,13 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
             <div className="relative flex-shrink-0 w-24 h-24">
               {mainImage ? (
                 <>
+                  <div className="absolute inset-0 z-10">
+                    <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
+                      <p className="text-xs font-medium text-white truncate">
+                        {product.product_category_name}
+                      </p>
+                    </div>
+                  </div>
                   <img
                     src={mainImage.url}
                     alt={product.name}
@@ -87,10 +94,6 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
               <p className="text-xs text-gray-600">
                 <span className="font-medium">設置場所:</span>{' '}
                 <span className={blurClass}>{product.room_name}</span>
-              </p>
-              <p className="text-xs text-gray-600">
-                <span className="font-medium">カテゴリ:</span>{' '}
-                <span className={blurClass}>{product.product_category_name}</span>
               </p>
             </div>
           </div>
