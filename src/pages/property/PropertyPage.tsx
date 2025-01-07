@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useSearchParams } from 'react-router-dom';
 import { Loader2, LayoutGrid, DoorOpen, FileText } from 'lucide-react';
 import { useProperty } from '../../features/property/hooks/useProperty';
 import { useImages } from '../../features/image/hooks/useImages';
@@ -21,10 +21,11 @@ type TabType = 'gallery' | 'rooms' | 'products';
 
 export const PropertyPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = (searchParams.get('tab') as TabType) || 'products';
   const axios = useAuthenticatedAxios();
   const { userId: clerkUserId } = useAuth();
   const { data: userProfile } = useUser(clerkUserId);
-  const [activeTab, setActiveTab] = useState<TabType>('products');
 
   if (!id) {
     return <Navigate to="/" replace />;
@@ -103,7 +104,7 @@ export const PropertyPage = () => {
           <div className="mt-8 border-b border-gray-200">
             <nav className="-mb-px flex">
               <button
-                onClick={() => setActiveTab('products')}
+                onClick={() => setSearchParams({ tab: 'products' })}
                 className={`
                   flex-1 flex justify-center pb-4 border-b-2 font-medium
                   ${activeTab === 'products'
@@ -116,7 +117,7 @@ export const PropertyPage = () => {
                 <FileText className="h-6 w-6" />
               </button>
               <button
-                onClick={() => setActiveTab('gallery')}
+                onClick={() => setSearchParams({ tab: 'gallery' })}
                 className={`
                   flex-1 flex justify-center pb-4 border-b-2 font-medium
                   ${activeTab === 'gallery'
@@ -129,7 +130,7 @@ export const PropertyPage = () => {
                 <LayoutGrid className="h-6 w-6" />
               </button>
               <button
-                onClick={() => setActiveTab('rooms')}
+                onClick={() => setSearchParams({ tab: 'rooms' })}
                 className={`
                   flex-1 flex justify-center pb-4 border-b-2 font-medium
                   ${activeTab === 'rooms'

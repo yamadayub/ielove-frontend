@@ -9,6 +9,7 @@ export const CheckoutSuccess: React.FC = () => {
   const { isSignedIn } = useAuth();
   const completePurchase = useStore((state) => state.completePurchase);
   const currentCheckoutListingId = useStore((state) => state.currentCheckoutListingId);
+  const currentPropertyId = useStore((state) => state.currentPropertyId);
 
   useEffect(() => {
     // 購入完了を記録（IDがある場合のみ）
@@ -16,13 +17,17 @@ export const CheckoutSuccess: React.FC = () => {
       completePurchase(currentCheckoutListingId.toString());
     }
     
-    // 3秒後にマイページに遷移（IDの有無に関わらず）
+    // 3秒後に物件ページに遷移（ProductDetailsタブを表示）
     const timer = setTimeout(() => {
-      navigate('/mypage');
+      if (currentPropertyId) {
+        navigate(`/property/${currentPropertyId}?tab=products`);
+      } else {
+        navigate('/mypage');
+      }
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [currentCheckoutListingId, completePurchase, navigate]);
+  }, [currentCheckoutListingId, currentPropertyId, completePurchase, navigate]);
 
   if (!isSignedIn) {
     navigate('/sign-in');
@@ -40,7 +45,7 @@ export const CheckoutSuccess: React.FC = () => {
           物件仕様の詳細が確認できるようになりました。
         </p>
         <p className="mt-2 text-gray-500">
-          まもなくマイページに移動します...
+          まもなく物件詳細ページに移動します...
         </p>
       </div>
     </div>

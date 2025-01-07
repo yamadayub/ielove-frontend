@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import { CheckCircle, Loader2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 import { useStore } from '../../../store/useStore';
+import { Loader2 } from 'lucide-react';
 
 interface PurchaseButtonProps {
   propertyId: number;
@@ -25,67 +24,72 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
   const setCurrentCheckoutListingId = useStore((state) => state.setCurrentCheckoutListingId);
+  const setCurrentPropertyId = useStore((state) => state.setCurrentPropertyId);
 
-  const handlePurchaseClick = () => {
+  const handlePurchase = () => {
     if (!isSignedIn) {
-      const currentPath = encodeURIComponent(window.location.pathname);
-      navigate(`/auth?redirect_url=${currentPath}`);
+      const currentPath = window.location.pathname + window.location.search;
+      navigate(`/sign-in?redirect_url=${encodeURIComponent(currentPath)}`);
       return;
     }
 
     if (listingId) {
       setCurrentCheckoutListingId(listingId);
+      setCurrentPropertyId(propertyId);
       navigate('/checkout');
-    } else {
-      toast.error('この物件は現在購入できません');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="w-full py-3 px-4 rounded-lg bg-gray-50 border border-gray-200">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
-        </div>
-      </div>
-    );
-  }
-
-  if (isOwner) {
-    return (
-      <div className="w-full py-3 px-4 rounded-lg bg-blue-100 border border-blue-200">
-        <div className="flex items-center justify-center space-x-2">
-          <CheckCircle className="h-5 w-5 text-blue-600" />
-          <span className="text-blue-800 font-medium">
-            登録済物件
-          </span>
-        </div>
-      </div>
+      <button
+        disabled
+        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400"
+      >
+        <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+      </button>
     );
   }
 
   if (isPurchased) {
     return (
-      <div className="w-full py-3 px-4 rounded-lg bg-green-100 border border-green-200">
-        <div className="flex items-center justify-center space-x-2">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <span className="text-green-800 font-medium">
-            詳細仕様購入済み
-          </span>
-        </div>
-      </div>
+      <button
+        disabled
+        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600"
+      >
+        購入済み
+      </button>
+    );
+  }
+
+  if (isOwner) {
+    return (
+      <button
+        disabled
+        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400"
+      >
+        所有者
+      </button>
+    );
+  }
+
+  if (!price) {
+    return (
+      <button
+        disabled
+        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400"
+      >
+        準備中
+      </button>
     );
   }
 
   return (
     <button
-      onClick={handlePurchaseClick}
-      disabled={isLoading}
-      className="w-full py-2.5 md:py-3 px-4 rounded-lg flex items-center justify-center space-x-2 text-sm md:text-base bg-blue-600 hover:bg-blue-700 text-white transition-colors disabled:bg-blue-400"
+      onClick={handlePurchase}
+      className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
     >
-      <span className="font-medium">
-        {price ? `¥${price.toLocaleString()}で詳細情報を購入する` : '物件情報を購入する'}
-      </span>
+      ¥{price.toLocaleString()}で購入
     </button>
   );
 }; 

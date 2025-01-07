@@ -1,4 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
+import { useStore } from '../../../store/useStore';
 import { Property } from '../types/property_types';
 import { PurchaseButton } from '../../purchase/components/PurchaseButton';
 
@@ -19,6 +22,24 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   price,
   isOwner
 }) => {
+  const navigate = useNavigate();
+  const { isSignedIn } = useAuth();
+  const setCurrentCheckoutListingId = useStore((state) => state.setCurrentCheckoutListingId);
+
+  const handlePurchase = () => {
+    if (!isSignedIn) {
+      // 現在のURLをエンコードしてクエリパラメータとして渡す
+      const currentPath = window.location.pathname + window.location.search;
+      navigate(`/sign-in?redirect_url=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+
+    if (listingId) {
+      setCurrentCheckoutListingId(listingId);
+      navigate('/checkout');
+    }
+  };
+
   return (
     <div className="bg-white shadow-sm overflow-hidden">
       <div className="px-4 py-5 sm:p-6">

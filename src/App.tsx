@@ -26,6 +26,7 @@ import { Toaster } from 'react-hot-toast';
 import { CheckoutSuccess } from './pages/purchase/CheckoutSuccess';
 import { CheckoutCancel } from './pages/purchase/CheckoutCancel';
 import { PropertyDetailPage } from './pages/property/PropertyDetailPage';
+import { OnboardingCompletePage } from './pages/seller/OnboardingCompletePage';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -119,6 +120,7 @@ export const App = () => {
                     </ProtectedRoute>
                   } />
                   <Route path="/listings/:id/edit" element={<EditListingPage />} />
+                  <Route path="/seller/onboarding/complete" element={<OnboardingCompletePage />} />
                 </Routes>
               </div>
               <BottomNav />
