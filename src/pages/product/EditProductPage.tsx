@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, X, Loader2 } from 'lucide-react';
 import { ImageUploader } from '../../features/image/components/ImageUploader';
 import { useProductDetails } from '../../features/product/hooks/useProductDetails';
+import { useProductCategories } from '../../features/product/hooks/useProductCategories';
 import { useImages } from '../../features/image/hooks/useImages';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/clerk-react';
@@ -115,6 +116,7 @@ export const EditProductPage: React.FC = () => {
   } = useImages({
     productId: productId || ''
   });
+  const { data: categories } = useProductCategories();
 
   // 製品の画像のみをフィルタリング
   const filteredProductImages = productImages?.filter(img => img.product_id === Number(productId));
@@ -510,6 +512,26 @@ export const EditProductPage: React.FC = () => {
                   })) || []}
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="product_category_id" className="block text-sm font-medium text-gray-700">
+                カテゴリ
+              </label>
+              <select
+                id="product_category_id"
+                name="product_category_id"
+                value={productForm.product_category_id || ''}
+                onChange={(e) => setProductForm(prev => ({ ...prev, product_category_id: Number(e.target.value) }))}
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+              >
+                <option value="">カテゴリを選択</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

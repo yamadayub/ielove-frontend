@@ -36,4 +36,9 @@ export interface ProductDetails extends Product {
   specifications: ProductSpecification[];
   dimensions: ProductDimension[];
   images: Image[];
+}
+
+export interface ProductCategory {
+  id: number
+  name: string
 } 

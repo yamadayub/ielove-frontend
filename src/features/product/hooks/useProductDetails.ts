@@ -16,6 +16,7 @@ export const useProductDetails = (productId: string | undefined) => {
     queryFn: async () => {
       if (!productId) throw new Error('Product ID is required')
       const { data } = await axios.get(ENDPOINTS.GET_PRODUCT_DETAILS(productId))
+      console.log('Product details response:', data)
       return data
     },
     enabled: !!productId,
