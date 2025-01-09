@@ -8,14 +8,13 @@ interface ImageUploaderProps {
   onImageUploaded: (imageData: {
     id: number;
     url: string;
-    image_type: 'MAIN' | 'SUB';
+    image_type: 'MAIN' | 'SUB' | 'PAID';
     status: 'pending' | 'completed';
   }) => void;
   onError: (error: string) => void;
   propertyId?: number;
   roomId?: number;
   productId?: number;
-  existingImages?: Array<{ id: number; image_type: 'MAIN' | 'SUB'; url: string }>;
   clerkUserId?: string;
 }
 
@@ -31,21 +30,26 @@ interface UploadProgressType {
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1秒
 
+const IMAGE_TYPE_LABELS = {
+  'MAIN': 'メイン画像',
+  'SUB': 'サブ画像',
+  'PAID': '有料画像'
+} as const;
+
+type ImageType = keyof typeof IMAGE_TYPE_LABELS;
+
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
   onImageUploaded,
   onError,
   propertyId,
   roomId,
   productId,
-  existingImages = [],
   clerkUserId
 }) => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgressType>({});
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const axios = useAuthenticatedAxios();
-
-  const hasMainImage = existingImages.some(img => img.image_type === 'MAIN');
 
   const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -123,6 +127,39 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     );
   };
 
+  const handleImageTypeChange = async (imageId: number, newType: ImageType) => {
+    if (!clerkUserId) {
+      throw new Error('ユーザーIDが設定されていません');
+    }
+
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.UPDATE_IMAGE_TYPE(imageId)}`,
+        { image_type: newType },
+        {
+          headers: {
+            'x-clerk-user-id': clerkUserId
+          }
+        }
+      );
+      onImageUploaded({
+        id: imageId,
+        url: existingImages.find(img => img.id === imageId)?.url || '',
+        image_type: newType,
+        status: 'completed'
+      });
+    } catch (error) {
+      console.error('画像タイプの更新に失敗しました:', error);
+      if (error instanceof AxiosError && error.response?.data) {
+        onError(`画像タイプの更新に失敗しました: ${error.response.data.message || '不明なエラー'}`);
+      } else if (error instanceof Error) {
+        onError(error.message);
+      } else {
+        onError('画像タイプの更新に失敗しました');
+      }
+    }
+  };
+
   const uploadImage = useCallback(async (file: File) => {
     const fileId = `${file.name}-${Date.now()}`;
     
@@ -150,7 +187,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         property_id: propertyId,
         room_id: roomId,
         product_id: productId,
-        image_type: hasMainImage ? 'SUB' : 'MAIN'
+        image_type: 'SUB'  // デフォルトでサブ画像としてアップロード
       });
 
       // 2. S3へのアップロード（リトライロジック付き）
@@ -191,7 +228,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       onImageUploaded({
         id: presignedData.image_id,
         url: presignedData.image_url,
-        image_type: hasMainImage ? 'SUB' : 'MAIN',
+        image_type: 'SUB',  // デフォルトでサブ画像として通知
         status: 'completed'
       });
 
@@ -216,7 +253,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         onError('画像のアップロードに失敗しました');
       }
     }
-  }, [axios, propertyId, roomId, productId, hasMainImage, onImageUploaded, onError, clerkUserId]);
+  }, [axios, propertyId, roomId, productId, onImageUploaded, onError, clerkUserId]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();

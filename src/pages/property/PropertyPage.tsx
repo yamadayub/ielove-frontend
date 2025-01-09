@@ -16,6 +16,7 @@ import { useAuthenticatedAxios } from '../../features/shared/api/axios';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import { useAuth } from '@clerk/clerk-react';
 import { useUser } from '../../features/user/hooks/useUser';
+import type { ProductDetails } from '../../features/product/types/product_types';
 
 type TabType = 'gallery' | 'rooms' | 'products';
 
@@ -50,8 +51,10 @@ export const PropertyPage = () => {
   const { data: products, isLoading: isLoadingProducts } = useQuery({
     queryKey: ['products', id],
     queryFn: async () => {
-      const { data } = await axios.get(`/api/products/property/${id}`);
-      return data;
+      console.log('Fetching products for property:', id);
+      const { data } = await axios.get(ENDPOINTS.GET_PRODUCTS_BY_PROPERTY(id));
+      console.log('Products response:', data);
+      return data as ProductDetails[];
     },
     enabled: !!id
   });
@@ -74,6 +77,8 @@ export const PropertyPage = () => {
     );
   }
 
+  console.log('Products data:', products);
+
   if (!property) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] px-4">
@@ -89,8 +94,13 @@ export const PropertyPage = () => {
     <div>
       <Breadcrumb />
       <div className="max-w-7xl mx-auto">
-        <PropertyGallery images={propertyImages} propertyName={property.name} />
-        <div className="pb-8">
+        <PropertyGallery 
+          images={propertyImages} 
+          propertyName={property.name}
+          isPurchased={purchaseStatus?.isPurchased || false}
+          isOwner={isOwner}
+        />
+        <div className="px-4 pt-4 pb-8">
           <PropertyInfo 
             property={property}
             isPurchased={purchaseStatus?.isPurchased}
@@ -151,7 +161,7 @@ export const PropertyPage = () => {
               propertyId={id}
               products={products || []}
               images={images || []}
-              isPurchased={purchaseStatus?.isPurchased}
+              isPurchased={purchaseStatus?.isPurchased || false}
               isOwner={isOwner}
             />
           )}
@@ -160,6 +170,8 @@ export const PropertyPage = () => {
               propertyId={id}
               images={images || []}
               rooms={rooms || []}
+              isPurchased={purchaseStatus?.isPurchased || false}
+              isOwner={isOwner}
             />
           )}
           {activeTab === 'rooms' && (
@@ -173,4 +185,4 @@ export const PropertyPage = () => {
       </div>
     </div>
   );
-};
+}

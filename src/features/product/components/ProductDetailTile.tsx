@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import type { Image } from '../../image/types/image_types';
 import type { ProductDetails } from '../types/product_types';
 
@@ -17,17 +18,18 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
   shouldBlur = false,
 }) => {
   const blurClass = shouldBlur ? 'blur-[6px]' : '';
+  const productUrl = `/property/${propertyId}/room/${product.room_id}/product/${product.id}`;
 
   return (
-    <div className="w-full border-b border-gray-200 py-4">
-      <div className="flex gap-4">
+    <Link 
+      to={productUrl}
+      className="group block w-full border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors"
+    >
+      <div className="flex gap-4 items-start">
         {/* 製品画像 */}
-        <Link 
-          to={`/property/${propertyId}/room/${product.room_id}/product/${product.id}`}
-          className="block w-24 h-24 flex-shrink-0"
-        >
+        <div className="block w-24 h-24 flex-shrink-0">
           <div className="flex items-start">
-            <div className="relative flex-shrink-0 w-24 h-24">
+            <div className="relative flex-shrink-0 w-24 h-24 group-hover:ring-2 group-hover:ring-gray-300 transition-all rounded-lg overflow-hidden">
               {mainImage ? (
                 <>
                   <div className="absolute inset-0 z-10">
@@ -55,18 +57,13 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
               )}
             </div>
           </div>
-        </Link>
+        </div>
 
         {/* 製品情報 */}
         <div className="flex-grow">
           <div>
-            <h3 className="text-base font-medium">
-              <Link 
-                to={`/property/${propertyId}/room/${product.room_id}/product/${product.id}`}
-                className="hover:text-blue-600"
-              >
-                {product.name}
-              </Link>
+            <h3 className="text-base font-medium group-hover:text-blue-600 transition-colors">
+              {product.name}
             </h3>
             <div className="mt-1 space-y-0.5">
               <p className="text-xs text-gray-600">
@@ -80,15 +77,19 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
               {product.catalog_url && (
                 <p className="text-xs text-gray-600">
                   <span className="font-medium">カタログURL:</span>{' '}
-                  <a
-                    href={shouldBlur ? '#' : product.catalog_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
                     className={`text-blue-600 hover:text-blue-800 ${shouldBlur ? 'pointer-events-none' : ''}`}
-                    onClick={(e) => shouldBlur && e.preventDefault()}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!shouldBlur) {
+                        window.open(product.catalog_url, '_blank');
+                      }
+                    }}
                   >
                     <span className={blurClass}>カタログを見る</span>
-                  </a>
+                  </button>
                 </p>
               )}
               <p className="text-xs text-gray-600">
@@ -131,7 +132,12 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
             </div>
           )}
         </div>
+
+        {/* 矢印アイコン */}
+        <div className="flex-shrink-0 self-center">
+          <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }; 

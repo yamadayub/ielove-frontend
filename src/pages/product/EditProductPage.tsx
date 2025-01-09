@@ -32,6 +32,15 @@ interface DeleteModalProps {
   message: string;
 }
 
+// 型定義を追加
+type ImageType = 'MAIN' | 'SUB' | 'PAID';
+
+const IMAGE_TYPE_LABELS = {
+  'MAIN': 'メイン画像',
+  'SUB': 'サブ画像',
+  'PAID': '有料画像'
+} as const;
+
 const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
   isOpen,
   onClose,
@@ -366,10 +375,25 @@ export const EditProductPage: React.FC = () => {
     }
   };
 
+  const handleImageTypeChange = async (imageId: number, newType: ImageType) => {
+    try {
+      await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), newType);
+      refetchImages();
+    } catch (error) {
+      console.error('Failed to update image type:', error);
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`画像タイプの更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('画像タイプの更新に失敗しました');
+      }
+    }
+  };
+
   const handleImageUploaded = (imageData: {
     id: number;
     url: string;
-    image_type: 'MAIN' | 'SUB';
+    image_type: ImageType;
     status: 'pending' | 'completed';
   }) => {
     refetchImages();
@@ -391,26 +415,6 @@ export const EditProductPage: React.FC = () => {
     } catch (error) {
       console.error('画像の削除に失敗しました:', error);
       setError('画像の削除に失敗しました');
-    }
-  };
-
-  const handleImageTypeChange = async (imageId: number, newType: 'MAIN' | 'SUB') => {
-    if (!userId) return;
-
-    try {
-      await axios.patch(
-        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.UPDATE_IMAGE(imageId)}`,
-        { image_type: newType },
-        {
-          headers: {
-            'x-clerk-user-id': userId
-          }
-        }
-      );
-      refetchImages();
-    } catch (error) {
-      console.error('画像タイプの更新に失敗しました:', error);
-      setError('画像タイプの更新に失敗しました');
     }
   };
 
@@ -487,11 +491,14 @@ export const EditProductPage: React.FC = () => {
                       <div className="mt-2">
                         <select
                           value={image.image_type || 'SUB'}
-                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'MAIN' | 'SUB')}
+                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as ImageType)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
                         >
-                          <option value="MAIN">メイン画像</option>
-                          <option value="SUB">サブ画像</option>
+                          {Object.entries(IMAGE_TYPE_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -500,16 +507,11 @@ export const EditProductPage: React.FC = () => {
 
                 <ImageUploader
                   onImageUploaded={handleImageUploaded}
-                  onError={(message: string) => setError(message)}
-                  clerkUserId={userId}
+                  onError={setError}
                   productId={Number(productId)}
                   roomId={Number(roomId)}
                   propertyId={Number(propertyId)}
-                  existingImages={filteredProductImages?.map(img => ({
-                    id: img.id,
-                    image_type: img.image_type || 'SUB',
-                    url: img.url
-                  })) || []}
+                  clerkUserId={userId}
                 />
               </div>
             </div>

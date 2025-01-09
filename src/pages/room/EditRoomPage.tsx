@@ -23,6 +23,15 @@ interface ApiError {
   details?: Record<string, string>;
 }
 
+// 型定義を追加
+type ImageType = 'MAIN' | 'SUB' | 'PAID';
+
+const IMAGE_TYPE_LABELS = {
+  'MAIN': 'メイン画像',
+  'SUB': 'サブ画像',
+  'PAID': '有料画像'
+} as const;
+
 export const EditRoomPage: React.FC = () => {
   const { propertyId, roomId } = useParams<{ propertyId: string; roomId: string }>();
   const navigate = useNavigate();
@@ -104,7 +113,7 @@ export const EditRoomPage: React.FC = () => {
   const handleImageUploaded = (imageData: {
     id: number;
     url: string;
-    image_type: 'MAIN' | 'SUB';
+    image_type: ImageType;
     status: 'pending' | 'completed';
   }) => {
     refetchImages();
@@ -125,9 +134,9 @@ export const EditRoomPage: React.FC = () => {
     }
   };
 
-  const handleImageTypeChange = async (imageId: number, newType: 'MAIN' | 'SUB') => {
+  const handleImageTypeChange = async (imageId: number, newType: ImageType) => {
     try {
-      await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), { image_type: newType });
+      await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), newType);
       refetchImages();
     } catch (error) {
       console.error('Failed to update image type:', error);
@@ -241,11 +250,14 @@ export const EditRoomPage: React.FC = () => {
                       <div className="mt-2">
                         <select
                           value={image.image_type || 'SUB'}
-                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'MAIN' | 'SUB')}
+                          onChange={(e) => handleImageTypeChange(image.id, e.target.value as ImageType)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
                         >
-                          <option value="MAIN">メイン画像</option>
-                          <option value="SUB">サブ画像</option>
+                          {Object.entries(IMAGE_TYPE_LABELS).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -256,13 +268,6 @@ export const EditRoomPage: React.FC = () => {
                   onError={setError}
                   roomId={Number(roomId)}
                   clerkUserId={userId || undefined}
-                  existingImages={filteredRoomImages
-                    ?.filter(img => img.image_type === 'MAIN' || img.image_type === 'SUB')
-                    .map(img => ({
-                      id: img.id,
-                      image_type: img.image_type as 'MAIN' | 'SUB',
-                      url: img.url
-                    }))}
                 />
               </div>
             </div>

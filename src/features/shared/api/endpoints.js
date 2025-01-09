@@ -26,6 +26,7 @@ export const ENDPOINTS = {
     UPDATE_PRODUCT: (productId) => `/api/products/${productId}`,
     DELETE_PRODUCT: (productId) => `/api/products/${productId}`,
     GET_PRODUCT_DETAILS: (productId) => `/api/products/${productId}/details`,
+    GET_PRODUCTS_BY_PROPERTY: (propertyId) => `/api/products/property/${propertyId}`,
     
     // Product Specifications
     CREATE_PRODUCT_SPECIFICATION: (productId) => `/api/products/${productId}/specifications`,
@@ -46,6 +47,7 @@ export const ENDPOINTS = {
     DELETE_IMAGE: (imageId) => `/api/images/${imageId}`,
     GET_IMAGE: (imageId) => `/api/images/${imageId}`,
     UPDATE_IMAGE_STATUS: (imageId) => `/api/images/${imageId}/status`,
+    UPDATE_IMAGE_TYPE: (imageId) => `/api/images/${imageId}/type`,
     GET_IMAGES: '/api/images',
     SET_MAIN_IMAGE: (imageId) => `/api/images/${imageId}/set-main`,
 

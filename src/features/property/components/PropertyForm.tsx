@@ -31,6 +31,15 @@ const PREFECTURES = [
   '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
 ] as const;
 
+// 型定義を更新
+type ImageType = 'MAIN' | 'SUB' | 'PAID';
+
+const IMAGE_TYPE_LABELS = {
+  'MAIN': 'メイン画像',
+  'SUB': 'サブ画像',
+  'PAID': '有料画像'
+} as const;
+
 export const PropertyForm: React.FC<PropertyFormProps> = ({
   onSubmit,
   initialData = {},
@@ -128,13 +137,13 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     }
   };
 
-  const handleImageTypeChange = async (imageId: number, newType: 'MAIN' | 'SUB') => {
+  const handleImageTypeChange = async (imageId: number, newType: ImageType) => {
     if (!clerkUserId) return;
 
     try {
       await axios.patch(
-        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.UPDATE_IMAGE(imageId)}`,
-        { image_type: newType },
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.UPDATE_IMAGE_TYPE(imageId)}`,
+        newType,
         {
           headers: {
             'x-clerk-user-id': clerkUserId
@@ -145,14 +154,18 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       onImageChange?.();
     } catch (error) {
       console.error('画像タイプの更新に失敗しました:', error);
-      setError('画像タイプの更新に失敗しました');
+      if (error instanceof AxiosError && error.response?.data) {
+        setError(`画像タイプの更新に失敗しました: ${error.response.data.detail || JSON.stringify(error.response.data)}`);
+      } else {
+        setError('画像タイプの更新に失敗しました');
+      }
     }
   };
 
   const handleImageUploaded = (imageData: {
     id: number;
     url: string;
-    image_type: 'MAIN' | 'SUB';
+    image_type: ImageType;
     status: 'pending' | 'completed';
   }) => {
     // 親コンポーネントに画像の変更を通知
@@ -174,10 +187,11 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
           </div>
         </div>
       )}
-
+      
       {/* 画像アップロードセクション */}
       {propertyId ? (
         <div className="p-6">
+          <p className="text-sm text-gray-600 mb-2">物件全体の写真</p>
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
               {displayImages.map((image) => (
@@ -200,11 +214,14 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                   <div className="mt-2">
                     <select
                       value={image.image_type || 'SUB'}
-                      onChange={(e) => handleImageTypeChange(image.id, e.target.value as 'MAIN' | 'SUB')}
+                      onChange={(e) => handleImageTypeChange(image.id, e.target.value as ImageType)}
                       className="block w-full rounded-lg border-gray-200 text-sm focus:border-gray-900 focus:ring-0"
                     >
-                      <option value="MAIN">メイン画像</option>
-                      <option value="SUB">サブ画像</option>
+                      {Object.entries(IMAGE_TYPE_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -212,21 +229,11 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
             </div>
 
             <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">物件全体の写真を追加</p>
               <ImageUploader
                 onImageUploaded={handleImageUploaded}
                 onError={setError}
                 propertyId={propertyId ? Number(propertyId) : undefined}
                 clerkUserId={clerkUserId}
-                existingImages={displayImages
-                  .filter((img): img is Image & { image_type: 'MAIN' | 'SUB' } => 
-                    img.image_type === 'MAIN' || img.image_type === 'SUB'
-                  )
-                  .map(img => ({
-                    id: img.id,
-                    image_type: img.image_type,
-                    url: img.url
-                  }))}
               />
             </div>
           </div>

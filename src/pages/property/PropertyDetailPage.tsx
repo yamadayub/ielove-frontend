@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useProperty } from '../../features/property/hooks/useProperty';
@@ -54,6 +54,39 @@ export const PropertyDetailPage = () => {
   // 物件の所有者かどうかを判定
   const isOwner = userProfile?.id && property?.user_id ? property.user_id === userProfile.id : false;
 
+  // データの変更を監視してログを出力
+  useEffect(() => {
+    console.log('PropertyDetailPage data:', {
+      images: images ? 'loaded' : 'loading',
+      property: property ? 'loaded' : 'loading',
+      purchaseStatus: purchaseStatus ? 'loaded' : 'loading',
+      userProfile: userProfile ? 'loaded' : 'loading'
+    });
+
+    console.log('PropertyDetailPage state:', {
+      purchaseStatus: purchaseStatus && {
+        isPurchased: purchaseStatus.isPurchased,
+        purchaseInfo: purchaseStatus.purchaseInfo
+      },
+      isOwner,
+      userProfileId: userProfile?.id,
+      propertyUserId: property?.user_id,
+      allImages: images?.map(img => ({
+        id: img.id,
+        type: img.image_type,
+        url: img.url,
+        property_id: img.property_id,
+        room_id: img.room_id,
+        product_id: img.product_id
+      })),
+      propertyImages: images?.filter(img => !img.room_id && !img.product_id).map(img => ({
+        id: img.id,
+        type: img.image_type,
+        url: img.url
+      }))
+    });
+  }, [images, property, purchaseStatus, isOwner, userProfile]);
+
   // 物件の画像のみをフィルタリング
   const propertyImages = images?.filter(img => !img.room_id && !img.product_id) || [];
 
@@ -79,7 +112,12 @@ export const PropertyDetailPage = () => {
   return (
     <div>
       <div className="max-w-7xl mx-auto">
-        <PropertyGallery images={propertyImages} propertyName={property.name} />
+        <PropertyGallery 
+          images={propertyImages} 
+          propertyName={property.name}
+          isPurchased={purchaseStatus?.isPurchased}
+          isOwner={isOwner}
+        />
         <div className="px-4 pt-4 pb-8">
           <PropertyInfo 
             property={property}

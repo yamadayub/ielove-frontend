@@ -2,7 +2,7 @@ export interface Image {
   id: number;
   url: string;
   description?: string | null;
-  image_type?: 'MAIN' | 'SUB';
+  image_type?: 'MAIN' | 'SUB' | 'PAID';
   s3_key?: string | null;
   property_id?: number | null;
   room_id?: number | null;
