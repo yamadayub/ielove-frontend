@@ -51,8 +51,8 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   return (
     <div className="mt-8">
       {showMessage && (
-        <p className="text-sm text-gray-500 mb-4">
-          仕様の詳細情報は詳細情報を購入すると表示されます
+        <p className="text-sm text-gray-500 mb-4 px-4">
+          物件仕様購入後に以下{products.length}件の詳細仕様が閲覧可能になります
         </p>
       )}
       

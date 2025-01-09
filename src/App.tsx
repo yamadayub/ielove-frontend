@@ -76,12 +76,9 @@ export const App = () => {
               <div className="fixed top-0 left-0 right-0 z-50">
                 <div className="bg-white">
                   <Header />
-                  <div className="border-b border-gray-200">
-                    <Breadcrumb />
-                  </div>
                 </div>
               </div>
-              <div className="pt-16 pb-16">
+              <div className="pt-[50px] pb-14">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/search" element={<SearchPage />} />

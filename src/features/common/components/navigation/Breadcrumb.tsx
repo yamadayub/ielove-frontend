@@ -33,7 +33,7 @@ export const Breadcrumb: React.FC = () => {
   }
 
   return (
-    <nav className="flex items-center bg-white border-b">
+    <nav className="flex items-center bg-white">
       <div className="max-w-7xl mx-auto w-full px-4 py-2 overflow-x-auto whitespace-nowrap">
         <div className="flex items-center space-x-2">
           <button

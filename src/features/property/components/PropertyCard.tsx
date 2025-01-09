@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../../store/useStore';
 import { useImages } from '../../image/hooks/useImages';
 import type { Property } from '../types/property_types';
@@ -11,7 +10,6 @@ interface PropertyCardProps {
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   const navigate = useNavigate();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const isPropertyPurchased = useStore((state) => 
     property.id ? state.isPropertyPurchased(property.id.toString()) : false
@@ -21,79 +19,25 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     propertyId: property.id?.toString()
   });
   
-  const propertyImages = images?.filter(img => !img.room_id && !img.product_id) || [];
-
-  useEffect(() => {
-    const mainImageIndex = propertyImages.findIndex(img => img.image_type === 'MAIN');
-    if (mainImageIndex !== -1) {
-      setCurrentImageIndex(mainImageIndex);
-    }
-  }, [propertyImages]);
+  const mainImage = images?.find(img => !img.room_id && !img.product_id && img.image_type === 'MAIN');
 
   if (!property.id) return null;
 
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? propertyImages.length - 1 : prev - 1
-    );
-  };
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => 
-      prev === propertyImages.length - 1 ? 0 : prev + 1
-    );
-  };
-
-  const handleImageClick = () => {
+  const handleClick = () => {
     navigate(`/property/${property.id}`);
   };
 
   return (
-    <div className="bg-white">
+    <div className="bg-white cursor-pointer border-b" onClick={handleClick}>
       <div className="relative aspect-[4/3]">
-        {propertyImages.length > 0 ? (
-          <>
-            <div 
-              onClick={handleImageClick}
-              className="cursor-pointer"
-            >
-              <img
-                src={propertyImages[currentImageIndex].url}
-                alt={`${property.name} - ${propertyImages[currentImageIndex].image_type === 'MAIN' ? 'メイン画像' : `画像 ${currentImageIndex + 1}`}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {propertyImages.length > 1 && (
-              <>
-                <button
-                  onClick={handlePrevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70 transition-colors z-10"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handleNextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70 transition-colors z-10"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-                  {propertyImages.map((img, index) => (
-                    <div
-                      key={index}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        index === currentImageIndex ? 'bg-white' : 'bg-white/50'
-                      } ${img.image_type === 'MAIN' ? 'ring-2 ring-white ring-offset-1 ring-offset-black/50' : ''}`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </>
+        {mainImage ? (
+          <img
+            src={mainImage.url}
+            alt={`${property.name} - メイン画像`}
+            className="w-full h-full object-cover"
+          />
         ) : (
-          <div className="w-full h-full bg-gray-100 rounded-t-lg flex items-center justify-center">
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
             <span className="text-gray-400">No image</span>
           </div>
         )}
@@ -103,10 +47,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         )}
       </div>
-      <div 
-        onClick={handleImageClick}
-        className="p-3 cursor-pointer"
-      >
+      <div className="py-3 px-2">
         <h3 className="font-bold text-gray-900">{property.name}</h3>
         <p className="text-sm text-gray-600 mt-2 line-clamp-2">{property.description}</p>
       </div>

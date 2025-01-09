@@ -170,8 +170,10 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
       {/* PAID画像セクション */}
       {filteredPaidImages.length > 0 && (
         <div className="mt-8">
-          <div className="text-center py-4 bg-gray-50">
-            <p className="text-gray-700 font-medium">以下の写真は購入後に閲覧可能</p>
+          <div className="py-4 bg-gray-50">
+            <p className="text-gray-700 font-medium px-6">
+            物件仕様購入後に以下{filteredPaidImages.length}枚の画像が閲覧可能になります
+            </p>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-0.5 bg-gray-100">
             {filteredPaidImages.map(renderPhotoTile)}
