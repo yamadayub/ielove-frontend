@@ -49,7 +49,7 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   console.log('PropertyProductsDetails - productsByRoom:', productsByRoom);
 
   return (
-    <div className="mt-8">
+    <div className="mt-4">
       {showMessage && (
         <p className="text-sm text-gray-500 mb-4 px-4">
           物件仕様購入後に以下{products.length}件の詳細仕様が閲覧可能になります

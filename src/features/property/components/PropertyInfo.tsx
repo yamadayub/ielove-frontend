@@ -41,17 +41,14 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   };
 
   return (
-    <div className="bg-white shadow-sm overflow-hidden">
-      <div className="px-4 py-5 sm:p-6">
-        <h2 className="text-xl font-semibold text-gray-900">{property.name}</h2>
+    <div className="bg-white">
+      <div className="px-4 py-3">
+        <h2 className="text-base font-semibold text-gray-900">{property.name}</h2>
         {property.description && (
-          <p className="mt-2 text-sm text-gray-600">{property.description}</p>
+          <p className="mt-1 text-sm text-gray-600 line-clamp-2">{property.description}</p>
         )}
-        <div className="mt-4 space-y-4">
-          {/* ... 他の物件情報 ... */}
-        </div>
       </div>
-      <div className="px-4 py-4">
+      <div className="px-4 pb-3">
         <PurchaseButton
           propertyId={property.id ?? 0}
           listingId={listingId}

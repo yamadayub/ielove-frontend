@@ -100,7 +100,7 @@ export const PropertyPage = () => {
           isPurchased={purchaseStatus?.isPurchased || false}
           isOwner={isOwner}
         />
-        <div className="px-4 pt-4 pb-8">
+        <div>
           <PropertyInfo 
             property={property}
             isPurchased={purchaseStatus?.isPurchased}
@@ -111,7 +111,7 @@ export const PropertyPage = () => {
           />
 
           {/* タブナビゲーション */}
-          <div className="mt-8 border-b border-gray-200">
+          <div className="mt-4">
             <nav className="-mb-px flex">
               <button
                 onClick={() => setSearchParams({ tab: 'products' })}
