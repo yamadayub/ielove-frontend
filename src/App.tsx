@@ -74,10 +74,14 @@ export const App = () => {
           <QueryProvider>
             <div className="min-h-screen bg-gray-50">
               <div className="fixed top-0 left-0 right-0 z-50">
-                <Header />
-                <Breadcrumb />
+                <div className="bg-white">
+                  <Header />
+                  <div className="border-b border-gray-200">
+                    <Breadcrumb />
+                  </div>
+                </div>
               </div>
-              <div className="pt-[112px] pb-16">
+              <div className="pt-16 pb-16">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/search" element={<SearchPage />} />
