@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Navigate, useSearchParams } from 'react-router-dom';
+import { useParams, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { Loader2, LayoutGrid, DoorOpen, FileText } from 'lucide-react';
 import { useProperty } from '../../features/property/hooks/useProperty';
 import { useImages } from '../../features/image/hooks/useImages';
@@ -22,6 +22,7 @@ type TabType = 'gallery' | 'rooms' | 'products';
 
 export const PropertyPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as TabType) || 'products';
   const axios = useAuthenticatedAxios();
@@ -108,6 +109,7 @@ export const PropertyPage = () => {
             listingId={listingId}
             price={price}
             isOwner={isOwner}
+            onEdit={() => navigate(`/properties/${id}/edit`)}
           />
 
           {/* タブナビゲーション */}

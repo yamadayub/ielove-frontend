@@ -4,6 +4,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { useStore } from '../../../store/useStore';
 import { Property } from '../types/property_types';
 import { PurchaseButton } from '../../purchase/components/PurchaseButton';
+import { Pencil } from 'lucide-react';
 
 interface PropertyInfoProps {
   property: Property;
@@ -12,6 +13,7 @@ interface PropertyInfoProps {
   listingId?: number;
   price?: number;
   isOwner?: boolean;
+  onEdit?: () => void;
 }
 
 export const PropertyInfo: React.FC<PropertyInfoProps> = ({ 
@@ -20,7 +22,8 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   isLoading,
   listingId,
   price,
-  isOwner
+  isOwner,
+  onEdit
 }) => {
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
@@ -43,7 +46,18 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   return (
     <div className="bg-white">
       <div className="px-4 py-3">
-        <h2 className="text-base font-semibold text-gray-900">{property.name}</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">{property.name}</h2>
+          {isOwner && onEdit && (
+            <button
+              onClick={onEdit}
+              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              <Pencil className="h-4 w-4 mr-1.5" />
+              編集する
+            </button>
+          )}
+        </div>
         {property.description && (
           <p className="mt-1 text-sm text-gray-600 line-clamp-2">{property.description}</p>
         )}
