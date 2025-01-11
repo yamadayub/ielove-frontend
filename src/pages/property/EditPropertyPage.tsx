@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, PlusCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, PlusCircle, Loader2, Trash2, Pencil, ImageIcon } from 'lucide-react';
 import { PropertyForm } from '../../features/property/components/PropertyForm';
 import type { Property } from '../../features/property/types/property_types';
 import { useProperty } from '../../features/property/hooks/useProperty';
@@ -19,6 +19,67 @@ interface ApiError {
   details?: Record<string, string>;
 }
 
+interface DeleteModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+          <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+          <div className="sm:flex sm:items-start">
+            <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                {title}
+              </h3>
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">
+                  {message}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
+              はい
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:w-auto sm:text-sm"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const EditPropertyPage: React.FC = () => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
@@ -36,7 +97,12 @@ export const EditPropertyPage: React.FC = () => {
   }
 
   const { data: property, isLoading: isLoadingProperty, error: propertyError } = useProperty(propertyId);
-  const { data: rooms, isLoading: isLoadingRooms, error: roomsError } = useRooms({ propertyId });
+  const { 
+    data: rooms, 
+    isLoading: isLoadingRooms, 
+    error: roomsError,
+    refetch: refetchRooms 
+  } = useRooms({ propertyId });
   const { 
     data: images, 
     isLoading: isLoadingImages,
@@ -63,6 +129,7 @@ export const EditPropertyPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [roomToDelete, setRoomToDelete] = useState<number | null>(null);
 
   // userIdのnullチェック
   if (!userId) {
@@ -119,6 +186,28 @@ export const EditPropertyPage: React.FC = () => {
       } else {
         setSubmitError('部屋の作成に失敗しました。もう一度お試しください');
       }
+    }
+  };
+
+  const handleDeleteRoom = async (roomId: number) => {
+    try {
+      await axios.delete(ENDPOINTS.DELETE_ROOM(roomId));
+      // 成功メッセージを設定
+      setSubmitError('部屋を削除しました');
+      // 部屋一覧を更新
+      await refetchRooms();
+      // 画像一覧も更新（部屋に紐づく画像も削除されるため）
+      await refetchImages();
+    } catch (error) {
+      console.error('部屋の削除に失敗しました:', error);
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setSubmitError(`部屋の削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setSubmitError('部屋の削除に失敗しました。もう一度お試しください');
+      }
+    } finally {
+      setRoomToDelete(null);
     }
   };
 
@@ -209,20 +298,66 @@ export const EditPropertyPage: React.FC = () => {
               <p className="text-gray-600">「部屋を追加」ボタンから部屋を登録してください</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-0.5 bg-gray-100">
-              {rooms.map((room) => (
-                <RoomTile
-                  key={room.id}
-                  room={room}
-                  image={getRoomMainImage(room.id)}
-                  showImage={true}
-                  onClick={() => navigate(`/property/${propertyId}/room/${room.id}/edit`)}
-                />
-              ))}
+            <div className="divide-y divide-gray-200">
+              {rooms.map((room) => {
+                const mainImage = getRoomMainImage(room.id);
+                return (
+                  <div key={room.id} className="flex items-start p-4 hover:bg-gray-50">
+                    {/* サムネイル画像 */}
+                    <div className="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                      {mainImage ? (
+                        <img
+                          src={mainImage.url}
+                          alt={room.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 部屋情報 */}
+                    <div className="flex-grow ml-4">
+                      <h3 className="text-lg font-medium text-gray-900">{room.name}</h3>
+                      <p className="mt-1 text-sm text-gray-500 line-clamp-2">{room.description}</p>
+                    </div>
+
+                    {/* アクションボタン */}
+                    <div className="flex-shrink-0 ml-4 flex items-center space-x-2">
+                      <button
+                        onClick={() => navigate(`/property/${propertyId}/room/${room.id}/edit`)}
+                        className="inline-flex items-center p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+                      >
+                        <Pencil className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRoomToDelete(room.id);
+                        }}
+                        className="inline-flex items-center p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      {/* 削除確認モーダル */}
+      <DeleteConfirmationModal
+        isOpen={roomToDelete !== null}
+        onClose={() => setRoomToDelete(null)}
+        onConfirm={() => roomToDelete && handleDeleteRoom(roomToDelete)}
+        title="部屋の削除"
+        message="この部屋を削除してもよろしいですか？この操作は取り消せません。"
+      />
     </div>
   );
 };

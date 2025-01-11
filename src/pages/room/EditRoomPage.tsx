@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, X, Plus, PlusCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, X, Plus, PlusCircle, ImageIcon, Trash2 } from 'lucide-react';
 import { ImageUploader } from '../../features/image/components/ImageUploader';
 import { useRoom } from '../../features/room/hooks/useRoom';
 import { useImages } from '../../features/image/hooks/useImages';
@@ -58,7 +58,11 @@ export const EditRoomPage: React.FC = () => {
   } = useImages({
     roomId: roomId
   });
-  const { data: products, isLoading: isLoadingProducts } = useProducts({
+  const { 
+    data: products, 
+    isLoading: isLoadingProducts,
+    refetch: refetchProducts 
+  } = useProducts({
     roomId: roomId
   });
 
@@ -173,6 +177,45 @@ export const EditRoomPage: React.FC = () => {
         setError(`内装仕様の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
         setError('内装仕様の作成に失敗しました。もう一度お試しください');
+      }
+    }
+  };
+
+  // 製品のメイン画像を取得する関数
+  const getProductMainImage = (productId: number | undefined) => {
+    if (!productId) return null;
+    return roomImages?.find(img => 
+      img.product_id === productId && 
+      img.image_type === 'MAIN'
+    );
+  };
+
+  const handleDeleteProduct = async (productId: number | undefined) => {
+    if (!productId) return;
+    
+    if (!window.confirm('この内装仕様を削除してもよろしいですか？')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/products/${productId}`);
+      // 製品一覧と関連する画像を再取得
+      await Promise.all([
+        refetchProducts(),
+        refetchImages()
+      ]);
+      // 成功メッセージを一時的に表示
+      setError('内装仕様を削除しました');
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+    } catch (error) {
+      console.error('内装仕様の削除に失敗しました:', error);
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`内装仕様の削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('内装仕様の削除に失敗しました。もう一度お試しください');
       }
     }
   };
@@ -330,27 +373,54 @@ export const EditRoomPage: React.FC = () => {
 
           {products && products.length > 0 ? (
             <div className="border-t border-gray-200">
-              {products.map((product) => (
-                <div
-                  key={product.id}
-                  className="border-b border-gray-200 last:border-b-0"
-                >
-                  <button
-                    onClick={() => navigate(`/property/${propertyId}/room/${roomId}/product/${product.id}/edit`)}
-                    className="w-full text-left p-4 hover:bg-gray-50 transition-colors"
+              {products.map((product) => {
+                const mainImage = getProductMainImage(product.id);
+                return (
+                  <div
+                    key={product.id}
+                    className="border-b border-gray-200 last:border-b-0"
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
-                        {product.description && (
-                          <p className="mt-1 text-sm text-gray-500">{product.description}</p>
-                        )}
-                      </div>
-                      <ArrowLeft className="h-4 w-4 text-gray-400 transform rotate-180" />
+                    <div className="flex items-center p-4 hover:bg-gray-50 transition-colors">
+                      <button
+                        onClick={() => navigate(`/property/${propertyId}/room/${roomId}/product/${product.id}/edit`)}
+                        className="flex-1 text-left"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-shrink-0 w-20 h-20 relative rounded-lg overflow-hidden bg-gray-100">
+                            {mainImage ? (
+                              <img
+                                src={mainImage.url}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <ImageIcon className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium text-gray-900 truncate">{product.name}</h3>
+                            {product.description && (
+                              <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0">
+                            <ArrowLeft className="h-4 w-4 text-gray-400 transform rotate-180" />
+                          </div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="ml-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        aria-label="内装仕様を削除"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
                     </div>
-                  </button>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg">

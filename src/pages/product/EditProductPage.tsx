@@ -183,13 +183,26 @@ export const EditProductPage: React.FC = () => {
   const handleRemoveSpecification = async (specId: number | undefined) => {
     if (specId === undefined) return;
 
+    if (!window.confirm('この仕様情報を削除してもよろしいですか？')) {
+      return;
+    }
+
     try {
       await axios.delete(ENDPOINTS.DELETE_PRODUCT_SPECIFICATION(specId));
       setSpecifications(prev => prev.filter(spec => spec.id !== specId));
-      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
+      // 成功メッセージを一時的に表示
+      setError('仕様情報を削除しました');
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     } catch (error) {
       console.error('仕様の削除に失敗しました:', error);
-      setError('仕様の削除に失敗しました');
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`仕様の削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('仕様の削除に失敗しました');
+      }
     }
   };
 
@@ -217,13 +230,26 @@ export const EditProductPage: React.FC = () => {
   const handleRemoveDimension = async (dimensionId: number | undefined) => {
     if (dimensionId === undefined) return;
 
+    if (!window.confirm('このサイズ情報を削除してもよろしいですか？')) {
+      return;
+    }
+
     try {
       await axios.delete(ENDPOINTS.DELETE_PRODUCT_DIMENSION(dimensionId));
       setDimensions(prev => prev.filter(dim => dim.id !== dimensionId));
-      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
+      // 成功メッセージを一時的に表示
+      setError('サイズ情報を削除しました');
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     } catch (error) {
       console.error('寸法の削除に失敗しました:', error);
-      setError('寸法の削除に失敗しました');
+      if (error instanceof AxiosError && error.response?.data) {
+        const apiError = error.response.data as ApiError;
+        setError(`サイズ情報の削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+      } else {
+        setError('サイズ情報の削除に失敗しました');
+      }
     }
   };
 
