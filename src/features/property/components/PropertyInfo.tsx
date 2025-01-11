@@ -12,7 +12,6 @@ interface PropertyInfoProps {
   listingId?: number;
   price?: number;
   isOwner?: boolean;
-  onEdit?: () => void;
 }
 
 export const PropertyInfo: React.FC<PropertyInfoProps> = ({ 
@@ -21,8 +20,7 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
   isLoading,
   listingId,
   price,
-  isOwner,
-  onEdit
+  isOwner
 }) => {
   const navigate = useNavigate();
   const { isSignedIn } = useAuth();
@@ -42,6 +40,10 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
     }
   };
 
+  const handleEdit = () => {
+    navigate(`/property/${property.id}/edit`);
+  };
+
   return (
     <div className="bg-white">
       <div className="px-4 py-3">
@@ -58,7 +60,7 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
           isLoading={isLoading}
           price={price}
           isOwner={isOwner}
-          onEdit={onEdit}
+          onEdit={handleEdit}
         />
       </div>
     </div>
