@@ -41,7 +41,7 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
                 <img
                   src={mainImage.url}
                   alt={product.name}
-                  className={`w-full h-full object-cover ${shouldBlur ? 'blur-sm' : ''}`}
+                  className="w-full h-full object-cover"
                 />
                 {product.id === 0 && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
