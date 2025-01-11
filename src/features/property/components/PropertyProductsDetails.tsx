@@ -49,22 +49,22 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   console.log('PropertyProductsDetails - productsByRoom:', productsByRoom);
 
   return (
-    <div className="mt-4">
+    <div>
       {showMessage && (
-        <p className="text-sm text-gray-500 mb-4 px-4">
+        <p className="text-sm text-gray-500 mb-4 px-4 pt-4">
           物件仕様購入後に以下{products.length}件の詳細仕様が閲覧可能になります
         </p>
       )}
       
-      <div className="space-y-8">
+      <div>
         {Object.entries(productsByRoom || {}).map(([roomId, { roomName, products: roomProducts }]) => (
-          <div key={roomId} className="space-y-4">
-            <div className="border-b border-gray-900/10 pb-1 px-4">
-              <h3 className="text-xl font-semibold text-gray-900">
+          <div key={roomId}>
+            <div className="border-b border-gray-900/10">
+              <h3 className="text-xl font-semibold text-gray-900 px-4">
                 {roomName || '部屋名なし'}
               </h3>
             </div>
-            <div className="pl-4 divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200">
               {roomProducts.map(product => {
                 const mainImage = images?.find(img => 
                   img.product_id === product.id && 

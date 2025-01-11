@@ -23,44 +23,42 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
   return (
     <Link 
       to={productUrl}
-      className="group block w-full border-b border-gray-200 py-4 hover:bg-gray-50 transition-colors"
+      className="group block w-full border-b border-gray-200 pb-4 hover:bg-gray-50 transition-colors"
     >
-      <div className="flex gap-4 items-start">
+      <div className="flex items-start">
         {/* 製品画像 */}
-        <div className="block w-24 h-24 flex-shrink-0">
-          <div className="flex items-start">
-            <div className="relative flex-shrink-0 w-24 h-24 group-hover:ring-2 group-hover:ring-gray-300 transition-all rounded-lg overflow-hidden">
-              {mainImage ? (
-                <>
-                  <div className="absolute inset-0 z-10">
-                    <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
-                      <p className="text-xs font-medium text-white truncate">
-                        {product.product_category_name}
-                      </p>
-                    </div>
+        <div className="w-32 h-32 flex-shrink-0">
+          <div className="relative w-32 h-32 group-hover:ring-1 group-hover:ring-gray-300 transition-all overflow-hidden">
+            {mainImage ? (
+              <>
+                <div className="absolute inset-0 z-10">
+                  <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
+                    <p className="text-xs font-medium text-white truncate">
+                      {product.product_category_name}
+                    </p>
                   </div>
-                  <img
-                    src={mainImage.url}
-                    alt={product.name}
-                    className={`w-full h-full object-cover ${shouldBlur ? 'blur-sm' : ''}`}
-                  />
-                  {product.id === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                      <span className="text-white text-sm font-medium">サンプル</span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <span className="text-gray-400 text-sm">No Image</span>
                 </div>
-              )}
-            </div>
+                <img
+                  src={mainImage.url}
+                  alt={product.name}
+                  className={`w-full h-full object-cover ${shouldBlur ? 'blur-sm' : ''}`}
+                />
+                {product.id === 0 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <span className="text-white text-sm font-medium">サンプル</span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                <span className="text-gray-400 text-sm">No Image</span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* 製品情報 */}
-        <div className="flex-grow">
+        <div className="flex-grow ml-4 pt-4">
           <div>
             <h3 className="text-base font-medium group-hover:text-blue-600 transition-colors">
               {product.name}
@@ -134,7 +132,7 @@ export const ProductDetailTile: React.FC<ProductDetailTileProps> = ({
         </div>
 
         {/* 矢印アイコン */}
-        <div className="flex-shrink-0 self-center">
+        <div className="flex-shrink-0 self-center pr-4">
           <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
         </div>
       </div>
