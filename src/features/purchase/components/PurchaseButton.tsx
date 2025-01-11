@@ -1,8 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@clerk/clerk-react';
+import { ShoppingBag, CheckCircle, Pencil } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
-import { Loader2 } from 'lucide-react';
 
 interface PurchaseButtonProps {
   propertyId: number;
@@ -11,6 +10,7 @@ interface PurchaseButtonProps {
   isLoading?: boolean;
   price?: number;
   isOwner?: boolean;
+  onEdit?: () => void;
 }
 
 export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
@@ -19,23 +19,15 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
   isPurchased,
   isLoading,
   price,
-  isOwner
+  isOwner,
+  onEdit
 }) => {
   const navigate = useNavigate();
-  const { isSignedIn } = useAuth();
   const setCurrentCheckoutListingId = useStore((state) => state.setCurrentCheckoutListingId);
-  const setCurrentPropertyId = useStore((state) => state.setCurrentPropertyId);
 
   const handlePurchase = () => {
-    if (!isSignedIn) {
-      const currentPath = window.location.pathname + window.location.search;
-      navigate(`/sign-in?redirect_url=${encodeURIComponent(currentPath)}`);
-      return;
-    }
-
     if (listingId) {
       setCurrentCheckoutListingId(listingId);
-      setCurrentPropertyId(propertyId);
       navigate('/checkout');
     }
   };
@@ -44,9 +36,21 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
     return (
       <button
         disabled
-        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400"
+        className="flex items-center justify-center space-x-2 bg-gray-300 text-gray-500 px-6 py-3 rounded-lg cursor-not-allowed w-full"
       >
-        <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+        <span className="font-medium">読み込み中...</span>
+      </button>
+    );
+  }
+
+  if (isOwner && onEdit) {
+    return (
+      <button
+        onClick={onEdit}
+        className="flex items-center justify-center space-x-2 bg-white text-gray-700 px-6 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors w-full"
+      >
+        <Pencil className="h-5 w-5" />
+        <span className="font-medium">編集する</span>
       </button>
     );
   }
@@ -55,31 +59,10 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
     return (
       <button
         disabled
-        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600"
+        className="flex items-center justify-center space-x-2 bg-green-500 text-white px-6 py-3 rounded-lg cursor-not-allowed w-full"
       >
-        購入済み
-      </button>
-    );
-  }
-
-  if (isOwner) {
-    return (
-      <button
-        disabled
-        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400"
-      >
-        所有者
-      </button>
-    );
-  }
-
-  if (!price) {
-    return (
-      <button
-        disabled
-        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-400"
-      >
-        準備中
+        <CheckCircle className="h-5 w-5" />
+        <span className="font-medium">購入済み</span>
       </button>
     );
   }
@@ -87,9 +70,10 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
   return (
     <button
       onClick={handlePurchase}
-      className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+      className="flex items-center justify-center space-x-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors w-full"
     >
-      ¥{price.toLocaleString()}で購入
+      <ShoppingBag className="h-5 w-5" />
+      <span className="font-medium">物件仕様を購入する</span>
     </button>
   );
 }; 
