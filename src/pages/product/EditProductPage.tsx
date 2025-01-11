@@ -704,16 +704,13 @@ export const EditProductPage: React.FC = () => {
               {dimensions.map((dim, index) => (
                 <div key={index} className="flex items-start space-x-4">
                   <div className="flex-1">
-                    <select
+                    <input
+                      type="text"
                       value={dim.dimension_type || ''}
                       onChange={(e) => handleUpdateDimension(dim.id, 'dimension_type', e.target.value)}
+                      placeholder="幅・高さ・奥行など"
                       className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
-                    >
-                      <option value="">選択してください</option>
-                      <option value="width">幅</option>
-                      <option value="height">高さ</option>
-                      <option value="depth">奥行</option>
-                    </select>
+                    />
                   </div>
                   <div className="flex-1">
                     <input

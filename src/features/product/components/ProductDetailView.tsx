@@ -41,8 +41,8 @@ export const ProductDetailView: React.FC<ProductDetailViewProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {specifications.map((spec, index) => (
               <div key={index} className="border-b pb-2">
-                <dt className="text-sm text-gray-600">{spec.name}</dt>
-                <dd className="text-sm font-medium mt-1">{spec.value}</dd>
+                <dt className="text-sm text-gray-600">{spec.spec_type}</dt>
+                <dd className="text-sm font-medium mt-1">{spec.spec_value}</dd>
               </div>
             ))}
           </div>
