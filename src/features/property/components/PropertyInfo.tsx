@@ -49,7 +49,7 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
       <div className="px-4 py-3">
         <h2 className="text-base font-semibold text-gray-900">{property.name}</h2>
         {property.description && (
-          <p className="mt-1 text-sm text-gray-600 line-clamp-2">{property.description}</p>
+          <p className="mt-1 text-sm text-gray-600 break-words whitespace-normal">{property.description}</p>
         )}
       </div>
       <div className="px-4 pb-3">

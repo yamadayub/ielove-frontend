@@ -49,7 +49,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       </div>
       <div className="py-3 px-2">
         <h3 className="font-bold text-gray-900">{property.name}</h3>
-        <p className="text-sm text-gray-600 mt-2 line-clamp-2">{property.description}</p>
+        <p className="text-sm text-gray-600 mt-2 truncate overflow-hidden whitespace-nowrap">{property.description}</p>
       </div>
     </div>
   );
