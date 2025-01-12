@@ -19,6 +19,9 @@ interface ProductTileProps {
 }
 
 const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images }) => {
+  const { userId } = useAuth();
+  const shouldBlur = !userId || !isPurchased;
+
   // メイン画像を取得（product_idでフィルタリング、product_specification_idがnullのもの）
   const productImages = images?.filter(img => 
     img.product_id === product.id && !img.product_specification_id
@@ -34,7 +37,7 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
             <img
               src={mainImage.url}
               alt={product.name}
-              className="w-32 h-32 object-cover"
+              className={`w-32 h-32 object-cover ${shouldBlur && mainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
             />
           ) : (
             <div className="w-32 h-32 bg-gray-100 flex items-center justify-center">
@@ -43,12 +46,24 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
           )}
         </div>
         <div className="flex-grow ml-4">
-          <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
+          <div className="text-sm">
+            <span className="font-medium text-gray-900">商品名</span>
+            <span className="mx-2 text-gray-400">|</span>
+            <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.name}</span>
+          </div>
           {product.manufacturer_name && (
-            <p className="mt-1 text-sm text-gray-500">{product.manufacturer_name}</p>
+            <div className="text-sm mt-1">
+              <span className="font-medium text-gray-900">メーカー</span>
+              <span className="mx-2 text-gray-400">|</span>
+              <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.manufacturer_name}</span>
+            </div>
           )}
           {product.description && (
-            <p className="mt-1 text-sm text-gray-500">{product.description}</p>
+            <div className="text-sm mt-1">
+              <span className="font-medium text-gray-900">説明</span>
+              <span className="mx-2 text-gray-400">|</span>
+              <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.description}</span>
+            </div>
           )}
         </div>
       </div>
@@ -67,7 +82,7 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
                 <img
                   src={specMainImage.url}
                   alt={`${spec.spec_type} - ${spec.spec_value}`}
-                  className="w-24 h-24 object-cover"
+                  className={`w-24 h-24 object-cover ${shouldBlur && specMainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
                 />
               ) : (
                 <div className="text-sm text-gray-500">
@@ -79,7 +94,7 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
               <div className="text-sm">
                 <span className="font-medium text-gray-900">{spec.spec_type}</span>
                 <span className="mx-2 text-gray-400">|</span>
-                <span className="text-gray-700">{spec.spec_value}</span>
+                <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{spec.spec_value}</span>
               </div>
             </div>
           </div>
