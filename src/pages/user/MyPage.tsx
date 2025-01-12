@@ -6,7 +6,7 @@ import { UserProfile } from '../../features/user/components/UserProfile';
 import { InitialUserSetup } from '../../features/user/components/InitialUserSetup';
 import { SellerDashboard } from '../../features/seller/components/SellerDashboard';
 import { AxiosError } from 'axios';
-import { Loader2, Plus, ArrowRight } from 'lucide-react';
+import { Loader2, Plus, ArrowRight, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { StripeConnect } from '../../features/seller/components/StripeConnect';
 import { ListingList } from '../../features/listing/components/ListingList';
@@ -16,6 +16,7 @@ import { PurchasedProperties } from '../../features/purchase/components/Purchase
 import { useState } from 'react';
 import { useMyPurchases } from '../../features/purchase/hooks/useMyPurchases';
 import { useMyListings } from '../../features/listing/hooks/useListing';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const MyPage: React.FC = () => {
   const { userId: clerkUserId } = useAuth();
@@ -33,6 +34,7 @@ export const MyPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'buyer' | 'seller'>('buyer');
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+  const queryClient = useQueryClient();
 
   const openDashboard = async () => {
     try {
@@ -46,6 +48,21 @@ export const MyPage: React.FC = () => {
       alert('ダッシュボードの取得に失敗しました。');
     } finally {
       setIsLoadingDashboard(false);
+    }
+  };
+
+  const handleDeleteProperty = async (propertyId: number) => {
+    if (!propertyId || !confirm('この物件を削除してもよろしいですか？')) {
+      return;
+    }
+
+    try {
+      await axios.delete(ENDPOINTS.DELETE_PROPERTY(propertyId));
+      // 物件リストを再取得
+      queryClient.invalidateQueries(['properties', userProfile?.id]);
+    } catch (error) {
+      console.error('物件の削除に失敗しました:', error);
+      alert('物件の削除に失敗しました。');
     }
   };
 
@@ -313,6 +330,13 @@ export const MyPage: React.FC = () => {
                               <path d="M12 5v14M5 12h14" />
                             </svg>
                             出品
+                          </button>
+                          <button
+                            onClick={() => property.id && handleDeleteProperty(property.id)}
+                            className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            削除
                           </button>
                         </div>
                       </div>

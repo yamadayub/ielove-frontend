@@ -28,7 +28,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
 
   return (
-    <div className="bg-white cursor-pointer border-b" onClick={handleClick}>
+    <div className="bg-white cursor-pointer border-b pb-8" onClick={handleClick}>
       <div className="relative aspect-[4/3]">
         {mainImage ? (
           <img
