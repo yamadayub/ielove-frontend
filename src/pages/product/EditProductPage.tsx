@@ -123,12 +123,16 @@ export const EditProductPage: React.FC = () => {
     isLoading: isLoadingImages,
     refetch: refetchImages 
   } = useImages({
-    productId: productId || ''
+    productId: productId || '',
+    productSpecificationId: undefined
   });
   const { data: categories } = useProductCategories();
 
-  // 製品の画像のみをフィルタリング
-  const filteredProductImages = productImages?.filter(img => img.product_id === Number(productId));
+  // 製品の画像のみをフィルタリング（仕様に紐づかない画像のみ）
+  const filteredProductImages = productImages?.filter(img => 
+    img.product_id === Number(productId) && 
+    !img.product_specification_id
+  );
 
   // Effect hooks
   React.useEffect(() => {
@@ -325,12 +329,12 @@ export const EditProductPage: React.FC = () => {
         return;
       }
 
-      // 一時的なIDを除外してAPIに送信
-      const specificationsToSubmit = specifications.map(({ id, product_id, spec_type, spec_value }) => ({
-        ...(typeof id === 'number' ? { id } : {}),
-        product_id,
-        spec_type,
-        spec_value
+      // 送信データの形式を修正
+      const specificationsToSubmit = specifications.map(spec => ({
+        id: spec.id,
+        product_id: Number(productId),
+        spec_type: spec.spec_type,
+        spec_value: spec.spec_value
       }));
 
       await axios.put(
@@ -401,18 +405,20 @@ export const EditProductPage: React.FC = () => {
     }
   };
 
-  const handleImageTypeChange = async (imageId: number, newType: ImageType) => {
+  const handleImageTypeChange = async (imageId: number, imageType: ImageType) => {
     try {
-      await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), newType);
+      await axios.patch(ENDPOINTS.UPDATE_IMAGE_TYPE(imageId), 
+        imageType,  // 文字列として直接送信
+        {
+          headers: {
+            'Content-Type': 'text/plain'
+          }
+        }
+      );
       refetchImages();
     } catch (error) {
-      console.error('Failed to update image type:', error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const apiError = error.response.data as ApiError;
-        setError(`画像タイプの更新に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
-      } else {
-        setError('画像タイプの更新に失敗しました');
-      }
+      console.error('画像タイプの更新に失敗しました:', error);
+      setError('画像タイプの更新に失敗しました');
     }
   };
 
@@ -421,22 +427,14 @@ export const EditProductPage: React.FC = () => {
     url: string;
     image_type: ImageType;
     status: 'pending' | 'completed';
+    product_specification_id?: number;
   }) => {
     refetchImages();
   };
 
   const handleImageDelete = async (imageId: number) => {
-    if (!userId) return;
-
     try {
-      await axios.delete(
-        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.DELETE_IMAGE(imageId)}`,
-        {
-          headers: {
-            'x-clerk-user-id': userId
-          }
-        }
-      );
+      await axios.delete(ENDPOINTS.DELETE_IMAGE(imageId));
       refetchImages();
     } catch (error) {
       console.error('画像の削除に失敗しました:', error);
@@ -579,32 +577,27 @@ export const EditProductPage: React.FC = () => {
 
             <div>
               <label htmlFor="manufacturer_name" className="block text-sm font-medium text-gray-700">
-                メーカー
+                メーカー・ブランド名
               </label>
               <input
                 type="text"
                 id="manufacturer_name"
-                name="manufacturer_name"
-                value={productForm.manufacturer_name || ''}
+                value={productForm.manufacturer_name}
                 onChange={(e) => setProductForm(prev => ({ ...prev, manufacturer_name: e.target.value }))}
-                placeholder="製造者名を入力してください"
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
               />
             </div>
 
             <div>
               <label htmlFor="product_code" className="block text-sm font-medium text-gray-700">
-                製品コード <span className="text-red-500">*</span>
+                型番・モデル名（任意）
               </label>
               <input
                 type="text"
                 id="product_code"
-                name="product_code"
                 value={productForm.product_code}
                 onChange={(e) => setProductForm(prev => ({ ...prev, product_code: e.target.value }))}
-                placeholder="製品コード・型番を入力して下さい"
-                required
-                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900"
+                className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
               />
             </div>
 
@@ -667,32 +660,56 @@ export const EditProductPage: React.FC = () => {
             </div>
             <div className="space-y-4">
               {specifications.map((spec, index) => (
-                <div key={index} className="flex items-start space-x-4">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={spec.spec_type}
-                      onChange={(e) => handleUpdateSpecification(spec.id, 'spec_type', e.target.value)}
-                      placeholder="仕様項目"
-                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
-                    />
+                <div key={index}>
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <ImageUploader
+                        onImageUploaded={handleImageUploaded}
+                        onError={setError}
+                        productId={Number(productId)}
+                        roomId={Number(roomId)}
+                        propertyId={Number(propertyId)}
+                        productSpecificationId={spec.id}
+                        clerkUserId={userId}
+                        compact
+                      />
+                    </div>
+                    <div className="flex-grow space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <label className="w-16 flex-shrink-0 text-sm font-medium text-gray-700">
+                          項目
+                        </label>
+                        <input
+                          type="text"
+                          value={spec.spec_type}
+                          onChange={(e) => handleUpdateSpecification(spec.id, 'spec_type', e.target.value)}
+                          placeholder="例）カラー"
+                          className="flex-grow block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <label className="w-16 flex-shrink-0 text-sm font-medium text-gray-700">
+                          内容
+                        </label>
+                        <input
+                          type="text"
+                          value={spec.spec_value}
+                          onChange={(e) => handleUpdateSpecification(spec.id, 'spec_value', e.target.value)}
+                          placeholder="例）グレー"
+                          className="flex-grow block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSpecification(spec.id)}
+                        className="text-gray-400 hover:text-gray-500 p-2"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={spec.spec_value}
-                      onChange={(e) => handleUpdateSpecification(spec.id, 'spec_value', e.target.value)}
-                      placeholder="仕様値"
-                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-gray-900 focus:ring-gray-900 text-sm"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSpecification(spec.id)}
-                    className="p-2 text-gray-400 hover:text-gray-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>

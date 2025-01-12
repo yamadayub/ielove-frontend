@@ -1,12 +1,20 @@
+export type ImageType = 'MAIN' | 'SUB' | 'PAID';
+
 export interface Image {
-  id: number;
-  url: string;
-  description?: string | null;
-  image_type?: 'MAIN' | 'SUB' | 'PAID';
-  s3_key?: string | null;
-  property_id?: number | null;
-  room_id?: number | null;
-  product_id?: number | null;
-  created_at?: string;
+  id?: number;
+  url?: string;
+  image_type?: ImageType;
   status?: 'pending' | 'completed';
+  property_id?: number;
+  room_id?: number;
+  product_id?: number;
+  product_specification_id?: number;
+  created_at?: string;
+}
+
+export interface UseImagesParams {
+  propertyId?: string;
+  roomId?: string;
+  productId?: string;
+  productSpecificationId?: number;
 }
