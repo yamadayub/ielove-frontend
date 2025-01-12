@@ -4,9 +4,9 @@ import { ENDPOINTS } from '../../shared/api/endpoints'
 import type { Image } from '../types/image_types'
 
 interface UseImagesParams {
-  propertyId?: string
-  roomId?: string
-  productId?: string
+  propertyId?: number
+  roomId?: number
+  productId?: number
   skip?: number
   limit?: number
 }
@@ -22,15 +22,15 @@ export const useImages = ({ propertyId, roomId, productId, skip = 0, limit = 100
   return useQuery<Image[]>({
     queryKey: ['images', { propertyId, roomId, productId, skip, limit }],
     queryFn: async () => {
-      const { data } = await axios.get(ENDPOINTS.GET_IMAGES, {
-        params: {
-          property_id: propertyId,
-          room_id: roomId,
-          product_id: productId,
-          skip,
-          limit
-        }
-      })
+      const params = {
+        skip,
+        limit,
+        ...(propertyId && { property_id: propertyId }),
+        ...(roomId && { room_id: roomId }),
+        ...(productId && { product_id: productId })
+      }
+
+      const { data } = await axios.get(ENDPOINTS.GET_IMAGES, { params })
       return data
     },
     retry: false,

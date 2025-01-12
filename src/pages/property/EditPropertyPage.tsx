@@ -108,7 +108,7 @@ export const EditPropertyPage: React.FC = () => {
     isLoading: isLoadingImages,
     refetch: refetchImages 
   } = useImages({
-    propertyId: propertyId
+    propertyId: Number(propertyId)
   });
 
   // 物件に関連する画像のみをフィルタリング（部屋や製品に紐付いていない画像）

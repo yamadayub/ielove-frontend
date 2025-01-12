@@ -60,8 +60,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   // 仕様画像を取得
   const { data: images, refetch: refetchImages } = useImages({
-    productId: productId || '',
-    productSpecificationId
+    ...(propertyId && { propertyId }),
+    ...(roomId && { roomId }),
+    ...(productId && { productId })
   });
 
   // メイン画像を取得

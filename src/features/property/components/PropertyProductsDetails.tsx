@@ -27,7 +27,7 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
                    productImages?.[0];  // メイン画像がない場合は最初の画像を使用
 
   return (
-    <div className="group block w-full border-b border-gray-200 hover:bg-gray-50 transition-colors">
+    <div className="group block w-full border-b border-gray-300 hover:bg-gray-50 transition-colors">
       <div className="flex items-start">
         <div className="flex-shrink-0">
           {mainImage ? (
@@ -61,8 +61,8 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
                             specImages?.[0];  // メイン画像がない場合は最初の画像を使用
         
         return (
-          <div key={spec.id} className="ml-8 flex items-start border-t border-gray-100">
-            <div className="flex-shrink-0">
+          <div key={spec.id} className="ml-8 flex items-start">
+            <div className="flex-shrink-0 py-2">
               {specMainImage ? (
                 <img
                   src={specMainImage.url}
@@ -70,12 +70,12 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
                   className="w-24 h-24 object-cover"
                 />
               ) : (
-                <div className="w-24 h-24 bg-gray-100 flex items-center justify-center">
-                  <ImageIcon className="h-6 w-6 text-gray-400" />
+                <div className="text-sm text-gray-500">
+                  （オプション）
                 </div>
               )}
             </div>
-            <div className="flex-grow ml-4">
+            <div className="flex-grow ml-4 py-2">
               <div className="text-sm">
                 <span className="font-medium text-gray-900">{spec.spec_type}</span>
                 <span className="mx-2 text-gray-400">|</span>
