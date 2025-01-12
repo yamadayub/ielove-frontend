@@ -58,6 +58,24 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
               <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.manufacturer_name}</span>
             </div>
           )}
+          {product.product_code && (
+            <div className="text-sm mt-1">
+              <span className="font-medium text-gray-900">型番</span>
+              <span className="mx-2 text-gray-400">|</span>
+              <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.product_code}</span>
+            </div>
+          )}
+          {product.catalog_url && (
+            <div className="text-sm mt-1">
+              <span className="font-medium text-gray-900">カタログ</span>
+              <span className="mx-2 text-gray-400">|</span>
+              <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>
+                <a href={product.catalog_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                  リンク
+                </a>
+              </span>
+            </div>
+          )}
           {product.description && (
             <div className="text-sm mt-1">
               <span className="font-medium text-gray-900">説明</span>
