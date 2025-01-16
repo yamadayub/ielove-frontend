@@ -6,7 +6,7 @@ import { UserProfile } from '../../features/user/components/UserProfile';
 import { InitialUserSetup } from '../../features/user/components/InitialUserSetup';
 import { SellerDashboard } from '../../features/seller/components/SellerDashboard';
 import { AxiosError } from 'axios';
-import { Loader2, Plus, ArrowRight, Trash2 } from 'lucide-react';
+import { Loader2, Plus, ArrowRight, Trash2, Copy, Share2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { StripeConnect } from '../../features/seller/components/StripeConnect';
 import { ListingList } from '../../features/listing/components/ListingList';
@@ -35,6 +35,7 @@ export const MyPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'buyer' | 'seller'>('buyer');
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const queryClient = useQueryClient();
+  const [showCopyModal, setShowCopyModal] = useState(false);
 
   const openDashboard = async () => {
     try {
@@ -64,6 +65,20 @@ export const MyPage: React.FC = () => {
       console.error('物件の削除に失敗しました:', error);
       alert('物件の削除に失敗しました。');
     }
+  };
+
+  const handleCopyUrl = (propertyId: number | undefined) => {
+    if (!propertyId) return;
+    
+    const url = `${window.location.origin}/property/${propertyId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShowCopyModal(true);
+      setTimeout(() => {
+        setShowCopyModal(false);
+      }, 2000);
+    }).catch(err => {
+      console.error('URLのコピーに失敗しました:', err);
+    });
   };
 
   if (isUserLoading) {
@@ -270,73 +285,65 @@ export const MyPage: React.FC = () => {
                   {properties.map((property) => (
                     <div
                       key={property.id}
-                      className="flex gap-6 p-4 hover:bg-gray-50 transition-colors"
+                      className="border-b last:border-b-0"
                     >
-                      {/* 物件画像 */}
-                      <div className="w-48 h-48 bg-gray-200 flex-shrink-0 overflow-hidden">
-                        {property.images?.find(img => img.image_type === 'MAIN')?.url ? (
-                          <img
-                            src={property.images.find(img => img.image_type === 'MAIN')?.url}
-                            alt={property.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            <span className="text-4xl">🏠</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 物件情報 */}
-                      <div className="flex-1 py-2">
-                        <h4 className="text-lg font-medium text-gray-900 mb-2">{property.name}</h4>
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <p>
-                            <span className="font-medium">所在地:</span> {property.prefecture}
-                          </p>
-                          {property.layout && (
-                            <p>
-                              <span className="font-medium">間取り:</span> {property.layout}
-                            </p>
-                          )}
-                          {property.construction_year && (
-                            <p>
-                              <span className="font-medium">築年数:</span> {property.construction_year}年
-                              {property.construction_month && `${property.construction_month}月`}
-                            </p>
-                          )}
-                          {property.structure && (
-                            <p>
-                              <span className="font-medium">構造:</span> {property.structure}
-                            </p>
+                      <div className="flex items-start gap-3 p-4">
+                        {/* サムネイル画像 */}
+                        <div className="w-20 h-20 bg-gray-100 flex-shrink-0 overflow-hidden rounded-lg">
+                          {property.images?.find(img => img.image_type === 'MAIN')?.url ? (
+                            <img
+                              src={property.images.find(img => img.image_type === 'MAIN')?.url}
+                              alt={property.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <span className="text-2xl">🏠</span>
+                            </div>
                           )}
                         </div>
-                        <div className="mt-4 flex gap-3">
+
+                        {/* 物件情報 */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 truncate">{property.name}</h4>
+                          <p className="text-sm text-gray-500 mt-1">{property.prefecture}</p>
+                          {property.layout && (
+                            <p className="text-sm text-gray-500">{property.layout}</p>
+                          )}
+                        </div>
+
+                        {/* アクションボタン */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleCopyUrl(property.id)}
+                            className="p-2 text-gray-500 hover:text-gray-900"
+                            title="リンクをシェア"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </button>
                           <Link
                             to={`/property/${property.id}/edit`}
-                            className="inline-flex items-center text-sm text-gray-700 hover:text-blue-600"
+                            className="p-2 text-gray-500 hover:text-gray-900"
+                            title="編集"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
-                            編集
                           </Link>
                           <button
                             onClick={() => property.id && handleCreateListing(property.id)}
-                            className="inline-flex items-center text-sm text-gray-700 hover:text-blue-600"
+                            className="p-2 text-gray-500 hover:text-gray-900"
+                            title="出品"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            出品
+                            <Plus className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => property.id && handleDeleteProperty(property.id)}
-                            className="inline-flex items-center text-sm text-red-600 hover:text-red-700"
+                            className="p-2 text-gray-500 hover:text-red-600"
+                            title="削除"
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            削除
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -404,6 +411,15 @@ export const MyPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* コピー完了モーダル */}
+      {showCopyModal && (
+        <div className="fixed bottom-20 left-0 right-0 flex justify-center items-center z-50 animate-fade-in">
+          <div className="bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
+            物件のリンクをコピーしました
+          </div>
+        </div>
+      )}
     </div>
   );
 };
