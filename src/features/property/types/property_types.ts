@@ -41,8 +41,8 @@ export interface Property {
   building_area?: number;
   floor_count?: number;
   structure?: StructureType | null;
-  design_company_id?: number;
-  construction_company_id?: number;
+  design_company?: string;
+  construction_company?: string;
   created_at?: string;
   updated_at?: string;
   images?: Image[];

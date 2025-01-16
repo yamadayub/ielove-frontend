@@ -74,7 +74,7 @@ export const RoomPage = () => {
           <div className="max-w-5xl mx-auto">
             <div className="px-4 py-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">仕上げ材</h2>
+                <h2 className="text-lg font-semibold text-gray-900">インテリア</h2>
                 <ProductViewTabs view={view} onViewChange={setView} />
               </div>
             </div>

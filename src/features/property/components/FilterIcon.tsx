@@ -2,7 +2,7 @@ import React from 'react';
 import type { Image } from '../../image/types/image_types';
 
 interface FilterIconProps {
-  image: Image;
+  image: Image | null;
   label: string;
   isSelected: boolean;
   onClick: () => void;
@@ -25,11 +25,17 @@ export const FilterIcon: React.FC<FilterIconProps> = ({
             isSelected ? "ring-blue-500" : "ring-gray-200"
           }`}
         >
-          <img
-            src={image.url}
-            alt={label}
-            className="w-full h-full object-cover rounded-full"
-          />
+          {image ? (
+            <img
+              src={image.url}
+              alt={label}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-400 text-xs">No Image</span>
+            </div>
+          )}
         </div>
       </div>
       <span className="text-xs text-gray-700 truncate max-w-[64px]">

@@ -204,12 +204,12 @@ export const EditRoomPage: React.FC = () => {
       );
       navigate(`/property/${propertyId}/room/${roomId}/product/${response.data.id}/edit`);
     } catch (error) {
-      console.error('内装仕様の作成に失敗しました:', error);
+      console.error('インテリアの作成に失敗しました:', error);
       if (error instanceof AxiosError && error.response?.data) {
         const apiError = error.response.data as ApiError;
-        setError(`内装仕様の作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+        setError(`インテリアの作成に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
-        setError('内装仕様の作成に失敗しました。もう一度お試しください');
+        setError('インテリアの作成に失敗しました。もう一度お試しください');
       }
     }
   };
@@ -226,7 +226,7 @@ export const EditRoomPage: React.FC = () => {
   const handleDeleteProduct = async (productId: number | undefined) => {
     if (!productId) return;
     
-    if (!window.confirm('この内装仕様を削除してもよろしいですか？')) {
+    if (!window.confirm('このインテリアを削除してもよろしいですか？')) {
       return;
     }
 
@@ -238,17 +238,17 @@ export const EditRoomPage: React.FC = () => {
         refetchImages()
       ]);
       // 成功メッセージを一時的に表示
-      setError('内装仕様を削除しました');
+      setError('インテリアを削除しました');
       setTimeout(() => {
         setError(null);
       }, 3000);
     } catch (error) {
-      console.error('内装仕様の削除に失敗しました:', error);
+      console.error('インテリアの削除に失敗しました:', error);
       if (error instanceof AxiosError && error.response?.data) {
         const apiError = error.response.data as ApiError;
-        setError(`内装仕様の削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
+        setError(`インテリアの削除に失敗しました: ${apiError.message || JSON.stringify(apiError)}`);
       } else {
-        setError('内装仕様の削除に失敗しました。もう一度お試しください');
+        setError('インテリアの削除に失敗しました。もう一度お試しください');
       }
     }
   };
@@ -394,13 +394,13 @@ export const EditRoomPage: React.FC = () => {
       <div className="md:max-w-2xl md:mx-auto mt-8">
         <div className="bg-white rounded-lg shadow-sm">
           <div className="flex items-center justify-between p-4 md:p-6">
-            <h2 className="text-lg font-semibold text-gray-900">内装仕様一覧</h2>
+            <h2 className="text-lg font-semibold text-gray-900">インテリア一覧</h2>
             <button
               onClick={handleCreateProduct}
               className="inline-flex items-center px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
             >
               <Plus className="h-4 w-4 mr-2" />
-              内装仕様を追加
+              インテリアを追加
             </button>
           </div>
 
@@ -446,7 +446,7 @@ export const EditRoomPage: React.FC = () => {
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
                         className="ml-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                        aria-label="内装仕様を削除"
+                        aria-label="インテリアを削除"
                       >
                         <Trash2 className="h-5 w-5" />
                       </button>
@@ -458,8 +458,8 @@ export const EditRoomPage: React.FC = () => {
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
               <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">内装仕様が登録されていません</h3>
-              <p className="text-gray-600">「内装仕様を追加」ボタンから製品を登録してください</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">インテリアが登録されていません</h3>
+              <p className="text-gray-600">「インテリアを追加」ボタンから製品を登録してください</p>
             </div>
           )}
         </div>

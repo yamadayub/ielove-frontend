@@ -51,6 +51,24 @@ export const PropertyInfo: React.FC<PropertyInfoProps> = ({
         {property.description && (
           <p className="mt-1 text-sm text-gray-600 break-words whitespace-normal">{property.description}</p>
         )}
+        
+        {/* 設計・施工会社情報 */}
+        <div className="mt-4 space-y-2">
+          {property.design_company && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-900">設計会社</span>
+              <span className="mx-2 text-gray-400">|</span>
+              <span className="text-gray-700">{property.design_company}</span>
+            </div>
+          )}
+          {property.construction_company && (
+            <div className="text-sm">
+              <span className="font-medium text-gray-900">施工会社</span>
+              <span className="mx-2 text-gray-400">|</span>
+              <span className="text-gray-700">{property.construction_company}</span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="px-4 pb-3">
         <PurchaseButton

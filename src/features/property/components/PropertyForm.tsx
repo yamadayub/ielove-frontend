@@ -64,8 +64,8 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     building_area: undefined,
     floor_count: undefined,
     structure: null,
-    design_company_id: undefined,
-    construction_company_id: undefined,
+    design_company: '',
+    construction_company: '',
     ...initialData,
   });
 
@@ -317,6 +317,36 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       <div className="p-6 space-y-6">
         <h3 className="text-sm">詳細情報</h3>
         
+        <div>
+          <label htmlFor="design_company" className="block text-sm mb-2">
+            設計会社
+          </label>
+          <input
+            type="text"
+            id="design_company"
+            name="design_company"
+            value={formData.design_company || ''}
+            onChange={handleInputChange}
+            className="block w-full rounded-lg border-gray-200 text-sm focus:border-gray-900 focus:ring-0"
+            placeholder="例：株式会社〇〇設計事務所"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="construction_company" className="block text-sm mb-2">
+            施工会社
+          </label>
+          <input
+            type="text"
+            id="construction_company"
+            name="construction_company"
+            value={formData.construction_company || ''}
+            onChange={handleInputChange}
+            className="block w-full rounded-lg border-gray-200 text-sm focus:border-gray-900 focus:ring-0"
+            placeholder="例：株式会社〇〇建設"
+          />
+        </div>
+
         <div>
           <label htmlFor="layout" className="block text-sm mb-2">
             間取

@@ -14,7 +14,7 @@ export const ProductFormFields: React.FC<ProductFormFieldsProps> = ({
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          仕上げ材名 <span className="text-red-500">*</span>
+          インテリア名 <span className="text-red-500">*</span>
         </label>
         <input
           type="text"

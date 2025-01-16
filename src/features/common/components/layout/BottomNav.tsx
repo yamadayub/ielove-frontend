@@ -14,40 +14,44 @@ export const BottomNav = () => {
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
+              `flex flex-col items-center p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
             }
           >
             <Home className="h-5 w-5" />
+            <span className="block text-[10px] mt-1">ホーム</span>
           </NavLink>
 
           {/* 検索 */}
           <NavLink
             to="/search"
             className={({ isActive }) =>
-              `p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
+              `flex flex-col items-center p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
             }
           >
             <Search className="h-5 w-5" />
+            <span className="block text-[10px] mt-1">検索</span>
           </NavLink>
 
           {/* 投稿 */}
           <NavLink
             to="/property/create"
             className={({ isActive }) =>
-              `p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
+              `flex flex-col items-center p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
             }
           >
             <PlusSquare className="h-5 w-5" />
+            <span className="block text-[10px] mt-1">物件追加</span>
           </NavLink>
 
           {/* お気に入り */}
           <NavLink
             to="/favorites"
             className={({ isActive }) =>
-              `p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
+              `flex flex-col items-center p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
             }
           >
             <Heart className="h-5 w-5" />
+            <span className="block text-[10px] mt-1">お気に入り</span>
           </NavLink>
 
           {/* ログイン/マイページ */}
@@ -55,19 +59,21 @@ export const BottomNav = () => {
             <NavLink
               to="/mypage"
               className={({ isActive }) =>
-                `p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
+                `flex flex-col items-center p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
               }
             >
               <User className="h-5 w-5" />
+              <span className="block text-[10px] mt-1">マイページ</span>
             </NavLink>
           ) : (
             <NavLink
               to="/sign-in"
               className={({ isActive }) =>
-                `p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
+                `flex flex-col items-center p-2 ${isActive ? 'text-gray-900' : 'text-gray-500'}`
               }
             >
               <LogIn className="h-5 w-5" />
+              <span className="block text-[10px] mt-1">ログイン</span>
             </NavLink>
           )}
         </div>

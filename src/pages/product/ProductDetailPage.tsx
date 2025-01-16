@@ -30,7 +30,7 @@ export const ProductDetailPage: React.FC = () => {
     return (
       <div className="text-center py-12">
         <h2 className="text-lg font-semibold text-gray-900">
-          製品情報が見つかりませんでした
+          インテリアが見つかりませんでした
         </h2>
       </div>
     );
@@ -75,7 +75,7 @@ export const ProductDetailPage: React.FC = () => {
     return (
       <div className="text-center py-12">
         <h2 className="text-lg font-semibold text-gray-900">
-          仕上げ材が見つかりませんでした
+          インテリアが見つかりませんでした
         </h2>
       </div>
     );

@@ -508,7 +508,7 @@ export const EditProductPage: React.FC = () => {
 
       {/* デスクトップヘッダー */}
       <div className="hidden md:block max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900">新規内装仕様</h1>
+        <h1 className="text-2xl font-bold text-gray-900">新規インテリア</h1>
       </div>
 
       {error && (

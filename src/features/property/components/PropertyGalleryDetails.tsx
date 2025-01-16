@@ -134,7 +134,7 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
       <div className="mt-4">
         <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide pl-2">
           <FilterIcon
-            image={propertyImages[0]}
+            image={propertyImages[0] || null}
             label="全て"
             isSelected={selectedFilter === null}
             onClick={() => setSelectedFilter(null)}

@@ -23,7 +23,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
   isOwner = false
 }) => {
   const { userId } = useAuth();
-  const shouldBlur = !userId || !(isPurchased || isOwner);
+  const shouldBlur = !isPurchased && !isOwner;
   const navigate = useNavigate();
 
   const handleProductClick = (productId: number | undefined) => {
@@ -77,7 +77,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                           <img
                             src={mainImage.url}
                             alt={product.name}
-                            className={`w-32 h-32 object-cover ${shouldBlur && mainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+                            className={`w-32 h-32 object-cover ${shouldBlur ? 'blur-[6px]' : ''}`}
                           />
                         ) : (
                           <div className="w-32 h-32 bg-gray-100 flex items-center justify-center">
@@ -89,27 +89,27 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                         <div className="text-sm">
                           <span className="font-medium text-gray-900">商品名</span>
                           <span className="mx-2 text-gray-400">|</span>
-                          <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.name}</span>
+                          <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.name}</span>
                         </div>
                         {product.manufacturer_name && (
                           <div className="text-sm mt-1">
                             <span className="font-medium text-gray-900">メーカー</span>
                             <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.manufacturer_name}</span>
+                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.manufacturer_name}</span>
                           </div>
                         )}
                         {product.product_code && (
                           <div className="text-sm mt-1">
                             <span className="font-medium text-gray-900">型番</span>
                             <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.product_code}</span>
+                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.product_code}</span>
                           </div>
                         )}
                         {product.catalog_url && (
                           <div className="text-sm mt-1">
                             <span className="font-medium text-gray-900">カタログ</span>
                             <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>
+                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>
                               <a href={product.catalog_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
                                 リンク
                               </a>
@@ -120,7 +120,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                           <div className="text-sm mt-1">
                             <span className="font-medium text-gray-900">説明</span>
                             <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{product.description}</span>
+                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.description}</span>
                           </div>
                         )}
                       </div>
@@ -143,7 +143,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                               <img
                                 src={specMainImage.url}
                                 alt={`${spec.spec_type} - ${spec.spec_value}`}
-                                className={`w-24 h-24 object-cover ${shouldBlur && specMainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+                                className={`w-24 h-24 object-cover ${shouldBlur ? 'blur-[6px]' : ''}`}
                               />
                             ) : (
                               <div className="text-sm text-gray-500">
@@ -155,7 +155,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                             <div className="text-sm">
                               <span className="font-medium text-gray-900">{spec.spec_type}</span>
                               <span className="mx-2 text-gray-400">|</span>
-                              <span className={`text-gray-700 ${shouldBlur ? 'blur-sm' : ''}`}>{spec.spec_value}</span>
+                              <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{spec.spec_value}</span>
                             </div>
                           </div>
                         </div>

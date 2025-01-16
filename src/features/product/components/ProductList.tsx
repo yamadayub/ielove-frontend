@@ -17,14 +17,17 @@ export const ProductList: React.FC<ProductListProps> = ({
   roomId,
   products,
   images,
-  isPurchased = false
+  isPurchased = false,
+  isOwner = false
 }) => {
   const navigate = useNavigate();
+
+  const shouldBlur = !isPurchased && !isOwner;
 
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">仕上げ材が登録されていません</p>
+        <p className="text-gray-500">インテリアが登録されていません</p>
       </div>
     );
   }
@@ -58,7 +61,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               <img
                 src={mainImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-all ${shouldBlur ? 'blur-[6px]' : ''}`}
               />
             </div>
           </div>
