@@ -73,7 +73,7 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
       className="flex items-center justify-center space-x-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors w-full"
     >
       <ShoppingBag className="h-5 w-5" />
-      <span className="font-medium">物件仕様を購入する</span>
+      <span className="font-medium">仕様情報を購入する</span>
     </button>
   );
 }; 

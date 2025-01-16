@@ -290,12 +290,21 @@ export const MyPage: React.FC = () => {
                       <div className="flex items-start gap-3 p-4">
                         {/* サムネイル画像 */}
                         <div className="w-20 h-20 bg-gray-100 flex-shrink-0 overflow-hidden rounded-lg">
-                          {property.images?.find(img => img.image_type === 'MAIN')?.url ? (
-                            <img
-                              src={property.images.find(img => img.image_type === 'MAIN')?.url}
-                              alt={property.name}
-                              className="w-full h-full object-cover"
-                            />
+                          {property.images && property.images.length > 0 ? (
+                            (() => {
+                              const mainImage = property.images.find(img => img.image_type === 'MAIN');
+                              return mainImage ? (
+                                <img
+                                  src={mainImage.url}
+                                  alt={property.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                  <span className="text-2xl">🏠</span>
+                                </div>
+                              );
+                            })()
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400">
                               <span className="text-2xl">🏠</span>

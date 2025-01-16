@@ -1,6 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
 import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import logo from '../../../../assets/logo.png';
 
@@ -15,7 +14,6 @@ export const Header = () => {
           </Link>
           
           <div className="flex items-center space-x-4">
-            <Search className="h-5 w-5 text-gray-900" />
             <SignedIn>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>

@@ -172,7 +172,7 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
         <div className="mt-8">
           <div className="py-4 bg-gray-50">
             <p className="text-gray-700 font-medium px-6">
-            物件仕様購入後に以下{filteredPaidImages.length}枚の画像が閲覧可能になります
+            仕様情報購入後に以下{filteredPaidImages.length}枚の画像が閲覧可能になります
             </p>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-0.5 bg-gray-100">

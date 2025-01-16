@@ -28,7 +28,7 @@ export const PurchaseRequiredModal: React.FC<PurchaseRequiredModalProps> = ({
           </button>
           <div className="text-center">
             <Dialog.Description className="text-base text-gray-600">
-              詳細情報は物件仕様購入後に閲覧可能になります
+              詳細情報は仕様情報購入後に閲覧可能になります
             </Dialog.Description>
           </div>
         </Dialog.Panel>

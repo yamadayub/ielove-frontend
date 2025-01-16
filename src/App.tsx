@@ -28,6 +28,7 @@ import { CheckoutCancel } from './pages/purchase/CheckoutCancel';
 import { PropertyDetailPage } from './pages/property/PropertyDetailPage';
 import { OnboardingCompletePage } from './pages/seller/OnboardingCompletePage';
 import { ErrorPage } from './pages/ErrorPage';
+import { FavoritesPage } from './pages/favorites/FavoritesPage';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -115,7 +116,7 @@ export const App = () => {
                     </ProtectedRoute>
                   } />
                   <Route path="/complete" element={<CompletePage />} />
-                  <Route path="/favorites" element={<div>お気に入り</div>} />
+                  <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/mypage/edit" element={
                     <ProtectedRoute>
                       <EditUserProfilePage />
