@@ -99,4 +99,9 @@ export const ENDPOINTS = {
         PURCHASED: '/api/transactions/purchased',
         CHECK: '/api/transactions/check'
     },
+
+    // 所有者チェックAPI
+    CHECK_PROPERTY_OWNERSHIP: (propertyId) => `/api/properties/${propertyId}/is-mine`,
+    CHECK_ROOM_OWNERSHIP: (roomId) => `/api/rooms/${roomId}/is-mine`,
+    CHECK_PRODUCT_OWNERSHIP: (productId) => `/api/products/${productId}/is-mine`,
 }; 

@@ -88,7 +88,7 @@ export const RoomPage = () => {
                 isOwner={isOwner}
               />
             ) : (
-              <div className="px-4">
+              <div className="">
                 <ProductListView
                   propertyId={propertyId}
                   roomId={roomId}

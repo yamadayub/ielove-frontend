@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, X, Loader2 } from 'lucide-react';
 import { ImageUploader } from '../../features/image/components/ImageUploader';
@@ -98,7 +98,7 @@ export const EditProductPage: React.FC = () => {
   const { propertyId, roomId, productId } = useParams<{ propertyId: string; roomId: string; productId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const axios = useAuthenticatedAxios();
 
   // State hooks
@@ -138,11 +138,11 @@ export const EditProductPage: React.FC = () => {
   React.useEffect(() => {
     if (product) {
       setProductForm({
-        name: product.name,
-        product_code: product.product_code,
-        description: product.description ?? '',
-        catalog_url: product.catalog_url ?? '',
-        manufacturer_name: product.manufacturer_name ?? '',
+        name: product.name || '',
+        product_code: product.product_code || '',
+        description: product.description || '',
+        catalog_url: product.catalog_url || '',
+        manufacturer_name: product.manufacturer_name || '',
         product_category_id: product.product_category_id,
         room_id: product.room_id
       });
@@ -154,6 +154,39 @@ export const EditProductPage: React.FC = () => {
       }
     }
   }, [product]);
+
+  // 所有者チェック
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!productId || !userId) return;
+
+      try {
+        const token = await getToken();
+        const response = await axios.get<boolean>(
+          ENDPOINTS.CHECK_PRODUCT_OWNERSHIP(Number(productId)),
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'x-clerk-user-id': userId
+            }
+          }
+        );
+        
+        if (!response.data) {
+          navigate('/error', { 
+            state: { message: 'この製品は他のユーザーによって登録されています' }
+          });
+        }
+      } catch (error) {
+        console.error('所有権の確認に失敗しました:', error);
+        navigate('/error', {
+          state: { message: '所有権の確認に失敗しました' }
+        });
+      }
+    };
+
+    checkOwnership();
+  }, [productId, userId, getToken, axios, navigate]);
 
   // 必要な情報が不足している場合の表示
   if (!productId || !roomId || !propertyId || !userId) {

@@ -41,7 +41,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-2 p-2">
+    <div className="grid grid-cols-3">
       {products.map((product) => {
         const mainImage = getMainImage(product.id || 0);
         

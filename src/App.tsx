@@ -27,6 +27,7 @@ import { CheckoutSuccess } from './pages/purchase/CheckoutSuccess';
 import { CheckoutCancel } from './pages/purchase/CheckoutCancel';
 import { PropertyDetailPage } from './pages/property/PropertyDetailPage';
 import { OnboardingCompletePage } from './pages/seller/OnboardingCompletePage';
+import { ErrorPage } from './pages/ErrorPage';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -122,6 +123,7 @@ export const App = () => {
                   } />
                   <Route path="/listings/:id/edit" element={<EditListingPage />} />
                   <Route path="/seller/onboarding/complete" element={<OnboardingCompletePage />} />
+                  <Route path="/error" element={<ErrorPage />} />
                 </Routes>
               </div>
               <BottomNav />

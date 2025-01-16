@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, PlusCircle, Loader2, Trash2, Pencil, ImageIcon } from 'lucide-react';
 import { PropertyForm } from '../../features/property/components/PropertyForm';
@@ -83,9 +83,42 @@ const DeleteConfirmationModal: React.FC<DeleteModalProps> = ({
 export const EditPropertyPage: React.FC = () => {
   const { propertyId } = useParams();
   const navigate = useNavigate();
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const axios = useAuthenticatedAxios();
   const { data: userProfile } = useUser(userId);
+
+  // 所有者チェック
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!propertyId || !userId) return;
+
+      try {
+        const token = await getToken();
+        const response = await axios.get<boolean>(
+          ENDPOINTS.CHECK_PROPERTY_OWNERSHIP(Number(propertyId)),
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'x-clerk-user-id': userId
+            }
+          }
+        );
+        
+        if (!response.data) {
+          navigate('/error', { 
+            state: { message: 'この物件は他のユーザーによって登録されています' }
+          });
+        }
+      } catch (error) {
+        console.error('所有権の確認に失敗しました:', error);
+        navigate('/error', {
+          state: { message: '所有権の確認に失敗しました' }
+        });
+      }
+    };
+
+    checkOwnership();
+  }, [propertyId, userId, getToken, axios, navigate]);
 
   // propertyIdのnullチェック
   if (!propertyId) {

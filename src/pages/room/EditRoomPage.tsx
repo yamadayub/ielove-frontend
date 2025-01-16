@@ -36,10 +36,43 @@ export const EditRoomPage: React.FC = () => {
   const { propertyId, roomId } = useParams<{ propertyId: string; roomId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { userId } = useAuth();
+  const { userId, getToken } = useAuth();
   const axios = useAuthenticatedAxios();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 所有者チェック
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (!roomId || !userId) return;
+
+      try {
+        const token = await getToken();
+        const response = await axios.get<boolean>(
+          ENDPOINTS.CHECK_ROOM_OWNERSHIP(Number(roomId)),
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'x-clerk-user-id': userId
+            }
+          }
+        );
+        
+        if (!response.data) {
+          navigate('/error', { 
+            state: { message: 'この部屋は他のユーザーによって登録されています' }
+          });
+        }
+      } catch (error) {
+        console.error('所有権の確認に失敗しました:', error);
+        navigate('/error', {
+          state: { message: '所有権の確認に失敗しました' }
+        });
+      }
+    };
+
+    checkOwnership();
+  }, [roomId, userId, getToken, axios, navigate]);
 
   // nullチェックの追加
   if (!roomId || !propertyId) {
