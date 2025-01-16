@@ -11,6 +11,7 @@ import { useAuthenticatedAxios } from '../../features/shared/api/axios';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import type { Room } from '../../features/room/types/room_types';
 import { AxiosError } from 'axios';
+import { Breadcrumb } from '../../features/common/components/navigation/Breadcrumb';
 
 interface RoomFormData {
   name: string;
@@ -271,6 +272,7 @@ export const EditRoomPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white md:bg-gray-50">
+      <Breadcrumb />
       {/* モバイルヘッダー */}
       <div className="sticky top-0 z-50 bg-white border-b md:hidden">
         <div className="flex items-center h-14 px-4">
@@ -342,6 +344,7 @@ export const EditRoomPage: React.FC = () => {
                 <ImageUploader
                   onImageUploaded={handleImageUploaded}
                   onError={setError}
+                  propertyId={Number(propertyId)}
                   roomId={Number(roomId)}
                   clerkUserId={userId || undefined}
                 />

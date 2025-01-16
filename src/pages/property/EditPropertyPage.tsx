@@ -12,6 +12,7 @@ import { RoomTile } from '../../features/room/components/RoomTile';
 import { useImages } from '../../features/image/hooks/useImages';
 import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import { AxiosError } from 'axios';
+import { Breadcrumb } from '../../features/common/components/navigation/Breadcrumb';
 
 interface ApiError {
   message: string;
@@ -137,24 +138,31 @@ export const EditPropertyPage: React.FC = () => {
     refetch: refetchRooms 
   } = useRooms({ propertyId });
   const { 
-    data: images, 
+    data: images = [], 
     isLoading: isLoadingImages,
     refetch: refetchImages 
   } = useImages({
     propertyId: Number(propertyId)
   });
 
+  // コンポーネントのマウント時に画像を再取得
+  useEffect(() => {
+    refetchImages();
+  }, [refetchImages]);
+
   // 物件に関連する画像のみをフィルタリング（部屋や製品に紐付いていない画像）
-  const propertyImages = images?.filter(image => 
+  const propertyImages = images.filter(image => 
     !image.room_id && !image.product_id
   );
 
   // 部屋の画像のみをフィルタリング（製品に紐付いていない画像）
-  const roomImages = images?.filter(img => img.room_id && !img.product_id) || [];
+  const roomImages = images.filter(img => 
+    img.room_id && !img.product_id
+  );
 
   // 各部屋のメイン画像を取得
   const getRoomMainImage = (roomId: number) => {
-    return roomImages.find(img => 
+    return images.find(img => 
       img.room_id === roomId && 
       img.image_type === 'MAIN'
     );
@@ -270,6 +278,7 @@ export const EditPropertyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white md:bg-gray-50">
+      <Breadcrumb />
       {/* モバイルヘッダー */}
       <div className="sticky top-0 z-50 bg-white border-b md:hidden">
         <div className="flex items-center h-14 px-4">

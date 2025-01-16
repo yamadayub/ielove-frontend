@@ -12,6 +12,7 @@ import { ENDPOINTS } from '../../features/shared/api/endpoints';
 import type { Product, ProductSpecification, ProductDimension } from '../../features/product/types/product_types';
 import type { Image } from '../../image/types/image_types';
 import { AxiosError } from 'axios';
+import { Breadcrumb } from '../../features/common/components/navigation/Breadcrumb';
 
 // 型定義の追加
 type QueryKeys = 
@@ -493,6 +494,7 @@ export const EditProductPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white md:bg-gray-50">
+      <Breadcrumb />
       {/* モバイルヘッダー */}
       <div className="sticky top-0 z-50 bg-white border-b md:hidden">
         <div className="flex items-center h-14 px-4">

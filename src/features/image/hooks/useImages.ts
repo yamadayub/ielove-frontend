@@ -34,5 +34,6 @@ export const useImages = ({ propertyId, roomId, productId, skip = 0, limit = 100
       return data
     },
     retry: false,
+    refetchOnMount: true
   })
 }
