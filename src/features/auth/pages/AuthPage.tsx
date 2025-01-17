@@ -8,39 +8,46 @@ export const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect_url');
   const afterAuthUrl = redirectUrl ? decodeURIComponent(redirectUrl) : '/mypage';
-  const [showLineModal, setShowLineModal] = useState(false);
+  const [isLineInApp, setIsLineInApp] = useState(false);
 
   useEffect(() => {
-    setShowLineModal(isLineInAppBrowser());
+    const isLine = isLineInAppBrowser();
+    setIsLineInApp(isLine);
   }, []);
 
-  return (
-    <>
-      <div className="min-h-[calc(100vh-160px)] flex items-center justify-center px-4">
-        <SignIn 
-          routing="path"
-          path="/sign-in"
-          afterSignInUrl={afterAuthUrl}
-          appearance={{
-            elements: {
-              rootBox: "mx-auto w-full max-w-md",
-              card: "rounded-xl shadow-sm"
-            }
-          }}
-        />
-        <SignUp
-          routing="path"
-          path="/sign-up"
-          afterSignUpUrl={afterAuthUrl}
-          appearance={{
-            elements: {
-              rootBox: "mx-auto w-full max-w-md",
-              card: "rounded-xl shadow-sm"
-            }
-          }}
-        />
+  // LINEのアプリ内ブラウザの場合は警告モーダルのみ表示
+  if (isLineInApp) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LineInAppBrowserModal isOpen={true} />
       </div>
-      <LineInAppBrowserModal isOpen={showLineModal} />
-    </>
+    );
+  }
+
+  return (
+    <div className="min-h-[calc(100vh-160px)] flex items-center justify-center px-4">
+      <SignIn 
+        routing="path"
+        path="/sign-in"
+        afterSignInUrl={afterAuthUrl}
+        appearance={{
+          elements: {
+            rootBox: "mx-auto w-full max-w-md",
+            card: "rounded-xl shadow-sm"
+          }
+        }}
+      />
+      <SignUp
+        routing="path"
+        path="/sign-up"
+        afterSignUpUrl={afterAuthUrl}
+        appearance={{
+          elements: {
+            rootBox: "mx-auto w-full max-w-md",
+            card: "rounded-xl shadow-sm"
+          }
+        }}
+      />
+    </div>
   );
 }; 
