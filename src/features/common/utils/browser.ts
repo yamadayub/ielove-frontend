@@ -14,8 +14,8 @@ export const isLineInAppBrowser = (): boolean => {
     'line-pad'
   ];
 
-  // デバッグ用にユーザーエージェントを出力
-  console.log('User Agent:', userAgent);
+  // デバッグ用にユーザーエージェントを画面に表示
+  alert(`User Agent: ${userAgent}`);
 
   return linePatterns.some(pattern => userAgent.includes(pattern));
 }; 

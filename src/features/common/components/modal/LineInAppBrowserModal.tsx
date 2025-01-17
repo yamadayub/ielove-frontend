@@ -19,14 +19,11 @@ export const LineInAppBrowserModal: React.FC<LineInAppBrowserModalProps> = ({ is
               <ExternalLink className="h-12 w-12 text-gray-900" />
             </div>
             <h3 className="text-lg font-medium leading-6 text-gray-900 mb-2">
-              外部ブラウザで開いてください
+              外部ブラウザでページを開いてください
             </h3>
             <div className="mt-2">
               <p className="text-sm text-gray-500">
-                LINEのブラウザではGoogleログインができません。
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                右上の「︙」メニューから「外部ブラウザで開く」を選択してください。
+                アプリ内のブラウザではGoogleログインができないため、右下のメニューから「ブラウザで開く」を選択してアクセスしてください。
               </p>
             </div>
           </div>
