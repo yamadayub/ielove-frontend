@@ -34,11 +34,18 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
       <div className="flex items-start">
         <div className="flex-shrink-0">
           {mainImage ? (
-            <img
-              src={mainImage.url}
-              alt={product.name}
-              className={`w-32 h-32 object-cover ${shouldBlur && mainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
-            />
+            <div className="relative">
+              <img
+                src={mainImage.url}
+                alt={product.name}
+                className={`w-32 h-32 object-cover ${shouldBlur && mainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+              />
+              <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
+                <p className="text-xs font-medium text-white truncate">
+                  {product.product_category_name}
+                </p>
+              </div>
+            </div>
           ) : (
             <div className="w-32 h-32 bg-gray-100 flex items-center justify-center">
               <ImageIcon className="h-8 w-8 text-gray-400" />
