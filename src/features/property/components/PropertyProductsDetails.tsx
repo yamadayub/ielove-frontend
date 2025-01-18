@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ProductDetails, ProductSpecification } from '../../product/types/product_types';
 import { Image, ImageType } from '../../image/types/image_types';
 import { useAuth } from '@clerk/clerk-react';
 import { ImageIcon } from 'lucide-react';
+import { ImagePreviewModal } from '../../common/components/modal/ImagePreviewModal';
 
 interface PropertyProductsDetailsProps {
   propertyId: string;
@@ -21,6 +22,7 @@ interface ProductTileProps {
 const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images }) => {
   const { userId } = useAuth();
   const shouldBlur = !userId || !isPurchased;
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
 
   // メイン画像を取得（product_idでフィルタリング、product_specification_idがnullのもの）
   const productImages = images?.filter(img => 
@@ -28,6 +30,12 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
   );
   const mainImage = productImages?.find(img => img.image_type === 'MAIN') || 
                    productImages?.[0];  // メイン画像がない場合は最初の画像を使用
+
+  const handleImageClick = (imageUrl: string, alt: string) => {
+    if (!shouldBlur || (mainImage && mainImage.image_type !== 'PAID')) {
+      setSelectedImage({ url: imageUrl, alt });
+    }
+  };
 
   return (
     <div className="group block w-full border-b border-gray-300 hover:bg-gray-50 transition-colors">
@@ -38,7 +46,8 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
               <img
                 src={mainImage.url}
                 alt={product.name}
-                className={`w-32 h-32 object-cover ${shouldBlur && mainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+                className={`w-32 h-32 object-cover cursor-pointer ${shouldBlur && mainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+                onClick={() => handleImageClick(mainImage.url, product.name)}
               />
               <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
                 <p className="text-xs font-medium text-white truncate">
@@ -107,7 +116,8 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
                 <img
                   src={specMainImage.url}
                   alt={`${spec.spec_type} - ${spec.spec_value}`}
-                  className={`w-24 h-24 object-cover ${shouldBlur && specMainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+                  className={`w-24 h-24 object-cover cursor-pointer ${shouldBlur && specMainImage.image_type === 'PAID' ? 'blur-sm' : ''}`}
+                  onClick={() => handleImageClick(specMainImage.url, `${spec.spec_type} - ${spec.spec_value}`)}
                 />
               ) : (
                 <div className="text-sm text-gray-500">
@@ -125,6 +135,13 @@ const ProductTile: React.FC<ProductTileProps> = ({ product, isPurchased, images 
           </div>
         );
       })}
+
+      <ImagePreviewModal
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        imageUrl={selectedImage?.url || ''}
+        alt={selectedImage?.alt}
+      />
     </div>
   );
 };

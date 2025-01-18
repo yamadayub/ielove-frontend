@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, CheckCircle, Pencil } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
+import { useAuth } from '@clerk/clerk-react';
 
 interface PurchaseButtonProps {
   propertyId: number;
@@ -23,9 +24,16 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
   onEdit
 }) => {
   const navigate = useNavigate();
+  const { userId } = useAuth();
   const setCurrentCheckoutListingId = useStore((state) => state.setCurrentCheckoutListingId);
 
   const handlePurchase = () => {
+    if (!userId) {
+      const currentUrl = encodeURIComponent(window.location.pathname);
+      navigate(`/sign-in?redirect_url=${currentUrl}&from=purchase`);
+      return;
+    }
+
     if (listingId) {
       setCurrentCheckoutListingId(listingId);
       navigate('/checkout');
