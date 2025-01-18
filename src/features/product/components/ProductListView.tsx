@@ -77,7 +77,7 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
                           <img
                             src={mainImage.url}
                             alt={product.name}
-                            className={`w-32 h-32 object-cover ${shouldBlur ? 'blur-[6px]' : ''}`}
+                            className="w-32 h-32 object-cover"
                           />
                         ) : (
                           <div className="w-32 h-32 bg-gray-100 flex items-center justify-center">

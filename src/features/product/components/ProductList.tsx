@@ -61,7 +61,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               <img
                 src={mainImage?.url || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=800'}
                 alt={product.name}
-                className={`w-full h-full object-cover transition-all ${shouldBlur ? 'blur-[6px]' : ''}`}
+                className="w-full h-full object-cover transition-all"
               />
             </div>
           </div>
