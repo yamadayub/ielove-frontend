@@ -10,7 +10,10 @@ export const Header = () => {
         <div className="flex items-center justify-between h-12">
           <Link to="/" className="flex items-center space-x-2">
             <img src={logo} alt="イエラブ" className="h-6 w-auto" />
-            <span className="font-semibold text-lg">ielove</span>
+            <div className="flex items-center space-x-2">
+              <span className="font-semibold text-lg">ielove</span>
+              <span className="text-xs text-gray-500">最高の家作りを、みんなで</span>
+            </div>
           </Link>
           
           <div className="flex items-center space-x-4">
