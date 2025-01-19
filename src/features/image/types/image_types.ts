@@ -9,12 +9,13 @@ export interface Image {
   room_id?: number;
   product_id?: number;
   product_specification_id?: number;
+  drawing_id?: number;
   created_at?: string;
-}
-
-export interface UseImagesParams {
+}export interface UseImagesParams {
   propertyId?: string;
   roomId?: string;
   productId?: string;
   productSpecificationId?: number;
+  drawingId?: string;
 }
+

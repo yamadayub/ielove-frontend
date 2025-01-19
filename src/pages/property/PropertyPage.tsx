@@ -181,6 +181,8 @@ export const PropertyPage = () => {
               propertyId={id}
               rooms={rooms || []}
               images={images || []}
+              isPurchased={purchaseStatus?.isPurchased || false}
+              isOwner={isOwner}
             />
           )}
         </div>

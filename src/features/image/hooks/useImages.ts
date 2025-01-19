@@ -7,6 +7,8 @@ interface UseImagesParams {
   propertyId?: number
   roomId?: number
   productId?: number
+  productSpecificationId?: number
+  drawingId?: number
   skip?: number
   limit?: number
 }
@@ -16,24 +18,41 @@ interface UseImagesParams {
  * @param params.entity_type - エンティティの種類（'property' | 'room' | 'product'）
  * @param params.entity_id - エンティティのID
  */
-export const useImages = ({ propertyId, roomId, productId, skip = 0, limit = 100 }: UseImagesParams) => {
+export const useImages = ({
+  propertyId,
+  roomId,
+  productId,
+  productSpecificationId,
+  drawingId,
+  skip = 0,
+  limit = 100
+}: UseImagesParams = {}) => {
   const axios = useAuthenticatedAxios()
 
-  return useQuery<Image[]>({
-    queryKey: ['images', { propertyId, roomId, productId, skip, limit }],
-    queryFn: async () => {
-      const params = {
-        skip,
-        limit,
-        ...(propertyId && { property_id: propertyId }),
-        ...(roomId && { room_id: roomId }),
-        ...(productId && { product_id: productId })
-      }
+  // クエリパラメータの構築
+  const params = {
+    ...(propertyId && { property_id: propertyId.toString() }),
+    ...(roomId && { room_id: roomId.toString() }),
+    ...(productId && { product_id: productId.toString() }),
+    ...(productSpecificationId && { product_specification_id: productSpecificationId.toString() }),
+    ...(drawingId && { drawing_id: drawingId.toString() }),
+    // property_idとdrawing_idが両方指定された場合はinclude_childrenを追加
+    ...(propertyId && drawingId && { include_children: 'true' })
+  };
 
-      const { data } = await axios.get(ENDPOINTS.GET_IMAGES, { params })
-      return data
+  console.log('useImages params:', params);
+
+  return useQuery({
+    queryKey: ['images', { propertyId, roomId, productId, productSpecificationId, drawingId }],
+    queryFn: async () => {
+      const { data } = await axios.get<Image[]>(
+        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.GET_IMAGES}`,
+        { params }
+      );
+
+      console.log('useImages response:', data);
+      return data;
     },
-    retry: false,
-    refetchOnMount: true
+    enabled: !!(propertyId || roomId || productId || productSpecificationId || drawingId)
   })
 }

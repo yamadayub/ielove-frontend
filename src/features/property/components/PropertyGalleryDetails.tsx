@@ -4,6 +4,9 @@ import { PhotoTile } from './PhotoTile';
 import { RoomDetails } from '../../room/types/room_types';
 import { Image } from '../../image/types/image_types';
 import { Product } from '../../product/types/product_types';
+import { useDrawings } from '../../drawing/hooks/useDrawings';
+import { Image as LucideImage } from 'lucide-react';
+import { ImagePreviewModal } from '../../common/components/modal/ImagePreviewModal';
 
 interface PropertyGalleryDetailsProps {
   propertyId: string;
@@ -21,9 +24,11 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
   isOwner
 }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const { data: drawings } = useDrawings({ propertyId });
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
 
   // 物件の画像のみをフィルタリング（部屋や製品に紐付いていない画像）
-  const propertyImages = images?.filter(img => !img.room_id && !img.product_id) || [];
+  const propertyImages = images?.filter(img => !img.room_id && !img.product_id && !img.drawing_id) || [];
 
   // 画像がPAIDで、未購入かつ所有者でない場合にブラー効果を適用
   const shouldBlur = (image: Image) => {
@@ -128,8 +133,21 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
     );
   };
 
+  // 図面の画像をフィルタリング
+  const getDrawingImages = (drawingId: number | undefined) => {
+    if (!drawingId) return [];
+    return images.filter(img => img.drawing_id === drawingId);
+  };
+
+  // 各図面のサムネイル画像を取得
+  const getDrawingThumbnail = (drawingId: number | undefined) => {
+    if (!drawingId) return null;
+    const drawingImages = getDrawingImages(drawingId);
+    return drawingImages.length > 0 ? drawingImages[0] : null;
+  };
+
   return (
-    <>
+    <div className="space-y-8">
       {/* フィルターアイコン */}
       <div className="mt-4">
         <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide pl-2">
@@ -172,14 +190,40 @@ export const PropertyGalleryDetails: React.FC<PropertyGalleryDetailsProps> = ({
         <div className="mt-8">
           <div className="py-4 bg-gray-50">
             <p className="text-gray-700 font-medium px-6">
-            仕様情報購入後に以下{filteredPaidImages.length}枚の画像が閲覧可能になります
+              仕様情報購入後に以下{filteredPaidImages.length}枚の画像が閲覧可能になります
             </p>
           </div>
           <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-0.5 bg-gray-100">
+            {/* 図面画像を最初に表示 */}
+            {drawings?.map((drawing) => {
+              if (!drawing.id) return null;
+              const thumbnail = getDrawingThumbnail(drawing.id);
+              if (!thumbnail) return null;
+
+              return (
+                <div key={drawing.id} className="relative aspect-square bg-white">
+                  <img
+                    src={thumbnail.url}
+                    alt={drawing.name}
+                    className={`w-full h-full object-cover ${!isPurchased && !isOwner ? 'blur-sm' : ''}`}
+                    onClick={() => setSelectedImage(thumbnail)}
+                  />
+                </div>
+              );
+            })}
+            {/* その他のPAID画像 */}
             {filteredPaidImages.map(renderPhotoTile)}
           </div>
         </div>
       )}
-    </>
+
+      {/* プレビューモーダル */}
+      <ImagePreviewModal
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        imageUrl={selectedImage?.url || ''}
+        alt="物件画像"
+      />
+    </div>
   );
-}; 
+};

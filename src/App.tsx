@@ -29,6 +29,7 @@ import { PropertyDetailPage } from './pages/property/PropertyDetailPage';
 import { OnboardingCompletePage } from './pages/seller/OnboardingCompletePage';
 import { ErrorPage } from './pages/ErrorPage';
 import { FavoritesPage } from './pages/favorites/FavoritesPage';
+import { EditDrawingPage } from './pages/drawing/EditDrawingPage';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -96,8 +97,16 @@ export const App = () => {
                       <MyPage />
                     </ProtectedRoute>
                   } />
-                  <Route path="/property/:propertyId/edit" element={<EditPropertyPage />} />
-                  <Route path="/property/:propertyId/room/:roomId/edit" element={<EditRoomPage />} />
+                  <Route path="/property/:propertyId/edit" element={
+                    <ProtectedRoute>
+                      <EditPropertyPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/property/:propertyId/room/:roomId/edit" element={
+                    <ProtectedRoute>
+                      <EditRoomPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/property/:propertyId/room/:roomId/product/:productId/edit" element={<EditProductPage />} />
                   <Route path="/property/:propertyId/room/:roomId/product/:productId" element={<ProductDetailPage />} />
                   <Route path="/property/:id" element={<PropertyPage />} />
@@ -125,6 +134,11 @@ export const App = () => {
                   <Route path="/listings/:id/edit" element={<EditListingPage />} />
                   <Route path="/seller/onboarding/complete" element={<OnboardingCompletePage />} />
                   <Route path="/error" element={<ErrorPage />} />
+                  <Route path="/property/:propertyId/drawing/:drawingId/edit" element={
+                    <ProtectedRoute>
+                      <EditDrawingPage />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </div>
               <BottomNav />

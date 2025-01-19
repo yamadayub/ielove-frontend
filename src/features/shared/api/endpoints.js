@@ -104,4 +104,12 @@ export const ENDPOINTS = {
     CHECK_PROPERTY_OWNERSHIP: (propertyId) => `/api/properties/${propertyId}/is-mine`,
     CHECK_ROOM_OWNERSHIP: (roomId) => `/api/rooms/${roomId}/is-mine`,
     CHECK_PRODUCT_OWNERSHIP: (productId) => `/api/products/${productId}/is-mine`,
+
+    // Drawings
+    CREATE_DRAWING: '/api/drawings',
+    GET_DRAWINGS_BY_PROPERTY: (propertyId) => `/api/drawings/property/${propertyId}`,
+    GET_DRAWING: (drawingId) => `/api/drawings/${drawingId}`,
+    UPDATE_DRAWING: (drawingId) => `/api/drawings/${drawingId}`,
+    DELETE_DRAWING: (drawingId) => `/api/drawings/${drawingId}`,
+    CHECK_DRAWING_OWNERSHIP: (drawingId) => `/api/drawings/${drawingId}/is-mine`,
 }; 

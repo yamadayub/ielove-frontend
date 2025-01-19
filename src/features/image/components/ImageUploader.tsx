@@ -18,8 +18,10 @@ interface ImageUploaderProps {
   roomId?: number;
   productId?: number;
   productSpecificationId?: number;
+  drawingId?: number;
   clerkUserId?: string;
   compact?: boolean;
+  imageType?: 'MAIN' | 'SUB' | 'PAID';
 }
 
 interface UploadProgressType {
@@ -50,8 +52,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   roomId,
   productId,
   productSpecificationId,
+  drawingId,
   clerkUserId,
-  compact = false
+  compact = false,
+  imageType = 'SUB'
 }) => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgressType>({});
   const [dragActive, setDragActive] = useState(false);
@@ -92,14 +96,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     room_id?: number;
     product_id?: number;
     product_specification_id?: number;
-    image_type: 'MAIN' | 'SUB' | 'TEMP';
+    drawing_id?: number;
+    image_type: 'MAIN' | 'SUB' | 'PAID';
   }) => {
     if (!clerkUserId) {
       throw new Error('ユーザーIDが設定されていません');
     }
 
-    // 仕様に紐付く画像の場合は強制的にMAINタイプに設定
-    const imageType = productSpecificationId ? 'MAIN' : params.image_type;
+    console.log('Presigned URL request params:', { ...params, image_type: imageType });
 
     const { data } = await axios.post(
       `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.GET_PRESIGNED_URL}`,
@@ -224,7 +228,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         room_id: roomId,
         product_id: productId,
         product_specification_id: productSpecificationId,
-        image_type: 'MAIN' // 仕様画像は常にMAIN
+        drawing_id: drawingId,
+        image_type: imageType
       });
 
       // 2. S3へのアップロード（リトライロジック付き）

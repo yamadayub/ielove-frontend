@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { ProductDetails, ProductSpecification } from '../../product/types/product_types';
-import { Image, ImageType } from '../../image/types/image_types';
+import type { Image, ImageType } from '../../image/types/image_types';
 import { useAuth } from '@clerk/clerk-react';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, Image as LucideImage } from 'lucide-react';
 import { ImagePreviewModal } from '../../common/components/modal/ImagePreviewModal';
+import { useDrawings } from '../../drawing/hooks/useDrawings';
 
 interface PropertyProductsDetailsProps {
   propertyId: string;
@@ -156,6 +157,7 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   const { userId } = useAuth();
   const shouldBlur = !userId || !(isPurchased || isOwner);
   const showMessage = !userId || !(isPurchased || isOwner);
+  const { data: drawings } = useDrawings({ propertyId });
 
   // 部屋ごとに製品をグループ化
   const productsByRoom = products?.reduce((acc, product) => {
@@ -170,6 +172,17 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
     return acc;
   }, {} as { [key: number]: { roomName: string; products: ProductDetails[] } });
 
+  // 図面の画像をフィルタリング
+  const getDrawingImages = (drawingId: number) => {
+    return images.filter(img => img.drawing_id === drawingId);
+  };
+
+  // 各図面のサムネイル画像を取得
+  const getDrawingThumbnail = (drawingId: number) => {
+    const drawingImages = getDrawingImages(drawingId);
+    return drawingImages.length > 0 ? drawingImages[0] : null;
+  };
+
   return (
     <div>
       {showMessage && (
@@ -179,6 +192,50 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
       )}
       
       <div>
+        {/* 図面セクション */}
+        {drawings && drawings.length > 0 && (
+          <div>
+            <div className="border-b border-gray-900/10">
+              <h3 className="text-xl font-semibold text-gray-900 px-4 pt-4">
+                図面
+              </h3>
+            </div>
+            <div className="grid grid-cols-3 gap-0.5 bg-gray-100">
+              {drawings.map((drawing) => (
+                <div key={drawing.id} className="relative aspect-square bg-white">
+                  {getDrawingThumbnail(drawing.id) ? (
+                    <div className="relative w-full h-full">
+                      <img
+                        src={getDrawingThumbnail(drawing.id)?.url}
+                        alt={drawing.name}
+                        className={`w-full h-full object-cover ${!isPurchased && !isOwner ? 'blur-sm' : ''}`}
+                      />
+                      {!isPurchased && !isOwner && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-full text-sm">
+                            購入後に表示
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
+                        <p className="text-xs font-medium text-white truncate">
+                          {drawing.name}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-4">
+                      <LucideImage className="h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-gray-500 text-sm text-center">{drawing.name}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 部屋ごとの製品リスト */}
         {Object.entries(productsByRoom || {}).map(([roomId, { roomName, products: roomProducts }]) => (
           <div key={roomId}>
             <div className="border-b border-gray-900/10">
