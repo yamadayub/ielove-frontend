@@ -210,13 +210,6 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
                         alt={drawing.name}
                         className={`w-full h-full object-cover ${!isPurchased && !isOwner ? 'blur-sm' : ''}`}
                       />
-                      {!isPurchased && !isOwner && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="bg-black bg-opacity-50 text-white px-4 py-2 rounded-full text-sm">
-                            購入後に表示
-                          </span>
-                        </div>
-                      )}
                       <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
                         <p className="text-xs font-medium text-white truncate">
                           {drawing.name}

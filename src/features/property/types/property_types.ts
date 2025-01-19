@@ -44,6 +44,7 @@ export interface Property {
   design_company?: string;
   construction_company?: string;
   created_at?: string;
+  status?: string;
   updated_at?: string;
   images?: Image[];
 }

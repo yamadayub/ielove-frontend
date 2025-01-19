@@ -24,13 +24,18 @@ export const PropertyRoomDetails: React.FC<PropertyRoomDetailsProps> = ({
   const navigate = useNavigate();
   const { data: drawings } = useDrawings({ propertyId });
 
+  // 更新済みの部屋のみをフィルタリング
+  const updatedRooms = rooms.filter(room => room.status === 'updated');
+
   // 図面の画像をフィルタリング
-  const getDrawingImages = (drawingId: number) => {
+  const getDrawingImages = (drawingId: number | undefined) => {
+    if (!drawingId) return [];
     return images.filter(img => img.drawing_id === drawingId);
   };
 
   // 各図面のサムネイル画像を取得
-  const getDrawingThumbnail = (drawingId: number) => {
+  const getDrawingThumbnail = (drawingId: number | undefined) => {
+    if (!drawingId) return null;
     const drawingImages = getDrawingImages(drawingId);
     return drawingImages.length > 0 ? drawingImages[0] : null;
   };
@@ -86,7 +91,7 @@ export const PropertyRoomDetails: React.FC<PropertyRoomDetailsProps> = ({
       )}
 
       {/* 部屋一覧 */}
-      {!rooms || rooms.length === 0 ? (
+      {!updatedRooms || updatedRooms.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <PlusCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">部屋が登録されていません</h3>
@@ -94,7 +99,7 @@ export const PropertyRoomDetails: React.FC<PropertyRoomDetailsProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-0.5 bg-gray-100">
-          {rooms.map((room) => (
+          {updatedRooms.map((room) => (
             <RoomTile
               key={room.id}
               room={room}

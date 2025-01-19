@@ -30,6 +30,7 @@ export interface Product {
   manufacturer_name?: string | null;
   created_at?: string;
   updated_at?: string;
+  status: string;
 }
 
 export interface ProductDetails extends Product {
