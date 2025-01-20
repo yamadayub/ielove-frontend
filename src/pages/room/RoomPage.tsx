@@ -27,18 +27,18 @@ export const RoomPage = () => {
     return <Navigate to="/" replace />;
   }
 
-  const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
-  const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
+  const { data: room, isLoading: isLoadingRoom } = useRoom({ roomId });
   const { data: images, isLoading: isLoadingImages } = useImages({ roomId });
+  const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
   const { data: purchaseStatus } = usePropertyPurchaseStatus(Number(propertyId));
 
   // 物件の所有者かどうかを判定
   const isOwner = userProfile?.id && property?.user_id ? property.user_id === userProfile.id : false;
 
-  const filteredRoomImages = images?.filter(img => !img.product_id) || [];
-  const productImages = images?.filter(img => img.product_id) || [];
+  // 更新済みの製品のみをフィルタリング
+  const updatedProducts = products?.filter(product => product.status === 'updated') || [];
 
-  if (isLoadingRoom || isLoadingProducts || isLoadingImages) {
+  if (isLoadingRoom || isLoadingImages || isLoadingProducts) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-160px)]">
         <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
@@ -46,7 +46,7 @@ export const RoomPage = () => {
     );
   }
 
-  if (!room) {
+  if (!room || !images) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)] px-4">
         <p className="text-gray-500 text-center">
@@ -61,7 +61,12 @@ export const RoomPage = () => {
     <div>
       <Breadcrumb />
       <div className="bg-white">
-        <RoomGallery images={filteredRoomImages} roomName={room.name} />
+        <RoomGallery
+          images={images}
+          roomName={room.name}
+          isPurchased={purchaseStatus?.isPurchased}
+          isOwner={isOwner}
+        />
         
         <div className="px-4">
           <RoomInfo 
@@ -82,8 +87,8 @@ export const RoomPage = () => {
               <ProductList
                 propertyId={propertyId}
                 roomId={roomId}
-                products={products || []}
-                images={productImages}
+                products={updatedProducts}
+                images={images}
                 isPurchased={purchaseStatus?.isPurchased}
                 isOwner={isOwner}
               />
@@ -92,8 +97,8 @@ export const RoomPage = () => {
                 <ProductListView
                   propertyId={propertyId}
                   roomId={roomId}
-                  products={products || []}
-                  images={productImages}
+                  products={updatedProducts}
+                  images={images}
                   isPurchased={purchaseStatus?.isPurchased}
                   isOwner={isOwner}
                 />

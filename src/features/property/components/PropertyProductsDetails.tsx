@@ -162,15 +162,18 @@ export const PropertyProductsDetails: React.FC<PropertyProductsDetailsProps> = (
   // 部屋ごとに製品をグループ化
   const productsByRoom = products?.reduce((acc, product) => {
     const roomId = product.room_id;
-    if (!acc[roomId]) {
-      acc[roomId] = {
-        roomName: product.room_name || '部屋名なし', // デフォルト値を設定
-        products: []
-      };
+    // status === 'updated'の製品のみを処理
+    if (product.status === 'updated') {
+      if (!acc[roomId]) {
+        acc[roomId] = {
+          roomName: product.room_name || '部屋名なし',
+          products: []
+        };
+      }
+      acc[roomId].products.push(product);
     }
-    acc[roomId].products.push(product);
     return acc;
-  }, {} as { [key: number]: { roomName: string; products: ProductDetails[] } });
+  }, {} as { [key: number]: { roomName: string; products: ProductDetails[] } }) || {};
 
   // 図面の画像をフィルタリング
   const getDrawingImages = (drawingId: number) => {

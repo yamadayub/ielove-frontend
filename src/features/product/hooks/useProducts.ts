@@ -30,6 +30,7 @@ export const useProducts = ({ roomId, skip = 0, limit = 100 }: UseProductsParams
           limit
         }
       })
+      console.log('Products API response:', data)
       return data
     },
     enabled: !!roomId,
