@@ -4,7 +4,7 @@ import { ENDPOINTS } from '../../shared/api/endpoints'
 import type { Product } from '../types/product_types'
 
 interface UseProductsParams {
-  roomId: string | undefined
+  roomId: number | undefined
   skip?: number
   limit?: number
 }
@@ -25,7 +25,7 @@ export const useProducts = ({ roomId, skip = 0, limit = 100 }: UseProductsParams
 
       const { data } = await axios.get(ENDPOINTS.GET_PRODUCTS, {
         params: {
-          room_id: parseInt(roomId),
+          room_id: roomId,
           skip,
           limit
         }
