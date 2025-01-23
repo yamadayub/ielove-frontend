@@ -84,7 +84,7 @@ export const App = () => {
                   <Header />
                 </div>
               </div>
-              <div className="pt-[50px] pb-14">
+              <div className="pt-12 pb-14">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/search" element={<SearchPage />} />
