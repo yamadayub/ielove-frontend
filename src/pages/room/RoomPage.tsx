@@ -27,9 +27,9 @@ export const RoomPage = () => {
     return <Navigate to="/" replace />;
   }
 
-  const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
-  const { data: images, isLoading: isLoadingImages } = useImages({ roomId: Number(roomId) });
-  const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId: Number(roomId) });
+  const { data: room, isLoading: isLoadingRoom } = useRoom({ roomId });
+  const { data: images, isLoading: isLoadingImages } = useImages({ roomId });
+  const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
   const { data: purchaseStatus } = usePropertyPurchaseStatus(Number(propertyId));
 
   // 物件の所有者かどうかを判定
@@ -63,7 +63,7 @@ export const RoomPage = () => {
       <div className="bg-white">
         <RoomGallery
           images={images}
-          roomName={room?.name || ''}
+          roomName={room.name}
           isPurchased={purchaseStatus?.isPurchased}
           isOwner={isOwner}
         />
@@ -87,7 +87,7 @@ export const RoomPage = () => {
               <ProductList
                 propertyId={propertyId}
                 roomId={roomId}
-                products={updatedProducts as any}
+                products={updatedProducts}
                 images={images}
                 isPurchased={purchaseStatus?.isPurchased}
                 isOwner={isOwner}
@@ -97,7 +97,7 @@ export const RoomPage = () => {
                 <ProductListView
                   propertyId={propertyId}
                   roomId={roomId}
-                  products={updatedProducts as any}
+                  products={updatedProducts}
                   images={images}
                   isPurchased={purchaseStatus?.isPurchased}
                   isOwner={isOwner}
