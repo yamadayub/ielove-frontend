@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ClerkProvider, SignIn, SignUp, useAuth } from '@clerk/clerk-react';
 import { Header } from './features/common/components/layout/Header';
 import { BottomNav } from './features/common/components/layout/BottomNav';
@@ -70,12 +70,12 @@ export const App = () => {
         publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
         localization={jaJP}
         signInUrl="/sign-in"
-        signUpUrl="/sign-up"     // サインアップページのパス
-        afterSignInUrl="/"       // ログイン後のリダイレクト先
-        afterSignUpUrl="/"       // サインアップ後のリダイレクト先
+        signUpUrl="/sign-up"
+        afterSignInUrl="/"
+        afterSignUpUrl="/"
         debug={true}
       >
-        <Router>
+        <Router future={{ v7_startTransition: true }}>
           <ScrollToTop />
           <QueryProvider>
             <div className="min-h-screen bg-gray-50">

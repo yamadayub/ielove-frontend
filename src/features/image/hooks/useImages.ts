@@ -45,10 +45,7 @@ export const useImages = ({
   return useQuery({
     queryKey: ['images', { propertyId, roomId, productId, productSpecificationId, drawingId }],
     queryFn: async () => {
-      const { data } = await axios.get<Image[]>(
-        `${import.meta.env.VITE_APP_BACKEND_URL}${ENDPOINTS.GET_IMAGES}`,
-        { params }
-      );
+      const { data } = await axios.get<Image[]>(ENDPOINTS.GET_IMAGES, { params });
 
       console.log('useImages response:', data);
       return data;
