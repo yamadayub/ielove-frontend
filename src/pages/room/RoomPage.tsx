@@ -27,7 +27,7 @@ export const RoomPage = () => {
     return <Navigate to="/" replace />;
   }
 
-  const { data: room, isLoading: isLoadingRoom } = useRoom({ roomId });
+  const { data: room, isLoading: isLoadingRoom } = useRoom(roomId);
   const { data: images, isLoading: isLoadingImages } = useImages({ roomId });
   const { data: products, isLoading: isLoadingProducts } = useProducts({ roomId });
   const { data: purchaseStatus } = usePropertyPurchaseStatus(Number(propertyId));

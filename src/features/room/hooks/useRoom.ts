@@ -14,7 +14,9 @@ export const useRoom = (roomId: string | undefined) => {
     queryKey: ['room', roomId],
     queryFn: async () => {
       if (!roomId) throw new Error('Room ID is required')
-      const { data } = await axios.get(ENDPOINTS.GET_ROOM(roomId))
+      const numericRoomId = parseInt(roomId)
+      if (isNaN(numericRoomId)) throw new Error('Invalid room ID')
+      const { data } = await axios.get(ENDPOINTS.GET_ROOM(numericRoomId))
       return data
     },
     enabled: !!roomId,

@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { useMyPurchases } from '../../features/purchase/hooks/useMyPurchases';
 import { useMyListings } from '../../features/listing/hooks/useListing';
 import { useQueryClient } from '@tanstack/react-query';
+import { LegalInformation } from '../../features/common/components/legal/LegalInformation';
 
 export const MyPage: React.FC = () => {
   const { userId: clerkUserId } = useAuth();
@@ -429,6 +430,11 @@ export const MyPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* サービス情報 */}
+      <div className="mt-8 px-4 pb-4">
+        <LegalInformation />
+      </div>
     </div>
   );
 };

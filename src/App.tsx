@@ -30,6 +30,9 @@ import { OnboardingCompletePage } from './pages/seller/OnboardingCompletePage';
 import { ErrorPage } from './pages/ErrorPage';
 import { FavoritesPage } from './pages/favorites/FavoritesPage';
 import { EditDrawingPage } from './pages/drawing/EditDrawingPage';
+import { TermsOfService } from './features/common/components/legal/TermsOfService';
+import { CommercialTransactionLaw } from './features/common/components/legal/CommercialTransactionLaw';
+import { PrivacyPolicy } from './features/common/components/legal/PrivacyPolicy';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -139,6 +142,9 @@ export const App = () => {
                       <EditDrawingPage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/commercial-law" element={<CommercialTransactionLaw />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
                 </Routes>
               </div>
               <BottomNav />

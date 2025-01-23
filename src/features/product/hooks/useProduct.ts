@@ -15,7 +15,9 @@ export const useProduct = (productId: string | undefined) => {
     queryFn: async () => {
       if (!productId) throw new Error('Product ID is required');
 
-      const { data } = await axios.get(ENDPOINTS.GET_PRODUCT(productId));
+      const numericProductId = parseInt(productId);
+      if (isNaN(numericProductId)) throw new Error('Invalid product ID');
+      const { data } = await axios.get(ENDPOINTS.GET_PRODUCT(numericProductId));
       return data;
     },
     enabled: !!productId,
