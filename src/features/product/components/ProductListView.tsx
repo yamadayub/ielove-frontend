@@ -53,120 +53,118 @@ export const ProductListView: React.FC<ProductListViewProps> = ({
       )}
       
       <div>
-        {Object.entries(productsByRoom || {}).map(([roomId, { roomName, products: roomProducts }]) => (
-          <div key={roomId}>
-            <div className="border-b border-gray-900/10">
-              <h3 className="text-xl font-semibold text-gray-900 px-4 pt-4">
-                {roomName}
-              </h3>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {roomProducts.map(product => {
-                // メイン画像を取得（product_idでフィルタリング、product_specification_idがnullのもの）
-                const productImages = images?.filter(img => 
-                  img.product_id === product.id && !img.product_specification_id
-                );
-                const mainImage = productImages?.find(img => img.image_type === 'MAIN') || 
-                                productImages?.[0];  // メイン画像がない場合は最初の画像を使用
+        <div className="divide-y divide-gray-200">
+          {products.map(product => {
+            // メイン画像を取得（product_idでフィルタリング、product_specification_idがnullのもの）
+            const productImages = images?.filter(img => 
+              img.product_id === product.id && !img.product_specification_id
+            );
+            const mainImage = productImages?.find(img => img.image_type === 'MAIN') || 
+                            productImages?.[0];  // メイン画像がない場合は最初の画像を使用
 
-                return (
-                  <div key={product.id} className="group block w-full border-b border-gray-300 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start">
+            return (
+              <div key={product.id} className="group block w-full border-b border-gray-300 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    {mainImage ? (
+                      <div className="relative">
+                        <img
+                          src={mainImage.url}
+                          alt={product.name}
+                          className="w-32 h-32 object-cover"
+                        />
+                        <div className="absolute top-0 left-0 right-0 bg-black/50 px-2 py-1">
+                          <p className="text-xs font-medium text-white truncate">
+                            {product.product_category_name}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-32 h-32 bg-gray-100 flex items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-grow ml-4">
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-900">商品名</span>
+                      <span className="mx-2 text-gray-400">|</span>
+                      <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.name}</span>
+                    </div>
+                    {product.manufacturer_name && (
+                      <div className="text-sm mt-1">
+                        <span className="font-medium text-gray-900">メーカー</span>
+                        <span className="mx-2 text-gray-400">|</span>
+                        <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.manufacturer_name}</span>
+                      </div>
+                    )}
+                    {product.product_code && (
+                      <div className="text-sm mt-1">
+                        <span className="font-medium text-gray-900">型番</span>
+                        <span className="mx-2 text-gray-400">|</span>
+                        <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.product_code}</span>
+                      </div>
+                    )}
+                    {product.catalog_url && (
+                      <div className="text-sm mt-1">
+                        <span className="font-medium text-gray-900">カタログ</span>
+                        <span className="mx-2 text-gray-400">|</span>
+                        <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>
+                          <a href={product.catalog_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
+                            リンク
+                          </a>
+                        </span>
+                      </div>
+                    )}
+                    {product.description && (
+                      <div className="text-sm mt-1">
+                        <span className="font-medium text-gray-900">説明</span>
+                        <span className="mx-2 text-gray-400">|</span>
+                        <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.description}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 仕様情報の表示 */}
+                {product.specifications?.map((spec: ProductSpecification) => {
+                  // 仕様に紐づく画像を取得
+                  const specImages = images?.filter(img => {
+                    if (!img.product_specification_id || !spec.id) return false;
+                    return img.product_specification_id === spec.id;
+                  });
+                  const specMainImage = specImages?.find(img => img.image_type === 'MAIN') || 
+                                    specImages?.[0];  // メイン画像がない場合は最初の画像を使用
+                  
+                  return (
+                    <div key={spec.id} className="ml-8 flex items-start">
                       <div className="flex-shrink-0">
-                        {mainImage ? (
+                        {specMainImage ? (
                           <img
-                            src={mainImage.url}
-                            alt={product.name}
-                            className="w-32 h-32 object-cover"
+                            src={specMainImage.url}
+                            alt={`${spec.spec_type} - ${spec.spec_value}`}
+                            className={`w-24 h-24 object-cover ${shouldBlur ? 'blur-[6px]' : ''}`}
                           />
                         ) : (
-                          <div className="w-32 h-32 bg-gray-100 flex items-center justify-center">
-                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                          <div className="text-sm text-gray-500">
+                            （オプション）
                           </div>
                         )}
                       </div>
                       <div className="flex-grow ml-4">
                         <div className="text-sm">
-                          <span className="font-medium text-gray-900">商品名</span>
+                          <span className="font-medium text-gray-900">{spec.spec_type}</span>
                           <span className="mx-2 text-gray-400">|</span>
-                          <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.name}</span>
+                          <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{spec.spec_value}</span>
                         </div>
-                        {product.manufacturer_name && (
-                          <div className="text-sm mt-1">
-                            <span className="font-medium text-gray-900">メーカー</span>
-                            <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.manufacturer_name}</span>
-                          </div>
-                        )}
-                        {product.product_code && (
-                          <div className="text-sm mt-1">
-                            <span className="font-medium text-gray-900">型番</span>
-                            <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.product_code}</span>
-                          </div>
-                        )}
-                        {product.catalog_url && (
-                          <div className="text-sm mt-1">
-                            <span className="font-medium text-gray-900">カタログ</span>
-                            <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>
-                              <a href={product.catalog_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">
-                                リンク
-                              </a>
-                            </span>
-                          </div>
-                        )}
-                        {product.description && (
-                          <div className="text-sm mt-1">
-                            <span className="font-medium text-gray-900">説明</span>
-                            <span className="mx-2 text-gray-400">|</span>
-                            <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{product.description}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
-
-                    {/* 仕様情報の表示 */}
-                    {product.specifications?.map((spec: ProductSpecification) => {
-                      // 仕様に紐づく画像を取得
-                      const specImages = images?.filter(img => {
-                        if (!img.product_specification_id || !spec.id) return false;
-                        return img.product_specification_id === spec.id;
-                      });
-                      const specMainImage = specImages?.find(img => img.image_type === 'MAIN') || 
-                                        specImages?.[0];  // メイン画像がない場合は最初の画像を使用
-                      
-                      return (
-                        <div key={spec.id} className="ml-8 flex items-start">
-                          <div className="flex-shrink-0">
-                            {specMainImage ? (
-                              <img
-                                src={specMainImage.url}
-                                alt={`${spec.spec_type} - ${spec.spec_value}`}
-                                className={`w-24 h-24 object-cover ${shouldBlur ? 'blur-[6px]' : ''}`}
-                              />
-                            ) : (
-                              <div className="text-sm text-gray-500">
-                                （オプション）
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-grow ml-4">
-                            <div className="text-sm">
-                              <span className="font-medium text-gray-900">{spec.spec_type}</span>
-                              <span className="mx-2 text-gray-400">|</span>
-                              <span className={`text-gray-700 ${shouldBlur ? 'blur-[6px]' : ''}`}>{spec.spec_value}</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
