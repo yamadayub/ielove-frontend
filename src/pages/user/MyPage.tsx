@@ -6,7 +6,7 @@ import { UserProfile } from '../../features/user/components/UserProfile';
 import { InitialUserSetup } from '../../features/user/components/InitialUserSetup';
 import { SellerDashboard } from '../../features/seller/components/SellerDashboard';
 import { AxiosError } from 'axios';
-import { Loader2, Plus, ArrowRight, Trash2, Copy, Share2, Pencil } from 'lucide-react';
+import { Loader2, Plus, ArrowRight, Trash2, Copy, Share2, Pencil, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { StripeConnect } from '../../features/seller/components/StripeConnect';
 import { ListingList } from '../../features/listing/components/ListingList';
@@ -18,6 +18,93 @@ import { useMyPurchases } from '../../features/purchase/hooks/useMyPurchases';
 import { useMyListings } from '../../features/listing/hooks/useListing';
 import { useQueryClient } from '@tanstack/react-query';
 import { LegalInformation } from '../../features/common/components/legal/LegalInformation';
+import { useImages } from '../../features/image/hooks/useImages';
+
+interface PropertyCardProps {
+  property: any;
+  onCopyUrl: (propertyId: number) => void;
+  onCreateListing: (propertyId: number) => void;
+  onDeleteProperty: (propertyId: number) => void;
+}
+
+const PropertyCard: React.FC<PropertyCardProps> = ({ 
+  property, 
+  onCopyUrl,
+  onCreateListing,
+  onDeleteProperty
+}) => {
+  const { data: propertyImages } = useImages({ propertyId: property.id });
+  const mainImage = propertyImages?.find(img => 
+    !img.room_id && 
+    !img.product_id && 
+    img.image_type === 'MAIN'
+  );
+
+  return (
+    <div className="border-b last:border-b-0">
+      <div className="flex items-start gap-3 p-4">
+        {/* サムネイル画像 */}
+        <div className="w-20 h-20 bg-gray-100 flex-shrink-0 overflow-hidden">
+          {mainImage ? (
+            <img
+              src={mainImage.url}
+              alt={property.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <span className="text-2xl">🏠</span>
+            </div>
+          )}
+        </div>
+
+        {/* 物件情報 */}
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-gray-900 truncate">{property.name}</h4>
+          <p className="text-sm text-gray-500 mt-1">{property.prefecture}</p>
+          {property.layout && (
+            <p className="text-sm text-gray-500">{property.layout}</p>
+          )}
+        </div>
+
+        {/* アクションボタン */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onCopyUrl(property.id)}
+            className="p-2 text-gray-500 hover:text-gray-900"
+            title="リンクをシェア"
+          >
+            <Share2 className="h-4 w-4" />
+          </button>
+          <Link
+            to={`/property/${property.id}/edit`}
+            className="p-2 text-gray-500 hover:text-gray-900"
+            title="編集"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </Link>
+          <button
+            onClick={() => onCreateListing(property.id)}
+            className="p-2 text-gray-500 hover:text-gray-900"
+            title="出品"
+          >
+            <Tag className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onDeleteProperty(property.id)}
+            className="p-2 text-gray-500 hover:text-red-600"
+            title="削除"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const MyPage: React.FC = () => {
   const { userId: clerkUserId } = useAuth();
@@ -202,7 +289,7 @@ export const MyPage: React.FC = () => {
       <div className="grid grid-cols-3 gap-2 px-4 py-3 bg-gray-50">
         <div className="text-center py-2">
           <span className="block font-semibold text-2xl text-gray-900">{properties?.length || 0}</span>
-          <span className="text-gray-600 text-xs">登録物件</span>
+          <span className="text-gray-600 text-xs">登録済</span>
         </div>
         <div className="text-center py-2">
           <span className="block font-semibold text-2xl text-gray-900">{listings?.length || 0}</span>
@@ -210,7 +297,7 @@ export const MyPage: React.FC = () => {
         </div>
         <div className="text-center py-2">
           <span className="block font-semibold text-2xl text-gray-900">{purchaseData?.transactions?.length || 0}</span>
-          <span className="text-gray-600 text-xs">購入済み</span>
+          <span className="text-gray-600 text-xs">購入済</span>
         </div>
       </div>
 
@@ -285,80 +372,13 @@ export const MyPage: React.FC = () => {
               ) : (
                 <div className="space-y-4">
                   {properties.map((property) => (
-                    <div
-                      key={property.id}
-                      className="border-b last:border-b-0"
-                    >
-                      <div className="flex items-start gap-3 p-4">
-                        {/* サムネイル画像 */}
-                        <div className="w-20 h-20 bg-gray-100 flex-shrink-0 overflow-hidden rounded-lg">
-                          {property.images && property.images.length > 0 ? (
-                            (() => {
-                              const mainImage = property.images.find(img => img.image_type === 'MAIN');
-                              return mainImage ? (
-                                <img
-                                  src={mainImage.url}
-                                  alt={property.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                  <span className="text-2xl">🏠</span>
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <span className="text-2xl">🏠</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* 物件情報 */}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-gray-900 truncate">{property.name}</h4>
-                          <p className="text-sm text-gray-500 mt-1">{property.prefecture}</p>
-                          {property.layout && (
-                            <p className="text-sm text-gray-500">{property.layout}</p>
-                          )}
-                        </div>
-
-                        {/* アクションボタン */}
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleCopyUrl(property.id)}
-                            className="p-2 text-gray-500 hover:text-gray-900"
-                            title="リンクをシェア"
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </button>
-                          <Link
-                            to={`/property/${property.id}/edit`}
-                            className="p-2 text-gray-500 hover:text-gray-900"
-                            title="編集"
-                          >
-                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </Link>
-                          <button
-                            onClick={() => property.id && handleCreateListing(property.id)}
-                            className="p-2 text-gray-500 hover:text-gray-900"
-                            title="出品"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => property.id && handleDeleteProperty(property.id)}
-                            className="p-2 text-gray-500 hover:text-red-600"
-                            title="削除"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                    <PropertyCard 
+                      key={property.id} 
+                      property={property}
+                      onCopyUrl={handleCopyUrl}
+                      onCreateListing={handleCreateListing}
+                      onDeleteProperty={handleDeleteProperty}
+                    />
                   ))}
                 </div>
               )}
