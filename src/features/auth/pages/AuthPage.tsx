@@ -8,6 +8,7 @@ export const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const redirectUrl = searchParams.get('redirect_url');
   const fromPurchase = searchParams.get('from') === 'purchase';
+  const fromPropertyCreate = searchParams.get('from') === 'property_create';
   const afterAuthUrl = redirectUrl ? decodeURIComponent(redirectUrl) : '/mypage';
   const [isLineInApp, setIsLineInApp] = useState(false);
 
@@ -31,6 +32,12 @@ export const AuthPage = () => {
         {fromPurchase && (
           <div className="mb-6 text-center">
             <p className="text-gray-900 font-medium">仕様情報の購入は会員登録が必要です</p>
+            <p className="text-sm text-gray-600 mt-1">以下のフォームから会員登録またはログインしてください</p>
+          </div>
+        )}
+        {fromPropertyCreate && (
+          <div className="mb-6 text-center">
+            <p className="text-gray-900 font-medium">物件の登録にはユーザー登録・ログインが必要です</p>
             <p className="text-sm text-gray-600 mt-1">以下のフォームから会員登録またはログインしてください</p>
           </div>
         )}

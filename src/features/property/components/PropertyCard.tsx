@@ -30,9 +30,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
   return (
     <div className="bg-white border-b pb-8 active:bg-gray-50" onClick={handleClick}>
-      <div className="relative aspect-[4/3]">
+      <div className="relative aspect-square">
         {mainImage ? (
-          <div className="relative">
+          <div className="relative h-full">
             <img
               src={mainImage.url}
               alt={`${property.name} - メイン画像`}

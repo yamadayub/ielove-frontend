@@ -6,7 +6,7 @@ import { UserProfile } from '../../features/user/components/UserProfile';
 import { InitialUserSetup } from '../../features/user/components/InitialUserSetup';
 import { SellerDashboard } from '../../features/seller/components/SellerDashboard';
 import { AxiosError } from 'axios';
-import { Loader2, Plus, ArrowRight, Trash2, Copy, Share2 } from 'lucide-react';
+import { Loader2, Plus, ArrowRight, Trash2, Copy, Share2, Pencil } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { StripeConnect } from '../../features/seller/components/StripeConnect';
 import { ListingList } from '../../features/listing/components/ListingList';
@@ -159,16 +159,17 @@ export const MyPage: React.FC = () => {
 
           {/* プロフィール情報 */}
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-lg font-semibold">{userProfile.name}</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h2 className="text-xl font-medium text-gray-900">
+                  {userProfile.name || 'ゲスト'}
+                </h2>
+              </div>
               <Link
-                to="/settings"
-                className="p-1 text-gray-700 hover:text-blue-600"
+                to="/mypage/edit"
+                className="p-2 text-gray-500 hover:text-gray-900"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
+                <Pencil className="h-5 w-5" />
               </Link>
             </div>
 

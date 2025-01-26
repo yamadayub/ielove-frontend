@@ -33,6 +33,7 @@ import { EditDrawingPage } from './pages/drawing/EditDrawingPage';
 import { TermsOfService } from './features/common/components/legal/TermsOfService';
 import { CommercialTransactionLaw } from './features/common/components/legal/CommercialTransactionLaw';
 import { PrivacyPolicy } from './features/common/components/legal/PrivacyPolicy';
+import { EditMyPage } from './pages/user/EditMyPage';
 
 // ClerkのPublishable Keyが設定されいるか確認
 if (!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY) {
@@ -131,7 +132,7 @@ export const App = () => {
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/mypage/edit" element={
                     <ProtectedRoute>
-                      <EditUserProfilePage />
+                      <EditMyPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/listings/:id/edit" element={<EditListingPage />} />
