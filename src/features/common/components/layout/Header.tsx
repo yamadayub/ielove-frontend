@@ -14,7 +14,7 @@ export const Header = () => {
             </div>
             <div className="flex items-center space-x-2">
               <span className="font-semibold text-lg">ietsuku</span>
-              <span className="text-xs text-gray-500">理想のづくり、みんなで</span>
+              <span className="text-xs text-gray-500">理想のづくりを、みんなで</span>
             </div>
           </Link>
           
