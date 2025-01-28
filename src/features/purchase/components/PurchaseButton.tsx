@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, CheckCircle, Pencil } from 'lucide-react';
+import { ShoppingBag, CheckCircle, Pencil, Clock } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -71,6 +71,18 @@ export const PurchaseButton: React.FC<PurchaseButtonProps> = ({
       >
         <CheckCircle className="h-5 w-5" />
         <span className="font-medium">購入済み</span>
+      </button>
+    );
+  }
+
+  if (!listingId) {
+    return (
+      <button
+        disabled
+        className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-400 px-6 py-3 rounded-lg cursor-not-allowed w-full"
+      >
+        <Clock className="h-5 w-5" />
+        <span className="font-medium">物件仕様作成中</span>
       </button>
     );
   }
