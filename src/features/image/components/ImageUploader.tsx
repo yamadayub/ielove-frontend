@@ -55,7 +55,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   drawingId,
   clerkUserId,
   compact = false,
-  imageType = 'SUB'
+  imageType: defaultImageType = 'MAIN'
 }) => {
   const [uploadProgress, setUploadProgress] = useState<UploadProgressType>({});
   const [dragActive, setDragActive] = useState(false);
@@ -69,11 +69,25 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     ...(productId && { productId })
   });
 
-  // メイン画像を取得
-  const mainImage = images?.find(img => 
-    img.product_specification_id === productSpecificationId && 
-    img.image_type === 'MAIN'
-  );
+  // メイン画像の存在チェック
+  const existingMainImage = images?.find(img => {
+    if (productSpecificationId) {
+      return img.product_specification_id === productSpecificationId && img.image_type === 'MAIN';
+    }
+    if (productId) {
+      return img.product_id === productId && !img.product_specification_id && img.image_type === 'MAIN';
+    }
+    if (roomId) {
+      return img.room_id === roomId && !img.product_id && img.image_type === 'MAIN';
+    }
+    if (propertyId) {
+      return img.property_id === propertyId && !img.room_id && !img.product_id && img.image_type === 'MAIN';
+    }
+    return false;
+  });
+
+  // 実際に使用する画像タイプを決定
+  const imageType = existingMainImage ? 'SUB' : defaultImageType;
 
   // 画像削除ハンドラー
   const handleDeleteImage = async (imageId: number) => {
@@ -337,17 +351,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   // 仕様画像が存在する場合はサムネイルを表示
-  if (productSpecificationId && mainImage) {
+  if (productSpecificationId && existingMainImage) {
     return (
       <div className="relative w-24 h-24">
         <img
-          src={mainImage.url}
+          src={existingMainImage.url}
           alt="仕様画像"
           className="w-full h-full object-cover rounded"
         />
         <button
           type="button"
-          onClick={() => handleDeleteImage(mainImage.id)}
+          onClick={() => handleDeleteImage(existingMainImage.id)}
           className="absolute top-1 right-1 p-1 bg-black/50 rounded-full text-white hover:bg-black/70"
           aria-label="画像を削除"
         >
