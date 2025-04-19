@@ -1,8 +1,9 @@
 {
     "root": "dist",
-    "clean_urls": true,
+    "clean_urls": false,
     "routes": {
-        "/sugoroku/**": "sugoroku/index.html",
+        "/marketplace/*": "marketplace/index.html",
+        "/sugoroku/*": "sugoroku/index.html",
         "/**": "marketplace/index.html"
     },
     "https_only": true,
