@@ -19,6 +19,7 @@ export default defineConfig({
   base: '/sugoroku/',
   build: {
     outDir: '../dist/sugoroku',
+    emptyOutDir: true,
     assetsDir: 'assets',
     rollupOptions: {
       output: {

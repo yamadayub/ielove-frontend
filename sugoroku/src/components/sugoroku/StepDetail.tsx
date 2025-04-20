@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Step, StepGroup, UserNote } from '../../types';
 import { Button } from '../ui/Button';
-import { handleImageError } from '../../utils/imageUtils';
 
 interface StepDetailProps {
   step: Step;
@@ -72,8 +71,13 @@ export const StepDetail: React.FC<StepDetailProps> = ({
               alt={`ステップ ${step.order} の画像 ${index + 1}`}
               className="w-full h-auto object-contain"
               onError={(e) => {
-                // ユーティリティ関数を使用
-                handleImageError(e, step.groupId);
+                // 画像ロードエラー時にフォールバック画像を設定
+                const target = e.target as HTMLImageElement;
+                const fallbackCategory = step.groupId === 1 ? 'planning' :
+                                        step.groupId === 2 ? 'design' :
+                                        step.groupId === 3 ? 'construction' : 'completion';
+                target.src = `/images/fallback/${fallbackCategory}_${index + 1}.jpg`;
+                target.onerror = null; // 無限ループ防止
               }}
             />
             <div className="p-2 bg-gray-100 text-center text-sm text-gray-700">

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSugoroku } from '../hooks/useSugorokuContext';
 import { Button } from '../components/ui/Button';
 import { StepGroup } from '../types';
-import { handleImageError } from '../utils/imageUtils';
 
 export const PostGalleryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,8 +37,12 @@ export const PostGalleryPage: React.FC = () => {
   };
   
   // 画像読み込みエラー時の処理
-  const handleLocalImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, groupId: number) => {
-    handleImageError(e, groupId);
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, groupId: number) => {
+    const target = e.target as HTMLImageElement;
+    const fallbackCategory = groupId === 1 ? 'planning' :
+                            groupId === 2 ? 'design' :
+                            groupId === 3 ? 'construction' : 'completion';
+    target.src = `/images/fallback/${fallbackCategory}_1.jpg`;
   };
   
   // グループのステップ数とその完了数を取得する関数
@@ -185,7 +188,7 @@ export const PostGalleryPage: React.FC = () => {
                     src={`/images/mock/step_${step.id}_1.jpg`}
                     alt={step.title}
                     className="w-full h-full object-cover"
-                    onError={(e) => handleLocalImageError(e, step.groupId)}
+                    onError={(e) => handleImageError(e, step.groupId)}
                   />
                   <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-0 hover:bg-opacity-20 transition-opacity flex items-center justify-center">
                     <div className="opacity-0 hover:opacity-100 transition-opacity text-white flex flex-col items-center">

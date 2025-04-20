@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useSugoroku } from '../hooks/useSugorokuContext';
 import { Button } from '../components/ui/Button';
-import { Step } from '../types';
-import { handleImageError } from '../utils/imageUtils';
 
 export const StepPostPage: React.FC = () => {
   const { stepId } = useParams<{ stepId: string }>();
@@ -38,10 +36,14 @@ export const StepPostPage: React.FC = () => {
     }
   }, [step, group]);
   
-  // 画像読み込みエラー時の処理
-  const handleLocalImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    // StepPostPageでは画像グループIDが不明なので、デフォルトのグループID 1を使用
-    handleImageError(e, step?.groupId || 1);
+  // 画像ロードエラー処理
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const target = e.target as HTMLImageElement;
+    const fallbackCategory = step?.groupId === 1 ? 'planning' :
+                            step?.groupId === 2 ? 'design' :
+                            step?.groupId === 3 ? 'construction' : 'completion';
+    target.src = `/images/fallback/${fallbackCategory}_${activeImageIndex + 1}.jpg`;
+    target.onerror = null; // 無限ループ防止
   };
   
   // スゴロクページに戻る
@@ -122,7 +124,7 @@ export const StepPostPage: React.FC = () => {
                   src={path}
                   alt={`ステップ ${step.order} の画像 ${index + 1}`}
                   className="max-w-full max-h-full object-contain"
-                  onError={handleLocalImageError}
+                  onError={handleImageError}
                 />
               </motion.div>
             ))}

@@ -10,6 +10,7 @@ export default defineConfig({
   base: '/',
   build: {
     outDir: '../dist/marketplace',
+    emptyOutDir: true,
     assetsDir: 'assets',
     rollupOptions: {
       output: {
