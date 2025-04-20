@@ -20,6 +20,10 @@ app.use('/sugoroku', express.static(join(__dirname, 'dist/sugoroku')));
 // marketplaceアプリのためのStatic Files
 app.use(express.static(join(__dirname, 'dist/marketplace')));
 
+app.get('/sugoroku', (req, res) => {
+  res.redirect(301, '/sugoroku/');
+});
+
 // sugorokuのSPA処理 - 明示的に/sugorokuと/sugoroku/を処理
 app.get(['/sugoroku', '/sugoroku/*'], (req, res) => {
   console.log(`Serving sugoroku for path: ${req.path}`);
@@ -31,6 +35,7 @@ app.get('/*', (req, res) => {
   console.log(`Serving marketplace for path: ${req.path}`);
   res.sendFile(join(__dirname, 'dist/marketplace/index.html'));
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
