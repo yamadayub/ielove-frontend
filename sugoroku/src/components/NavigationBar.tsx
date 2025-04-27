@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Grid, LayoutList, FileText, User } from 'lucide-react';
 import { useStepContext } from '../contexts/StepContext';
 import { ViewMode } from '../types';
@@ -8,9 +9,19 @@ const NavigationBar: React.FC<{ onViewNotes: () => void, isNotesView: boolean }>
   isNotesView 
 }) => {
   const { viewMode, setViewMode } = useStepContext();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // 詳細ページにいるかどうかを確認
+  const isDetailPage = location.pathname.startsWith('/steps/');
 
   const handleViewChange = (mode: ViewMode) => {
     setViewMode(mode);
+    
+    // 詳細ページにいる場合は、ホームページに戻る
+    if (isDetailPage) {
+      navigate('/');
+    }
   };
 
   return (
@@ -22,7 +33,7 @@ const NavigationBar: React.FC<{ onViewNotes: () => void, isNotesView: boolean }>
             if (isNotesView) onViewNotes();
           }}
           className={`p-4 ${
-            viewMode === 'boardGame' && !isNotesView
+            viewMode === 'boardGame' && !isNotesView && !isDetailPage
               ? 'text-primary'
               : 'text-primary-light'
           }`}
@@ -37,7 +48,7 @@ const NavigationBar: React.FC<{ onViewNotes: () => void, isNotesView: boolean }>
             if (isNotesView) onViewNotes();
           }}
           className={`p-4 ${
-            viewMode === 'timeline' && !isNotesView
+            viewMode === 'timeline' && !isNotesView && !isDetailPage
               ? 'text-primary'
               : 'text-primary-light'
           }`}
@@ -52,7 +63,7 @@ const NavigationBar: React.FC<{ onViewNotes: () => void, isNotesView: boolean }>
             if (isNotesView) onViewNotes();
           }}
           className={`p-4 ${
-            viewMode === 'grid' && !isNotesView
+            viewMode === 'grid' && !isNotesView && !isDetailPage
               ? 'text-primary'
               : 'text-primary-light'
           }`}
@@ -62,9 +73,17 @@ const NavigationBar: React.FC<{ onViewNotes: () => void, isNotesView: boolean }>
         </button>
         
         <button
-          onClick={onViewNotes}
+          onClick={() => {
+            if (isDetailPage) {
+              navigate('/');
+              // メモ一覧に移動するためのフラグを設定
+              setTimeout(() => onViewNotes(), 100);
+            } else {
+              onViewNotes();
+            }
+          }}
           className={`p-4 ${
-            isNotesView
+            isNotesView && !isDetailPage
               ? 'text-primary'
               : 'text-primary-light'
           }`}
@@ -79,7 +98,7 @@ const NavigationBar: React.FC<{ onViewNotes: () => void, isNotesView: boolean }>
             if (isNotesView) onViewNotes();
           }}
           className={`p-4 ${
-            viewMode === 'mypage' && !isNotesView
+            viewMode === 'mypage' && !isNotesView && !isDetailPage
               ? 'text-primary'
               : 'text-primary-light'
           }`}

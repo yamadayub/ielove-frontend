@@ -1,13 +1,19 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStepContext } from '../contexts/StepContext';
 import { Home } from 'lucide-react';
 import PhaseFilter from '../components/PhaseFilter';
 
 const BoardGameView: React.FC = () => {
-  const { getFilteredSteps, setCurrentStep } = useStepContext();
+  const { getFilteredSteps } = useStepContext();
+  const navigate = useNavigate();
   
   const getCleanTitle = (title: string) => {
     return title.replace(/^Step \d+: /, '');
+  };
+
+  const handleStepClick = (stepId: number) => {
+    navigate(`/steps/${stepId}`);
   };
 
   const steps = getFilteredSteps();
@@ -27,7 +33,7 @@ const BoardGameView: React.FC = () => {
                   )}
                   
                   <button
-                    onClick={() => setCurrentStep(step)}
+                    onClick={() => handleStepClick(step.id)}
                     className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all shadow-lg flex-shrink-0 relative z-10 ${
                       step.isCompleted 
                         ? 'bg-primary text-white' 
@@ -42,7 +48,7 @@ const BoardGameView: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => setCurrentStep(step)}
+                    onClick={() => handleStepClick(step.id)}
                     className="bg-white rounded-lg shadow-md p-3 flex-grow hover:bg-primary-lightest transition-colors relative z-10"
                   >
                     <p className="text-sm font-medium text-primary">

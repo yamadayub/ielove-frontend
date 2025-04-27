@@ -5,6 +5,7 @@ export interface Step {
   detailImage: string;
   category: string;
   phase: Phase;
+  description?: string;
 }
 
 export interface UserStep extends Step {

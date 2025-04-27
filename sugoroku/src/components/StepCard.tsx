@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, CheckCircle, FileText } from 'lucide-react';
 import { UserStep } from '../types';
 import { useStepContext } from '../contexts/StepContext';
@@ -9,10 +10,11 @@ interface StepCardProps {
 }
 
 const StepCard: React.FC<StepCardProps> = ({ step, mode = 'full' }) => {
-  const { setCurrentStep, toggleStepComplete } = useStepContext();
+  const { toggleStepComplete } = useStepContext();
+  const navigate = useNavigate();
 
   const handleCardClick = () => {
-    setCurrentStep(step);
+    navigate(`/steps/${step.id}`);
   };
 
   const handleCheckClick = (e: React.MouseEvent) => {
