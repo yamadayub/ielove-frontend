@@ -5,7 +5,16 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: '#2a526b',
+          light: '#6e8b9e',
+          lighter: '#e5eaed',
+          lightest: '#f5f7f8'
+        }
+      }
+    },
   },
   plugins: [
     require('@tailwindcss/forms'),

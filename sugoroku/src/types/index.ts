@@ -1,35 +1,30 @@
 export interface Step {
   id: number;
   title: string;
-  description: string;
-  images: string[];
-  groupId: number;
-  order: number;
+  titleImage: string;
+  detailImage: string;
+  category: string;
+  phase: Phase;
 }
 
-export interface StepGroup {
-  id: number;
-  name: string;
-  description: string;
-  color: string;
-  order: number;
+export interface UserStep extends Step {
+  isCompleted: boolean;
+  notes: string;
 }
 
-export interface UserNote {
-  stepId: number;
-  content: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ViewMode = 'timeline' | 'grid' | 'boardGame' | 'mypage';
 
-export interface UserProgress {
-  userId: string;
-  completedSteps: number[];
-  currentStep: number;
-  lastUpdated: string;
-}
+export type Phase = 
+  | '計画'
+  | '発注'
+  | '設計'
+  | '施工'
+  | '完成・引き渡し';
 
-export interface DeepLinkParams {
-  stepId?: number;
-  groupId?: number;
-} 
+export const ALL_PHASES: Phase[] = [
+  '計画',
+  '発注',
+  '設計',
+  '施工',
+  '完成・引き渡し'
+];
