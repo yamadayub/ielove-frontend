@@ -104,27 +104,29 @@ const FloorPlanEditor: React.FC = () => {
     if (!gridVisible) return null;
 
     const lines = [];
+    const canvasWidth = stageSize.width / scale;
+    const canvasHeight = stageSize.height / scale;
 
     // 縦線
-    for (let i = 0; i < stageSize.width / gridSize; i++) {
+    for (let i = 0; i <= Math.ceil(canvasWidth / gridSize); i++) {
       lines.push(
         <Line
           key={`v${i}`}
-          points={[i * gridSize, 0, i * gridSize, stageSize.height]}
+          points={[i * gridSize, 0, i * gridSize, canvasHeight]}
           stroke="#e5e7eb"
-          strokeWidth={0.5}
+          strokeWidth={0.5 / scale}
         />
       );
     }
 
     // 横線
-    for (let i = 0; i < stageSize.height / gridSize; i++) {
+    for (let i = 0; i <= Math.ceil(canvasHeight / gridSize); i++) {
       lines.push(
         <Line
           key={`h${i}`}
-          points={[0, i * gridSize, stageSize.width, i * gridSize]}
+          points={[0, i * gridSize, canvasWidth, i * gridSize]}
           stroke="#e5e7eb"
-          strokeWidth={0.5}
+          strokeWidth={0.5 / scale}
         />
       );
     }
@@ -209,6 +211,26 @@ const FloorPlanEditor: React.FC = () => {
     ));
   };
 
+  // 要素ドラッグ処理
+  const handleElementDragMove = (elementId: string, e: KonvaEventObject<DragEvent>) => {
+    const newX = snapToGrid(e.target.x());
+    const newY = snapToGrid(e.target.y());
+    
+    e.target.x(newX);
+    e.target.y(newY);
+
+    setFloors(prev => prev.map((floor, index) => 
+      index === currentFloorIndex 
+        ? {
+            ...floor,
+            elements: floor.elements.map(el => 
+              el.id === elementId ? { ...el, x: newX, y: newY } : el
+            )
+          }
+        : floor
+    ));
+  };
+
   // 要素を描画
   const renderElement = (element: FloorElement) => {
     const isSelected = selectedElementId === element.id;
@@ -248,6 +270,7 @@ const FloorPlanEditor: React.FC = () => {
           rotation={element.rotation}
           draggable={selectedTool === 'select'}
           onClick={handleElementClickLocal}
+          onDragMove={(e: any) => handleElementDragMove(element.id, e)}
         />
         {isSelected && (
           <>
@@ -278,7 +301,7 @@ const FloorPlanEditor: React.FC = () => {
             />
           </>
         )}
-        {/* 要素ラベル */}
+        {/* 要素ラベル - 要素の中央に配置 */}
         <Text
           x={element.x + element.width / 2}
           y={element.y + element.height / 2}
@@ -289,6 +312,7 @@ const FloorPlanEditor: React.FC = () => {
           verticalAlign="middle"
           offsetX={element.type === 'wall' ? 6 : element.type === 'door' ? 9 : 6}
           offsetY={6}
+          listening={false}
         />
       </React.Fragment>
     );
@@ -589,11 +613,11 @@ const FloorPlanEditor: React.FC = () => {
         </div>
 
         {/* キャンバスエリア */}
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden" ref={containerRef}>
           <div className="absolute inset-0 bg-gray-100">
             <Stage
-              width={window.innerWidth - (window.innerWidth < 1024 ? 0 : 256)}
-              height={window.innerHeight - 64}
+              width={stageSize.width}
+              height={stageSize.height}
               scaleX={scale}
               scaleY={scale}
               x={stagePos.x}
@@ -605,7 +629,7 @@ const FloorPlanEditor: React.FC = () => {
             >
               <Layer>
                 {/* グリッド */}
-                {gridVisible && renderGrid()}
+                {renderGrid()}
                 
                 {/* 現在の階層の要素を描画 */}
                 {floors[currentFloorIndex]?.elements.map((element) => renderElement(element))}
@@ -616,23 +640,23 @@ const FloorPlanEditor: React.FC = () => {
           {/* ズームコントロール */}
           <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-2 space-y-2">
             <button
-              onClick={() => setScale(Math.min(scale * 1.2, 3))}
+              onClick={handleZoomIn}
               className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+              title="ズームイン"
             >
-              <Plus className="h-4 w-4" />
+              <ZoomIn className="h-4 w-4" />
             </button>
             <button
-              onClick={() => setScale(Math.max(scale / 1.2, 0.1))}
+              onClick={handleZoomOut}
               className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+              title="ズームアウト"
             >
-              <Minus className="h-4 w-4" />
+              <ZoomOut className="h-4 w-4" />
             </button>
             <button
-              onClick={() => {
-                setScale(1);
-                setStagePos({ x: 0, y: 0 });
-              }}
-              className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs"
+              onClick={handleZoomReset}
+              className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs font-medium"
+              title="ズームリセット"
             >
               1:1
             </button>
