@@ -30,4 +30,8 @@ declare module 'react-konva' {
   export const Line: ComponentType<any>;
   export const Circle: ComponentType<any>;
   export const Text: ComponentType<any>;
-} 
+}
+
+import { KonvaEventObject as OriginalKonvaEventObject } from 'konva/lib/Node';
+
+export type KonvaEventObject<T = Event> = OriginalKonvaEventObject<T>; 

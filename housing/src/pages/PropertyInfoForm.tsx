@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, Building2 } from 'lucide-react';
 
 interface PropertyInfo {
   propertyType: 'detached_house' | 'apartment_renovation';
@@ -17,7 +17,7 @@ interface PropertyInfo {
 const PropertyInfoForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const propertyType = location.state?.propertyType;
+  const propertyType = location.state?.propertyType as 'detached_house' | 'apartment_renovation';
 
   const [formData, setFormData] = useState<PropertyInfo>({
     propertyType: propertyType || 'detached_house',
@@ -31,240 +31,371 @@ const PropertyInfoForm: React.FC = () => {
     description: ''
   });
 
+  const [errors, setErrors] = useState<Partial<PropertyInfo>>({});
+
   const handleBack = () => {
     navigate('/property-type');
   };
 
-  const handleNext = () => {
-    // フォームの基本的なバリデーション
-    if (formData.projectName && formData.floorPlan && formData.floorType && formData.floorArea) {
-      // 間取り編集画面に遷移
-      navigate('/floor-plan-editor', { state: { propertyInfo: formData } });
-    } else {
-      alert('必須項目を入力してください');
+  const handleInputChange = (field: keyof PropertyInfo, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // エラーをクリア
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const validateForm = (): boolean => {
+    const newErrors: Partial<PropertyInfo> = {};
+
+    if (!formData.projectName.trim()) {
+      newErrors.projectName = 'プロジェクト名は必須です';
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = '住所は必須です';
+    }
+
+    if (!formData.floorPlan) {
+      newErrors.floorPlan = '間取りは必須です';
+    }
+
+    if (!formData.floorArea.trim()) {
+      newErrors.floorArea = '床面積は必須です';
+    }
+
+    if (!formData.budget) {
+      newErrors.budget = '予算は必須です';
+    }
+
+    if (!formData.timeline) {
+      newErrors.timeline = '工期は必須です';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const isFormValid = formData.projectName && formData.floorPlan && formData.floorType && formData.floorArea;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      navigate('/floor-plan-editor', { 
+        state: { 
+          propertyInfo: formData 
+        } 
+      });
+    }
+  };
+
+  const floorPlanOptions = propertyType === 'detached_house' 
+    ? [
+        { value: '1K', label: '1K' },
+        { value: '1DK', label: '1DK' },
+        { value: '1LDK', label: '1LDK' },
+        { value: '2K', label: '2K' },
+        { value: '2DK', label: '2DK' },
+        { value: '2LDK', label: '2LDK' },
+        { value: '3K', label: '3K' },
+        { value: '3DK', label: '3DK' },
+        { value: '3LDK', label: '3LDK' },
+        { value: '4LDK', label: '4LDK' },
+        { value: '5LDK以上', label: '5LDK以上' },
+        { value: 'その他', label: 'その他' }
+      ]
+    : [
+        { value: '1K', label: '1K' },
+        { value: '1DK', label: '1DK' },
+        { value: '1LDK', label: '1LDK' },
+        { value: '2K', label: '2K' },
+        { value: '2DK', label: '2DK' },
+        { value: '2LDK', label: '2LDK' },
+        { value: '3K', label: '3K' },
+        { value: '3DK', label: '3DK' },
+        { value: '3LDK', label: '3LDK' },
+        { value: '4LDK', label: '4LDK' },
+        { value: 'その他', label: 'その他' }
+      ];
+
+  const floorTypeOptions = propertyType === 'detached_house'
+    ? [
+        { value: '平屋', label: '平屋' },
+        { value: '2階建て', label: '2階建て' },
+        { value: '3階建て', label: '3階建て' },
+        { value: '地下あり', label: '地下あり' }
+      ]
+    : [
+        { value: '低層階（1-3階）', label: '低層階（1-3階）' },
+        { value: '中層階（4-7階）', label: '中層階（4-7階）' },
+        { value: '高層階（8階以上）', label: '高層階（8階以上）' },
+        { value: '最上階', label: '最上階' }
+      ];
+
+  const budgetOptions = [
+    { value: '300万円未満', label: '300万円未満' },
+    { value: '300-500万円', label: '300-500万円' },
+    { value: '500-800万円', label: '500-800万円' },
+    { value: '800-1200万円', label: '800-1200万円' },
+    { value: '1200-2000万円', label: '1200-2000万円' },
+    { value: '2000万円以上', label: '2000万円以上' }
+  ];
+
+  const timelineOptions = [
+    { value: '1ヶ月以内', label: '1ヶ月以内' },
+    { value: '2-3ヶ月', label: '2-3ヶ月' },
+    { value: '3-6ヶ月', label: '3-6ヶ月' },
+    { value: '6ヶ月-1年', label: '6ヶ月-1年' },
+    { value: '1年以上', label: '1年以上' },
+    { value: '未定', label: '未定' }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4 lg:py-6">
-            <div className="flex items-center">
-              <button
-                onClick={handleBack}
-                className="inline-flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1 lg:mr-2" />
-                <span className="hidden sm:inline">戻る</span>
-              </button>
-              <h1 className="ml-4 lg:ml-6 text-xl lg:text-2xl font-bold text-gray-900">物件情報入力</h1>
-            </div>
+      <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center">
+          <button
+            onClick={handleBack}
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mr-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            戻る
+          </button>
+          <div className="flex items-center">
+            {propertyType === 'detached_house' ? (
+              <Home className="w-5 h-5 text-blue-600 mr-2" />
+            ) : (
+              <Building2 className="w-5 h-5 text-green-600 mr-2" />
+            )}
+            <h1 className="text-lg font-semibold text-gray-900">
+              {propertyType === 'detached_house' ? '戸建て住宅' : 'マンションリノベーション'} - 物件情報入力
+            </h1>
           </div>
         </div>
       </div>
 
       {/* メインコンテンツ */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 lg:px-6 py-6 lg:py-8">
-            <div className="mb-6 lg:mb-8">
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2">プロジェクト詳細情報</h2>
-              <p className="text-sm lg:text-base text-gray-600">
-                設計に必要な基本情報を入力してください
-              </p>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              プロジェクト情報を入力してください
+            </h2>
+            <p className="text-gray-600">
+              設計に必要な基本情報を入力してください。後から変更することも可能です。
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* プロジェクト名 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                プロジェクト名 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.projectName}
+                onChange={(e) => handleInputChange('projectName', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.projectName ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="例：我が家のリノベーション"
+              />
+              {errors.projectName && (
+                <p className="mt-1 text-sm text-red-600">{errors.projectName}</p>
+              )}
             </div>
 
-            <form className="space-y-4 lg:space-y-6">
-              {/* プロジェクト名 */}
-              <div>
-                <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-2">
-                  プロジェクト名 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="projectName"
-                  name="projectName"
-                  value={formData.projectName}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                  placeholder="例: 田中邸新築工事"
-                />
-              </div>
+            {/* 住所 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                住所 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.address ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="例：東京都渋谷区○○1-2-3"
+              />
+              {errors.address && (
+                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+              )}
+            </div>
 
-              {/* 住所 */}
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                  住所
-                </label>
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                  placeholder="例: 東京都渋谷区..."
-                />
-              </div>
-
+            <div className="grid md:grid-cols-2 gap-6">
               {/* 間取り */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                <div>
-                  <label htmlFor="floorPlan" className="block text-sm font-medium text-gray-700 mb-2">
-                    間取り <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="floorPlan"
-                    name="floorPlan"
-                    value={formData.floorPlan}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                  >
-                    <option value="">選択してください</option>
-                    <option value="1R">1R</option>
-                    <option value="1K">1K</option>
-                    <option value="1DK">1DK</option>
-                    <option value="1LDK">1LDK</option>
-                    <option value="2K">2K</option>
-                    <option value="2DK">2DK</option>
-                    <option value="2LDK">2LDK</option>
-                    <option value="3K">3K</option>
-                    <option value="3DK">3DK</option>
-                    <option value="3LDK">3LDK</option>
-                    <option value="4LDK">4LDK</option>
-                    <option value="5LDK以上">5LDK以上</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="floorType" className="block text-sm font-medium text-gray-700 mb-2">
-                    階数 <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="floorType"
-                    name="floorType"
-                    value={formData.floorType}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                  >
-                    <option value="">選択してください</option>
-                    <option value="平屋">平屋</option>
-                    <option value="2階建て">2階建て</option>
-                    <option value="3階建て">3階建て</option>
-                    <option value="その他">その他</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* 延床面積 */}
               <div>
-                <label htmlFor="floorArea" className="block text-sm font-medium text-gray-700 mb-2">
-                  延床面積 <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    id="floorArea"
-                    name="floorArea"
-                    value={formData.floorArea}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 pr-12 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                    placeholder="例: 100"
-                  />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 text-sm">㎡</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 予算 */}
-              <div>
-                <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-2">
-                  予算
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  現在の間取り <span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="budget"
-                  name="budget"
-                  value={formData.budget}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  value={formData.floorPlan}
+                  onChange={(e) => handleInputChange('floorPlan', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.floorPlan ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">選択してください</option>
-                  <option value="1000万円未満">1000万円未満</option>
-                  <option value="1000-2000万円">1000-2000万円</option>
-                  <option value="2000-3000万円">2000-3000万円</option>
-                  <option value="3000-4000万円">3000-4000万円</option>
-                  <option value="4000-5000万円">4000-5000万円</option>
-                  <option value="5000万円以上">5000万円以上</option>
+                  {floorPlanOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
+                {errors.floorPlan && (
+                  <p className="mt-1 text-sm text-red-600">{errors.floorPlan}</p>
+                )}
+              </div>
+
+              {/* 階層・階数 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {propertyType === 'detached_house' ? '建物構造' : '所在階'}
+                </label>
+                <select
+                  value={formData.floorType}
+                  onChange={(e) => handleInputChange('floorType', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">選択してください</option>
+                  {floorTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 床面積 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                床面積 <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.floorArea}
+                  onChange={(e) => handleInputChange('floorArea', e.target.value)}
+                  className={`w-full px-3 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.floorArea ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="例：80"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <span className="text-gray-500 text-sm">㎡</span>
+                </div>
+              </div>
+              {errors.floorArea && (
+                <p className="mt-1 text-sm text-red-600">{errors.floorArea}</p>
+              )}
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* 予算 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  予算 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.budget}
+                  onChange={(e) => handleInputChange('budget', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.budget ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="">選択してください</option>
+                  {budgetOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.budget && (
+                  <p className="mt-1 text-sm text-red-600">{errors.budget}</p>
+                )}
               </div>
 
               {/* 工期 */}
               <div>
-                <label htmlFor="timeline" className="block text-sm font-medium text-gray-700 mb-2">
-                  希望工期
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  希望工期 <span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="timeline"
-                  name="timeline"
                   value={formData.timeline}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
+                  onChange={(e) => handleInputChange('timeline', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    errors.timeline ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 >
                   <option value="">選択してください</option>
-                  <option value="3ヶ月以内">3ヶ月以内</option>
-                  <option value="6ヶ月以内">6ヶ月以内</option>
-                  <option value="1年以内">1年以内</option>
-                  <option value="1年以上">1年以上</option>
-                  <option value="未定">未定</option>
+                  {timelineOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
+                {errors.timeline && (
+                  <p className="mt-1 text-sm text-red-600">{errors.timeline}</p>
+                )}
               </div>
+            </div>
 
-              {/* 備考 */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  備考・要望
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={4}
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm lg:text-base"
-                  placeholder="特別な要望や注意事項があれば記入してください"
-                />
-              </div>
-            </form>
-          </div>
+            {/* 要望・備考 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                要望・備考
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="設計に関するご要望や特記事項があればご記入ください"
+              />
+            </div>
 
-          {/* フッター */}
-          <div className="px-4 lg:px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-            <div className="flex justify-end">
+            {/* 送信ボタン */}
+            <div className="flex justify-end pt-6">
               <button
-                onClick={handleNext}
-                disabled={!isFormValid}
-                className={`w-full sm:w-auto inline-flex items-center justify-center px-4 lg:px-6 py-3 border border-transparent text-sm lg:text-base font-medium rounded-md ${
-                  isFormValid
-                    ? 'text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                    : 'text-gray-400 bg-gray-200 cursor-not-allowed'
-                }`}
+                type="submit"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                間取り編集へ
+                間取り編集を開始
                 <ArrowRight className="ml-2 w-4 h-4" />
               </button>
+            </div>
+          </form>
+        </div>
+
+        {/* 注意事項 */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                ヒント
+              </h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  入力した情報は間取り編集画面でいつでも変更できます。
+                  まずは大まかな情報を入力して、設計を始めてみましょう。
+                </p>
+              </div>
             </div>
           </div>
         </div>
