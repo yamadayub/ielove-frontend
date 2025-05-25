@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Heart, Share2, Edit2, Save, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart, Share2, Edit2, Save, X, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Step } from '../../types';
+import { Step } from '../../types/sugoroku';
 
 export interface StepDetailProps {
   step: Step;
   userNote: string;
   isLiked: boolean;
+  isSignedIn?: boolean;
   onToggleLike: () => void;
   onShare: () => void;
   onSaveNote: (note: string) => void;
@@ -19,6 +20,7 @@ const StepDetail: React.FC<StepDetailProps> = ({
   step,
   userNote,
   isLiked,
+  isSignedIn = false,
   onToggleLike,
   onShare,
   onSaveNote,
@@ -26,13 +28,30 @@ const StepDetail: React.FC<StepDetailProps> = ({
   onNavigateNext,
   onClose
 }) => {
-  // モック画像配列（実際のAPIから取得する予定）
-  const images = [
-    `/images/mock/step_${step.id}_1.jpg`,
-    `/images/mock/step_${step.id}_2.jpg`,
-    `/images/mock/step_${step.id}_3.jpg`,
-  ];
+  // ステップの画像を取得
+  const getStepImages = () => {
+    // APIから取得した画像がない場合はフォールバック画像を設定
+    if (!step.images || step.images.length === 0) {
+      return [`/images/mock/step_${step.id}_1.jpg`];
+    }
+    
+    // 画像タイプでソート
+    const sortedImages = [...step.images].sort((a, b) => {
+      // タイプで優先度ソート：title -> detail -> gallery
+      const typeOrder: Record<string, number> = { title: 1, detail: 2, gallery: 3 };
+      const orderA = typeOrder[a.image_type] || 99;
+      const orderB = typeOrder[b.image_type] || 99;
+      
+      if (orderA !== orderB) return orderA - orderB;
+      
+      // 同じタイプならorder属性でソート
+      return a.order - b.order;
+    });
+    
+    return sortedImages.map(img => img.image_url);
+  };
 
+  const images = getStepImages();
   const [noteContent, setNoteContent] = useState(userNote);
   const [isEditing, setIsEditing] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -53,6 +72,11 @@ const StepDetail: React.FC<StepDetailProps> = ({
     target.src = '/images/fallback/default_image.jpg';
   };
 
+  // カテゴリー情報（グループ名を使用）
+  const getCategoryName = () => {
+    return step.group_id ? `グループ ${step.group_id}` : '未分類';
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -60,6 +84,17 @@ const StepDetail: React.FC<StepDetailProps> = ({
       exit={{ opacity: 0 }}
       className="bg-white"
     >
+      {/* ヘッダーと戻るボタン */}
+      <div className="px-4 py-3 border-b flex items-center">
+        <button
+          onClick={onClose}
+          className="mr-2 text-gray-700 hover:text-gray-900"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="font-bold text-base">ステップ詳細</h1>
+      </div>
+
       {/* 画像スライダー */}
       <div className="relative aspect-square bg-gray-100">
         <img
@@ -106,12 +141,26 @@ const StepDetail: React.FC<StepDetailProps> = ({
 
       {/* アクションボタン */}
       <div className="flex items-center p-4 border-b">
-        <button
-          onClick={onToggleLike}
-          className={`mr-4 ${isLiked ? 'text-red-500' : 'text-gray-700'}`}
-        >
-          <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
-        </button>
+        {isSignedIn ? (
+          // 認証済みユーザー向けのいいねボタン
+          <button
+            onClick={onToggleLike}
+            className={`mr-4 ${isLiked ? 'text-red-500' : 'text-gray-700'}`}
+          >
+            <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
+          </button>
+        ) : (
+          // 未認証ユーザー向けのログインボタン
+          <button
+            onClick={onToggleLike}
+            className="mr-4 text-gray-700 flex items-center"
+            title="いいねするにはログインが必要です"
+          >
+            <LogIn size={22} className="mr-1" />
+            <Heart size={20} />
+          </button>
+        )}
+        
         <button onClick={onShare} className="text-gray-700">
           <Share2 size={24} />
         </button>
@@ -141,8 +190,9 @@ const StepDetail: React.FC<StepDetailProps> = ({
         </p>
         
         <div className="text-sm text-gray-500">
-          <p>カテゴリ: {step.category}</p>
+          <p>カテゴリ: {getCategoryName()}</p>
           <p>フェーズ: {step.phase}</p>
+          <p>いいね: {step.like_count || 0}</p>
         </div>
       </div>
 
@@ -150,46 +200,70 @@ const StepDetail: React.FC<StepDetailProps> = ({
       <div className="p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold">あなたのメモ</h3>
-          {!isEditing ? (
-            <button 
-              onClick={() => setIsEditing(true)} 
-              className="text-primary hover:text-primary-dark"
-            >
-              <Edit2 size={18} />
-            </button>
-          ) : (
-            <div className="flex gap-2">
+          {isSignedIn ? (
+            // 認証済みユーザー向けの編集ボタン
+            !isEditing ? (
               <button 
-                onClick={handleCancelEdit} 
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={18} />
-              </button>
-              <button 
-                onClick={handleSaveNote} 
+                onClick={() => setIsEditing(true)} 
                 className="text-primary hover:text-primary-dark"
               >
-                <Save size={18} />
+                <Edit2 size={18} />
               </button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleCancelEdit} 
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={18} />
+                </button>
+                <button 
+                  onClick={handleSaveNote} 
+                  className="text-primary hover:text-primary-dark"
+                >
+                  <Save size={18} />
+                </button>
+              </div>
+            )
+          ) : (
+            // 未認証ユーザー向けのログインボタン
+            <button 
+              onClick={() => onSaveNote('')} 
+              className="text-primary hover:text-primary-dark flex items-center"
+              title="メモを追加するにはログインが必要です"
+            >
+              <LogIn size={16} className="mr-1" />
+              <span className="text-xs">ログイン</span>
+            </button>
           )}
         </div>
         
-        {!isEditing ? (
-          <div className="bg-gray-50 rounded-md p-3 min-h-[100px]">
-            {noteContent ? (
-              <p className="text-gray-700 whitespace-pre-wrap">{noteContent}</p>
-            ) : (
-              <p className="text-gray-400 italic">メモはまだありません。「編集」ボタンをクリックして追加してください。</p>
-            )}
-          </div>
+        {isSignedIn ? (
+          // 認証済みユーザー向けのメモ表示
+          !isEditing ? (
+            <div className="bg-gray-50 rounded-md p-3 min-h-[100px]">
+              {noteContent ? (
+                <p className="text-gray-700 whitespace-pre-wrap">{noteContent}</p>
+              ) : (
+                <p className="text-gray-400 italic">メモはまだありません。「編集」ボタンをクリックして追加してください。</p>
+              )}
+            </div>
+          ) : (
+            <textarea
+              value={noteContent}
+              onChange={(e) => setNoteContent(e.target.value)}
+              placeholder="このステップについてのメモを書いてください..."
+              className="w-full p-3 border rounded-md min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          )
         ) : (
-          <textarea
-            value={noteContent}
-            onChange={(e) => setNoteContent(e.target.value)}
-            placeholder="このステップについてのメモを書いてください..."
-            className="w-full p-3 border rounded-md min-h-[150px] focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          // 未認証ユーザー向けのメッセージ
+          <div className="bg-gray-50 rounded-md p-3 min-h-[100px] flex items-center justify-center">
+            <p className="text-gray-500 text-center">
+              メモ機能を使用するには<br />
+              <span className="text-primary font-semibold">ログイン</span>が必要です
+            </p>
+          </div>
         )}
       </div>
     </motion.div>
