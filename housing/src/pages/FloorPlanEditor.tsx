@@ -188,44 +188,16 @@ const FloorPlanEditor: React.FC = () => {
     setSelectedElementId(element.id);
   };
 
-  // 要素ドラッグ処理
-  const handleElementDragMove = (elementId: string, e: KonvaEventObject<DragEvent>) => {
-    const newX = snapToGrid(e.target.x());
-    const newY = snapToGrid(e.target.y());
-    
-    e.target.x(newX);
-    e.target.y(newY);
-
-    setFloors(prev => prev.map((floor, index) => 
-      index === currentFloorIndex 
-        ? {
-            ...floor,
-            elements: floor.elements.map(el => 
-              el.id === elementId ? { ...el, x: newX, y: newY } : el
-            )
-          }
-        : floor
-    ));
-  };
-
-  // 要素削除
-  const deleteElement = (elementId: string) => {
-    setFloors(prev => prev.map((floor, index) => 
-      index === currentFloorIndex 
-        ? { ...floor, elements: floor.elements.filter(el => el.id !== elementId) }
-        : floor
-    ));
-    setSelectedElementId(null);
-  };
-
   // 要素プロパティ更新
-  const updateElementProperty = (elementId: string, property: string, value: any) => {
+  const updateElementPropertyFixed = (property: string, value: any) => {
+    if (!selectedElementId) return;
+    
     setFloors(prev => prev.map((floor, index) => 
       index === currentFloorIndex 
         ? {
             ...floor,
             elements: floor.elements.map(el => 
-              el.id === elementId 
+              el.id === selectedElementId 
                 ? { 
                     ...el, 
                     properties: { ...el.properties, [property]: value }
@@ -235,118 +207,6 @@ const FloorPlanEditor: React.FC = () => {
           }
         : floor
     ));
-  };
-
-  // プロパティ入力値の変更処理
-  const handlePropertyInputChange = (elementId: string, property: string, inputValue: string) => {
-    // 入力中は文字列として保持
-    setFloors(prev => prev.map((floor, index) => 
-      index === currentFloorIndex 
-        ? {
-            ...floor,
-            elements: floor.elements.map(el => 
-              el.id === elementId 
-                ? { 
-                    ...el, 
-                    properties: { ...el.properties, [`${property}_input`]: inputValue }
-                  } 
-                : el
-            )
-          }
-        : floor
-    ));
-  };
-
-  // 入力値を取得（表示用）
-  const getInputValue = (elementId: string, property: string): string => {
-    const element = currentFloor.elements.find(el => el.id === elementId);
-    if (!element) return '';
-    
-    // 入力中の値があればそれを返す、なければ実際の値を返す
-    const inputKey = `${property}_input`;
-    if (element.properties[inputKey] !== undefined) {
-      return element.properties[inputKey] as string;
-    }
-    
-    const value = element.properties[property];
-    return value !== undefined ? String(value) : '';
-  };
-
-  // 入力フィールドのフォーカスが外れた時の処理
-  const handleInputBlur = (elementId: string, property: string) => {
-    const element = currentFloor.elements.find(el => el.id === elementId);
-    if (!element) return;
-
-    const inputKey = `${property}_input`;
-    const inputValue = element.properties[inputKey] as string;
-    
-    if (inputValue !== undefined) {
-      const numericValue = parseFloat(inputValue);
-      if (!isNaN(numericValue) && numericValue > 0) {
-        // 有効な数値の場合、実際の値を更新
-        updateElementProperty(elementId, property, numericValue);
-        
-        // 寸法に応じてキャンバス上のサイズも更新
-        if (property === 'length' || property === 'thickness') {
-          const newWidth = property === 'length' ? mmToPixels(numericValue) : element.width;
-          const newHeight = property === 'thickness' ? mmToPixels(numericValue) : element.height;
-          updateElementSize(elementId, newWidth, newHeight);
-        }
-      }
-      
-      // 入力中の値をクリア
-      setFloors(prev => prev.map((floor, index) => 
-        index === currentFloorIndex 
-          ? {
-              ...floor,
-              elements: floor.elements.map(el => 
-                el.id === elementId 
-                  ? { 
-                      ...el, 
-                      properties: { ...el.properties, [inputKey]: undefined }
-                    } 
-                  : el
-              )
-            }
-          : floor
-      ));
-    }
-  };
-
-  // 要素サイズ更新
-  const updateElementSize = (elementId: string, width: number, height: number) => {
-    setFloors(prev => prev.map((floor, index) => 
-      index === currentFloorIndex 
-        ? {
-            ...floor,
-            elements: floor.elements.map(el => 
-              el.id === elementId ? { ...el, width, height } : el
-            )
-          }
-        : floor
-    ));
-  };
-
-  // 要素回転更新
-  const updateElementRotation = (elementId: string, rotation: number) => {
-    setFloors(prev => prev.map((floor, index) => 
-      index === currentFloorIndex 
-        ? {
-            ...floor,
-            elements: floor.elements.map(el => 
-              el.id === elementId ? { ...el, rotation } : el
-            )
-          }
-        : floor
-    ));
-  };
-
-  // 要素を90度回転
-  const rotateElement = (elementId: string) => {
-    const element = currentFloor.elements.find(el => el.id === elementId);
-    if (element) {
-      updateElementRotation(elementId, (element.rotation + 90) % 360);
-    }
   };
 
   // 要素を描画
@@ -371,7 +231,7 @@ const FloorPlanEditor: React.FC = () => {
       }
     };
 
-    const handleClick = (e: KonvaEventObject<MouseEvent>) => {
+    const handleElementClickLocal = (e: KonvaEventObject<MouseEvent>) => {
       handleElementClick(element, e);
     };
 
@@ -387,8 +247,7 @@ const FloorPlanEditor: React.FC = () => {
           strokeWidth={isSelected ? 2 : 1}
           rotation={element.rotation}
           draggable={selectedTool === 'select'}
-          onClick={handleClick}
-          onDragMove={(e) => handleElementDragMove(element.id, e)}
+          onClick={handleElementClickLocal}
         />
         {isSelected && (
           <>
@@ -499,8 +358,11 @@ const FloorPlanEditor: React.FC = () => {
     
     const scaleBy = 1.02;
     const stage = e.target.getStage();
+    if (!stage) return;
+    
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
+    if (!pointer) return;
     
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
@@ -581,94 +443,113 @@ const FloorPlanEditor: React.FC = () => {
               </div>
             </div>
 
-            {/* 選択された要素のプロパティ */}
-            {selectedElement && (
-              <div className="border-t pt-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">プロパティ</h3>
-                <div className="space-y-3">
-                  {selectedElement.type === 'wall' && (
-                    <>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          厚さ (mm)
-                        </label>
-                        <input
-                          type="number"
-                          value={selectedElement.thickness || 100}
-                          onChange={(e) => updateElementProperty('thickness', parseInt(e.target.value))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          材質
-                        </label>
-                        <select
-                          value={selectedElement.material || 'concrete'}
-                          onChange={(e) => updateElementProperty('material', e.target.value)}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                        >
-                          <option value="concrete">コンクリート</option>
-                          <option value="wood">木造</option>
-                          <option value="steel">鉄骨</option>
-                        </select>
-                      </div>
-                    </>
-                  )}
-
-                  {(selectedElement.type === 'door' || selectedElement.type === 'window') && (
-                    <>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          幅 (mm)
-                        </label>
-                        <input
-                          type="number"
-                          value={selectedElement.width || 800}
-                          onChange={(e) => updateElementProperty('width', parseInt(e.target.value))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          高さ (mm)
-                        </label>
-                        <input
-                          type="number"
-                          value={selectedElement.height || 2000}
-                          onChange={(e) => updateElementProperty('height', parseInt(e.target.value))}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
-                      </div>
-                      {selectedElement.type === 'window' && (
-                        <>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              床からの高さ (mm)
-                            </label>
-                            <input
-                              type="number"
-                              value={selectedElement.heightFrom || 900}
-                              onChange={(e) => updateElementProperty('heightFrom', parseInt(e.target.value))}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                              上端高さ (mm)
-                            </label>
-                            <input
-                              type="number"
-                              value={selectedElement.heightTo || 2100}
-                              onChange={(e) => updateElementProperty('heightTo', parseInt(e.target.value))}
-                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                            />
-                          </div>
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
+            {/* プロパティパネル */}
+            {selectedElementId && selectedElement && (
+              <div className="bg-white p-4 rounded-lg shadow-md">
+                <h3 className="text-lg font-semibold mb-3">
+                  {selectedElement.type === 'wall' && '壁のプロパティ'}
+                  {selectedElement.type === 'door' && 'ドアのプロパティ'}
+                  {selectedElement.type === 'window' && '窓のプロパティ'}
+                </h3>
+                
+                {selectedElement.type === 'wall' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        長さ (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.length || ''}
+                        onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="2000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        厚さ (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.thickness || ''}
+                        onChange={(e) => updateElementPropertyFixed('thickness', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="120"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {selectedElement.type === 'door' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        幅 (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.width || ''}
+                        onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        高さ (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.height || ''}
+                        onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="2000"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {selectedElement.type === 'window' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        幅 (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.width || ''}
+                        onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="1200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        高さ (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.height || ''}
+                        onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="1000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        床からの高さ (mm)
+                      </label>
+                      <input
+                        type="number"
+                        value={selectedElement.properties.heightFrom || ''}
+                        onChange={(e) => updateElementPropertyFixed('heightFrom', parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        placeholder="800"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -680,7 +561,7 @@ const FloorPlanEditor: React.FC = () => {
                   <div
                     key={floor.id}
                     className={`p-2 rounded border cursor-pointer ${
-                      currentFloor === index ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                      currentFloorIndex === index ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
                     }`}
                     onClick={() => setCurrentFloorIndex(index)}
                   >
@@ -692,7 +573,7 @@ const FloorPlanEditor: React.FC = () => {
                   onClick={() => {
                     const newFloor: Floor = {
                       id: (floors.length + 1).toString(),
-                      name: (floors.length + 1).toString(),
+                      name: `${floors.length + 1}階`,
                       elements: []
                     };
                     setFloors(prev => [...prev, newFloor]);
@@ -719,7 +600,6 @@ const FloorPlanEditor: React.FC = () => {
               y={stagePos.y}
               onWheel={handleWheel}
               onClick={handleStageClick}
-              onMouseDown={handleClick}
               ref={stageRef}
               draggable={selectedTool === 'select'}
             >
