@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: '../dist/housing',
     emptyOutDir: true,
     assetsDir: 'assets',
   },

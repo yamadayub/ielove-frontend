@@ -14,14 +14,27 @@ app.use((req, res, next) => {
   next();
 });
 
+// housingアプリケーションのためのStatic Files
+app.use('/housing', express.static(join(__dirname, 'dist/housing')));
+
 // sugorokuアプリケーションのためのStatic Files
 app.use('/sugoroku', express.static(join(__dirname, 'dist/sugoroku')));
 
 // marketplaceアプリのためのStatic Files
 app.use(express.static(join(__dirname, 'dist/marketplace')));
 
+app.get('/housing', (req, res) => {
+  res.redirect(301, '/housing/');
+});
+
 app.get('/sugoroku', (req, res) => {
   res.redirect(301, '/sugoroku/');
+});
+
+// housingのSPA処理 - 明示的に/housingと/housing/を処理
+app.get(['/housing', '/housing/*'], (req, res) => {
+  console.log(`Serving housing for path: ${req.path}`);
+  res.sendFile(join(__dirname, 'dist/housing/index.html'));
 });
 
 // sugorokuのSPA処理 - 明示的に/sugorokuと/sugoroku/を処理
