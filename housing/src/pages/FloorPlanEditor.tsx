@@ -141,8 +141,8 @@ const FloorPlanEditor: React.FC = () => {
       type,
       x: position?.x || 100,
       y: position?.y || 100,
-      width: type === 'wall' ? mmToPixels(2000) : type === 'door' ? mmToPixels(800) : mmToPixels(1200),
-      height: type === 'wall' ? mmToPixels(120) : type === 'door' ? mmToPixels(35) : mmToPixels(1000),
+      width: type === 'wall' ? mmToPixels(2000) : type === 'door' ? mmToPixels(800) : mmToPixels(1800),
+      height: type === 'wall' ? mmToPixels(120) : type === 'door' ? mmToPixels(35) : mmToPixels(400),
       rotation: 0,
       properties: {
         ...(type === 'wall' && {
@@ -159,9 +159,10 @@ const FloorPlanEditor: React.FC = () => {
           swingDirection: 'right'
         }),
         ...(type === 'window' && {
-          width: 1200,
-          height: 1000,
-          heightFrom: 800,
+          length: 1800,
+          width: 400,
+          height: 2000,
+          glassWidth: 100,
           windowType: 'sliding',
           glassType: 'double'
         })
@@ -261,9 +262,9 @@ const FloorPlanEditor: React.FC = () => {
                     updatedElement.height = mmToPixels(value);
                   }
                 } else if (element.type === 'window') {
-                  if (property === 'width') {
+                  if (property === 'length') {
                     updatedElement.width = mmToPixels(value);
-                  } else if (property === 'height') {
+                  } else if (property === 'width') {
                     updatedElement.height = mmToPixels(value);
                   }
                 }
@@ -361,6 +362,36 @@ const FloorPlanEditor: React.FC = () => {
             dash={[5, 5]}
             listening={false}
           />
+        )}
+        
+        {/* 窓のガラス断面を表示 */}
+        {element.type === 'window' && (
+          <>
+            {/* 左側のガラス断面 */}
+            <Rect
+              x={element.x + mmToPixels(300)}
+              y={element.y}
+              width={mmToPixels(element.properties.glassWidth || 100)}
+              height={element.height}
+              fill="rgba(59, 130, 246, 0.3)"
+              stroke="#1e40af"
+              strokeWidth={1}
+              rotation={element.rotation}
+              listening={false}
+            />
+            {/* 右側のガラス断面 */}
+            <Rect
+              x={element.x + element.width - mmToPixels(300) - mmToPixels(element.properties.glassWidth || 100)}
+              y={element.y}
+              width={mmToPixels(element.properties.glassWidth || 100)}
+              height={element.height}
+              fill="rgba(59, 130, 246, 0.3)"
+              stroke="#1e40af"
+              strokeWidth={1}
+              rotation={element.rotation}
+              listening={false}
+            />
+          </>
         )}
         
         {isSelected && (
@@ -838,15 +869,29 @@ const FloorPlanEditor: React.FC = () => {
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                          長さ (mm)
+                        </label>
+                        <input
+                          type="number"
+                          value={selectedElement.properties.length || 1800}
+                          onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                          placeholder="1800"
+                          min="600"
+                          step="100"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           幅 (mm)
                         </label>
                         <input
                           type="number"
-                          value={selectedElement.properties.width || pixelsToMm(selectedElement.width)}
+                          value={selectedElement.properties.width || 400}
                           onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="1200"
-                          min="300"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                          placeholder="400"
+                          min="200"
                           step="50"
                         />
                       </div>
@@ -856,26 +901,26 @@ const FloorPlanEditor: React.FC = () => {
                         </label>
                         <input
                           type="number"
-                          value={selectedElement.properties.height || pixelsToMm(selectedElement.height)}
+                          value={selectedElement.properties.height || 2000}
                           onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="1000"
-                          min="300"
-                          step="50"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                          placeholder="2000"
+                          min="1000"
+                          step="100"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          床からの高さ (mm)
+                          ガラス幅 (mm)
                         </label>
                         <input
                           type="number"
-                          value={selectedElement.properties.heightFrom || ''}
-                          onChange={(e) => updateElementPropertyFixed('heightFrom', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="800"
-                          min="0"
-                          step="50"
+                          value={selectedElement.properties.glassWidth || 100}
+                          onChange={(e) => updateElementPropertyFixed('glassWidth', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                          placeholder="100"
+                          min="50"
+                          step="10"
                         />
                       </div>
                       <div>
@@ -885,7 +930,7 @@ const FloorPlanEditor: React.FC = () => {
                         <select
                           value={selectedElement.properties.windowType || 'sliding'}
                           onChange={(e) => updateElementPropertyFixed('windowType', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                         >
                           <option value="sliding">引き違い窓</option>
                           <option value="casement">開き窓</option>
@@ -900,7 +945,7 @@ const FloorPlanEditor: React.FC = () => {
                         <select
                           value={selectedElement.properties.glassType || 'double'}
                           onChange={(e) => updateElementPropertyFixed('glassType', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                         >
                           <option value="single">単板ガラス</option>
                           <option value="double">複層ガラス</option>
@@ -1115,15 +1160,29 @@ const FloorPlanEditor: React.FC = () => {
                       <>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
+                            長さ (mm)
+                          </label>
+                          <input
+                            type="number"
+                            value={selectedElement.properties.length || 1800}
+                            onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                            placeholder="1800"
+                            min="600"
+                            step="100"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
                             幅 (mm)
                           </label>
                           <input
                             type="number"
-                            value={selectedElement.properties.width || pixelsToMm(selectedElement.width)}
+                            value={selectedElement.properties.width || 400}
                             onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="1200"
-                            min="300"
+                            placeholder="400"
+                            min="200"
                             step="50"
                           />
                         </div>
@@ -1133,26 +1192,26 @@ const FloorPlanEditor: React.FC = () => {
                           </label>
                           <input
                             type="number"
-                            value={selectedElement.properties.height || pixelsToMm(selectedElement.height)}
+                            value={selectedElement.properties.height || 2000}
                             onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="1000"
-                            min="300"
-                            step="50"
+                            placeholder="2000"
+                            min="1000"
+                            step="100"
                           />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            床からの高さ (mm)
+                            ガラス幅 (mm)
                           </label>
                           <input
                             type="number"
-                            value={selectedElement.properties.heightFrom || ''}
-                            onChange={(e) => updateElementPropertyFixed('heightFrom', parseFloat(e.target.value) || 0)}
+                            value={selectedElement.properties.glassWidth || 100}
+                            onChange={(e) => updateElementPropertyFixed('glassWidth', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="800"
-                            min="0"
-                            step="50"
+                            placeholder="100"
+                            min="50"
+                            step="10"
                           />
                         </div>
                         <div>
