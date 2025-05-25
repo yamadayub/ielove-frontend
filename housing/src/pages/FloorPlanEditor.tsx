@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Stage, Layer, Rect, Line, Circle, Text, Arc } from 'react-konva';
-import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus } from 'lucide-react';
+import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus, RectangleHorizontal, Home, DoorOpen } from 'lucide-react';
 import type { KonvaEventObject } from '../types/konva';
 
 interface FloorElement {
@@ -462,19 +462,6 @@ const FloorPlanEditor: React.FC = () => {
             />
           </>
         )}
-        {/* 要素ラベル - 要素の中央に配置 */}
-        <Text
-          x={element.x + elementWidth / 2}
-          y={element.y + elementHeight / 2}
-          text={element.type === 'wall' ? '壁' : element.type === 'door' ? 'ドア' : '窓'}
-          fontSize={12}
-          fill="white"
-          align="center"
-          verticalAlign="middle"
-          offsetX={element.type === 'wall' ? 6 : element.type === 'door' ? 9 : 6}
-          offsetY={6}
-          listening={false}
-        />
       </React.Fragment>
     );
   };
@@ -599,67 +586,78 @@ const FloorPlanEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
-        {/* ツールパネル */}
-        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 lg:overflow-y-auto">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">描画ツール</h3>
-              <div className="grid grid-cols-4 lg:grid-cols-1 gap-2">
-                {[
-                  { tool: 'wall', icon: Minus, label: '壁' },
-                  { tool: 'door', icon: Square, label: 'ドア' },
-                  { tool: 'window', icon: Square, label: '窓' },
-                  { tool: 'select', icon: MousePointer, label: '選択' }
-                ].map(({ tool, icon: Icon, label }) => (
-                  <button
-                    key={tool}
-                    onClick={() => setSelectedTool(tool as any)}
-                    className={`flex items-center justify-center lg:justify-start p-2 lg:p-3 rounded-md text-sm ${
-                      selectedTool === tool
-                        ? 'bg-blue-100 text-blue-600 border-blue-200'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    } border`}
-                  >
-                    <Icon className="h-4 w-4 lg:mr-2" />
-                    <span className="hidden lg:inline">{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* 階層タブ - ヘッダーの下に配置 */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2">
+        <div className="flex items-center space-x-2">
+          {floors.map((floor, index) => (
+            <button
+              key={floor.id}
+              onClick={() => setCurrentFloorIndex(index)}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                index === currentFloorIndex
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {floor.name}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              const newFloor: Floor = {
+                id: (floors.length + 1).toString(),
+                name: `${floors.length + 1}階`,
+                elements: []
+              };
+              setFloors(prev => [...prev, newFloor]);
+              setCurrentFloorIndex(floors.length);
+            }}
+            className="px-3 py-1 rounded-md text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors"
+          >
+            + 階を追加
+          </button>
+        </div>
+      </div>
 
-            {/* 階層管理 */}
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">階層</h3>
-              <div className="space-y-2">
-                {floors.map((floor, index) => (
-                  <div
-                    key={floor.id}
-                    className={`p-2 rounded border cursor-pointer ${
-                      currentFloorIndex === index ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
-                    }`}
-                    onClick={() => setCurrentFloorIndex(index)}
-                  >
-                    <div className="text-sm font-medium">{floor.name}</div>
-                    <div className="text-xs text-gray-500">{floor.elements.length}個の要素</div>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    const newFloor: Floor = {
-                      id: (floors.length + 1).toString(),
-                      name: `${floors.length + 1}階`,
-                      elements: []
-                    };
-                    setFloors(prev => [...prev, newFloor]);
-                    setCurrentFloorIndex(floors.length);
-                  }}
-                  className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-gray-400"
-                >
-                  + 階層を追加
-                </button>
-              </div>
-            </div>
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)]">
+        {/* ツールパネル */}
+        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4">
+          <div className="flex lg:flex-col space-x-2 lg:space-x-0 lg:space-y-4">
+            {/* 選択ツール */}
+            <button
+              onClick={() => setSelectedTool('select')}
+              className={`p-2 rounded-md transition-colors ${
+                selectedTool === 'select'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <MousePointer className="h-5 w-5" />
+            </button>
+
+            {/* 壁ツール */}
+            <button
+              onClick={() => addElement('wall')}
+              className="p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              <Home className="h-5 w-5" />
+            </button>
+
+            {/* ドアツール */}
+            <button
+              onClick={() => addElement('door')}
+              className="p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              <DoorOpen className="h-5 w-5" />
+            </button>
+
+            {/* 窓ツール */}
+            <button
+              onClick={() => addElement('window')}
+              className="p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+            >
+              <RectangleHorizontal className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
