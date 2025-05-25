@@ -551,35 +551,35 @@ const FloorPlanEditor: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="floor-plan-editor min-h-screen bg-gray-50 overflow-hidden">
       {/* ヘッダー */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
+        <div className="px-2 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-12 sm:h-16">
+            <div className="flex items-center min-w-0">
               <button
                 onClick={() => navigate('/housing/property-info')}
-                className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
+                className="flex items-center text-gray-600 hover:text-gray-900 mr-2 sm:mr-4 flex-shrink-0"
               >
-                <ArrowLeft className="h-5 w-5 mr-1" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
                 <span className="hidden sm:inline">戻る</span>
               </button>
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">間取り設計</h1>
+              <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">間取り設計</h1>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
               <button
                 onClick={() => setGridVisible(!gridVisible)}
-                className={`p-2 rounded-md ${gridVisible ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+                className={`p-1.5 sm:p-2 rounded-md ${gridVisible ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
                 title="グリッド表示切替"
               >
-                <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Grid className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
               </button>
               <button
                 onClick={handleSave}
-                className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm sm:text-base"
+                className="bg-blue-600 text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-md hover:bg-blue-700 text-xs sm:text-sm lg:text-base"
               >
                 <span className="hidden sm:inline">保存</span>
-                <Save className="h-4 w-4 sm:hidden" />
+                <Save className="h-3 w-3 sm:hidden" />
               </button>
             </div>
           </div>
@@ -587,13 +587,13 @@ const FloorPlanEditor: React.FC = () => {
       </div>
 
       {/* 階層タブ - ヘッダーの下に配置 */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2">
-        <div className="flex items-center space-x-2">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-1 sm:py-2 overflow-x-auto">
+        <div className="flex items-center space-x-1 sm:space-x-2 min-w-max">
           {floors.map((floor, index) => (
             <button
               key={floor.id}
               onClick={() => setCurrentFloorIndex(index)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 index === currentFloorIndex
                   ? 'bg-blue-100 text-blue-700 border border-blue-300'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -612,57 +612,57 @@ const FloorPlanEditor: React.FC = () => {
               setFloors(prev => [...prev, newFloor]);
               setCurrentFloorIndex(floors.length);
             }}
-            className="px-3 py-1 rounded-md text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors"
+            className="px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors whitespace-nowrap"
           >
             + 階を追加
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)]">
-        {/* ツールパネル */}
-        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4">
-          <div className="flex lg:flex-col space-x-2 lg:space-x-0 lg:space-y-4">
+      <div className="flex flex-col h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)]">
+        {/* ツールパネル - スマホでは上部に横並び、デスクトップでは左側に縦並び */}
+        <div className="w-full lg:w-64 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 p-2 sm:p-4 lg:h-full lg:overflow-y-auto">
+          <div className="flex lg:flex-col space-x-1 sm:space-x-2 lg:space-x-0 lg:space-y-4 justify-center lg:justify-start">
             {/* 選択ツール */}
             <button
               onClick={() => setSelectedTool('select')}
-              className={`p-2 rounded-md transition-colors ${
+              className={`p-1.5 sm:p-2 rounded-md transition-colors flex-shrink-0 ${
                 selectedTool === 'select'
                   ? 'bg-blue-100 text-blue-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <MousePointer className="h-5 w-5" />
+              <MousePointer className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             {/* 壁ツール */}
             <button
               onClick={() => addElement('wall')}
-              className="p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              className="p-1.5 sm:p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
             >
-              <Home className="h-5 w-5" />
+              <Home className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             {/* ドアツール */}
             <button
               onClick={() => addElement('door')}
-              className="p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              className="p-1.5 sm:p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
             >
-              <DoorOpen className="h-5 w-5" />
+              <DoorOpen className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             {/* 窓ツール */}
             <button
               onClick={() => addElement('window')}
-              className="p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              className="p-1.5 sm:p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
             >
-              <RectangleHorizontal className="h-5 w-5" />
+              <RectangleHorizontal className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
 
         {/* メインエリア */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col lg:flex-row min-h-0">
           {/* キャンバスエリア */}
           <div className="flex-1 relative overflow-hidden" ref={containerRef}>
             <div className="absolute inset-0 bg-gray-100">
@@ -689,24 +689,24 @@ const FloorPlanEditor: React.FC = () => {
             </div>
 
             {/* ズームコントロール */}
-            <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-2 space-y-2">
+            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white rounded-lg shadow-lg p-1 sm:p-2 space-y-1 sm:space-y-2">
               <button
                 onClick={handleZoomIn}
-                className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+                className="block w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
                 title="ズームイン"
               >
-                <ZoomIn className="h-4 w-4" />
+                <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
               <button
                 onClick={handleZoomOut}
-                className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+                className="block w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
                 title="ズームアウト"
               >
-                <ZoomOut className="h-4 w-4" />
+                <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
               <button
                 onClick={handleZoomReset}
-                className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs font-medium"
+                className="block w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs font-medium"
                 title="ズームリセット"
               >
                 1:1
