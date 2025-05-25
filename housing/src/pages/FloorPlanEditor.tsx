@@ -141,13 +141,17 @@ const FloorPlanEditor: React.FC = () => {
       type,
       x: position?.x || 100,
       y: position?.y || 100,
-      width: type === 'wall' ? mmToPixels(2000) : type === 'door' ? mmToPixels(800) : mmToPixels(1800),
-      height: type === 'wall' ? mmToPixels(120) : type === 'door' ? mmToPixels(35) : mmToPixels(400),
+      width: type === 'wall' ? mmToPixels(2000) : 
+             type === 'door' ? mmToPixels(800) : 
+             mmToPixels(1800), // 窓の長さ: 1800mm
+      height: type === 'wall' ? mmToPixels(130) : // 壁の厚み: 130mm
+              type === 'door' ? mmToPixels(35) : 
+              mmToPixels(40), // 窓の幅: 40mm
       rotation: 0,
       properties: {
         ...(type === 'wall' && {
+          thickness: 130, // 壁の厚み: 130mm
           length: 2000,
-          thickness: 120,
           height: 2400,
           material: 'concrete'
         }),
@@ -159,12 +163,12 @@ const FloorPlanEditor: React.FC = () => {
           swingDirection: 'right'
         }),
         ...(type === 'window' && {
-          length: 1800,
-          width: 400,
+          length: 1800, // 窓の長さ: 1800mm
+          width: 40,    // 窓の幅: 40mm
           height: 2000,
-          glassWidth: 100,
+          glassWidth: 10, // ガラス幅: 10mm
           windowType: 'sliding',
-          glassType: 'double'
+          glassType: 'single'
         })
       }
     };
@@ -330,13 +334,29 @@ const FloorPlanEditor: React.FC = () => {
       setSelectedElementId(element.id);
     };
 
+    // 要素のサイズを計算
+    let elementWidth, elementHeight;
+    if (element.type === 'wall') {
+      elementWidth = mmToPixels((element.properties as any).length || 2000);
+      elementHeight = mmToPixels((element.properties as any).thickness || 120);
+    } else if (element.type === 'door') {
+      elementWidth = mmToPixels((element.properties as any).length || 800);
+      elementHeight = mmToPixels((element.properties as any).width || 35);
+    } else if (element.type === 'window') {
+      elementWidth = mmToPixels((element.properties as any).length || 1800);
+      elementHeight = mmToPixels((element.properties as any).width || 40);
+    } else {
+      elementWidth = element.width;
+      elementHeight = element.height;
+    }
+
     return (
       <React.Fragment key={element.id}>
         <Rect
           x={element.x}
           y={element.y}
-          width={element.width}
-          height={element.height}
+          width={elementWidth}
+          height={elementHeight}
           fill={getElementColor(element.type)}
           stroke={isSelected ? '#ef4444' : getElementStroke(element.type)}
           strokeWidth={isSelected ? 2 : 1}
@@ -350,10 +370,10 @@ const FloorPlanEditor: React.FC = () => {
         {/* ドアの開き軌道を表示 */}
         {element.type === 'door' && (
           <Arc
-            x={element.properties.swingDirection === 'right' ? element.x : element.x + element.width}
+            x={element.properties.swingDirection === 'right' ? element.x : element.x + elementWidth}
             y={element.y}
             innerRadius={0}
-            outerRadius={element.width}
+            outerRadius={elementWidth}
             angle={90}
             rotation={element.rotation + (element.properties.swingDirection === 'right' ? 0 : 180)}
             fill="rgba(217, 119, 6, 0.2)"
@@ -364,32 +384,51 @@ const FloorPlanEditor: React.FC = () => {
           />
         )}
         
-        {/* 窓のガラス断面を表示 */}
+        {/* 窓の場合、ガラス断面を表示 */}
         {element.type === 'window' && (
           <>
-            {/* 左側のガラス断面 */}
+            {/* 左側の窓枠 (900x40mm) */}
             <Rect
-              x={element.x + mmToPixels(300)}
-              y={element.y}
-              width={mmToPixels(element.properties.glassWidth || 100)}
+              x={0}
+              y={0}
+              width={element.width / 2}
               height={element.height}
-              fill="rgba(59, 130, 246, 0.3)"
-              stroke="#1e40af"
+              fill="rgba(200, 200, 200, 0.8)"
+              stroke="#666"
               strokeWidth={1}
-              rotation={element.rotation}
-              listening={false}
             />
-            {/* 右側のガラス断面 */}
+            
+            {/* 右側の窓枠 (900x40mm) */}
             <Rect
-              x={element.x + element.width - mmToPixels(300) - mmToPixels(element.properties.glassWidth || 100)}
-              y={element.y}
-              width={mmToPixels(element.properties.glassWidth || 100)}
+              x={element.width / 2}
+              y={0}
+              width={element.width / 2}
               height={element.height}
-              fill="rgba(59, 130, 246, 0.3)"
-              stroke="#1e40af"
+              fill="rgba(200, 200, 200, 0.8)"
+              stroke="#666"
               strokeWidth={1}
-              rotation={element.rotation}
-              listening={false}
+            />
+            
+            {/* 左側のガラス面 (900x10mm) */}
+            <Rect
+              x={0}
+              y={mmToPixels(15)} // 40mmの中央付近に配置 (40-10)/2 = 15mm
+              width={element.width / 2}
+              height={mmToPixels((element.properties as any).glassWidth || 10)}
+              fill="rgba(173, 216, 230, 0.6)"
+              stroke="rgba(100, 149, 237, 0.8)"
+              strokeWidth={1}
+            />
+            
+            {/* 右側のガラス面 (900x10mm) */}
+            <Rect
+              x={element.width / 2}
+              y={mmToPixels(15)} // 40mmの中央付近に配置
+              width={element.width / 2}
+              height={mmToPixels((element.properties as any).glassWidth || 10)}
+              fill="rgba(173, 216, 230, 0.6)"
+              stroke="rgba(100, 149, 237, 0.8)"
+              strokeWidth={1}
             />
           </>
         )}
@@ -404,20 +443,20 @@ const FloorPlanEditor: React.FC = () => {
               fill="#ef4444"
             />
             <Circle
-              x={element.x + element.width}
+              x={element.x + elementWidth}
               y={element.y}
               radius={4}
               fill="#ef4444"
             />
             <Circle
-              x={element.x + element.width}
-              y={element.y + element.height}
+              x={element.x + elementWidth}
+              y={element.y + elementHeight}
               radius={4}
               fill="#ef4444"
             />
             <Circle
               x={element.x}
-              y={element.y + element.height}
+              y={element.y + elementHeight}
               radius={4}
               fill="#ef4444"
             />
@@ -425,8 +464,8 @@ const FloorPlanEditor: React.FC = () => {
         )}
         {/* 要素ラベル - 要素の中央に配置 */}
         <Text
-          x={element.x + element.width / 2}
-          y={element.y + element.height / 2}
+          x={element.x + elementWidth / 2}
+          y={element.y + elementHeight / 2}
           text={element.type === 'wall' ? '壁' : element.type === 'door' ? 'ドア' : '窓'}
           fontSize={12}
           fill="white"
@@ -868,90 +907,56 @@ const FloorPlanEditor: React.FC = () => {
                   {selectedElement.type === 'window' && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           長さ (mm)
                         </label>
                         <input
                           type="number"
                           value={selectedElement.properties.length || 1800}
-                          onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                          placeholder="1800"
-                          min="600"
-                          step="100"
+                          onChange={(e) => updateElementPropertyFixed('length', parseInt(e.target.value))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          min="100"
+                          max="5000"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           幅 (mm)
                         </label>
                         <input
                           type="number"
-                          value={selectedElement.properties.width || 400}
-                          onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                          placeholder="400"
-                          min="200"
-                          step="50"
+                          value={selectedElement.properties.width || 40}
+                          onChange={(e) => updateElementPropertyFixed('width', parseInt(e.target.value))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          min="20"
+                          max="200"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          ガラス幅 (mm)
+                        </label>
+                        <input
+                          type="number"
+                          value={selectedElement.properties.glassWidth || 10}
+                          onChange={(e) => updateElementPropertyFixed('glassWidth', parseInt(e.target.value))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          min="5"
+                          max="50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           高さ (mm)
                         </label>
                         <input
                           type="number"
                           value={selectedElement.properties.height || 2000}
-                          onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                          placeholder="2000"
-                          min="1000"
-                          step="100"
+                          onChange={(e) => updateElementPropertyFixed('height', parseInt(e.target.value))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          min="500"
+                          max="3000"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          ガラス幅 (mm)
-                        </label>
-                        <input
-                          type="number"
-                          value={selectedElement.properties.glassWidth || 100}
-                          onChange={(e) => updateElementPropertyFixed('glassWidth', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                          placeholder="100"
-                          min="50"
-                          step="10"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          窓タイプ
-                        </label>
-                        <select
-                          value={selectedElement.properties.windowType || 'sliding'}
-                          onChange={(e) => updateElementPropertyFixed('windowType', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                        >
-                          <option value="sliding">引き違い窓</option>
-                          <option value="casement">開き窓</option>
-                          <option value="awning">突き出し窓</option>
-                          <option value="fixed">はめ殺し窓</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          ガラスタイプ
-                        </label>
-                        <select
-                          value={selectedElement.properties.glassType || 'double'}
-                          onChange={(e) => updateElementPropertyFixed('glassType', e.target.value)}
-                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                        >
-                          <option value="single">単板ガラス</option>
-                          <option value="double">複層ガラス</option>
-                          <option value="triple">トリプルガラス</option>
-                          <option value="low-e">Low-Eガラス</option>
-                        </select>
                       </div>
                     </>
                   )}
@@ -1159,90 +1164,56 @@ const FloorPlanEditor: React.FC = () => {
                     {selectedElement.type === 'window' && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             長さ (mm)
                           </label>
                           <input
                             type="number"
                             value={selectedElement.properties.length || 1800}
-                            onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="1800"
-                            min="600"
-                            step="100"
+                            onChange={(e) => updateElementPropertyFixed('length', parseInt(e.target.value))}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            min="100"
+                            max="5000"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             幅 (mm)
                           </label>
                           <input
                             type="number"
-                            value={selectedElement.properties.width || 400}
-                            onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="400"
-                            min="200"
-                            step="50"
+                            value={selectedElement.properties.width || 40}
+                            onChange={(e) => updateElementPropertyFixed('width', parseInt(e.target.value))}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            min="20"
+                            max="200"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            ガラス幅 (mm)
+                          </label>
+                          <input
+                            type="number"
+                            value={selectedElement.properties.glassWidth || 10}
+                            onChange={(e) => updateElementPropertyFixed('glassWidth', parseInt(e.target.value))}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            min="5"
+                            max="50"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
                             高さ (mm)
                           </label>
                           <input
                             type="number"
                             value={selectedElement.properties.height || 2000}
-                            onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="2000"
-                            min="1000"
-                            step="100"
+                            onChange={(e) => updateElementPropertyFixed('height', parseInt(e.target.value))}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            min="500"
+                            max="3000"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            ガラス幅 (mm)
-                          </label>
-                          <input
-                            type="number"
-                            value={selectedElement.properties.glassWidth || 100}
-                            onChange={(e) => updateElementPropertyFixed('glassWidth', parseFloat(e.target.value) || 0)}
-                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                            placeholder="100"
-                            min="50"
-                            step="10"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            窓タイプ
-                          </label>
-                          <select
-                            value={selectedElement.properties.windowType || 'sliding'}
-                            onChange={(e) => updateElementPropertyFixed('windowType', e.target.value)}
-                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                          >
-                            <option value="sliding">引き違い窓</option>
-                            <option value="casement">開き窓</option>
-                            <option value="awning">突き出し窓</option>
-                            <option value="fixed">はめ殺し窓</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            ガラスタイプ
-                          </label>
-                          <select
-                            value={selectedElement.properties.glassType || 'double'}
-                            onChange={(e) => updateElementPropertyFixed('glassType', e.target.value)}
-                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
-                          >
-                            <option value="single">単板ガラス</option>
-                            <option value="double">複層ガラス</option>
-                            <option value="triple">トリプルガラス</option>
-                            <option value="low-e">Low-Eガラス</option>
-                          </select>
                         </div>
                       </>
                     )}
