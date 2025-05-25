@@ -54,6 +54,24 @@ const PropertyInfoForm: React.FC = () => {
     }
   };
 
+  const handleSpecialFeaturesChange = (value: string, checked: boolean) => {
+    setFormData(prev => {
+      const currentFeatures = prev.specialFeatures || [];
+      let newFeatures: string[];
+      
+      if (checked) {
+        newFeatures = [...currentFeatures, value];
+      } else {
+        newFeatures = currentFeatures.filter(f => f !== value);
+      }
+      
+      return {
+        ...prev,
+        specialFeatures: newFeatures
+      };
+    });
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Partial<PropertyInfo> = {};
 
@@ -309,12 +327,7 @@ const PropertyInfoForm: React.FC = () => {
                         value={option.value}
                         checked={formData.specialFeatures?.includes(option.value) || false}
                         onChange={(e) => {
-                          const currentFeatures = formData.specialFeatures || [];
-                          if (e.target.checked) {
-                            handleInputChange('specialFeatures', [...currentFeatures, option.value].join(','));
-                          } else {
-                            handleInputChange('specialFeatures', currentFeatures.filter(f => f !== option.value).join(','));
-                          }
+                          handleSpecialFeaturesChange(option.value, e.target.checked);
                         }}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
                       />
