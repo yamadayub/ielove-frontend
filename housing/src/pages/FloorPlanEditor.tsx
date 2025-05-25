@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Stage, Layer, Rect, Line, Circle, Text } from 'react-konva';
+import { Stage, Layer, Rect, Line, Circle, Text, Arc } from 'react-konva';
 import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus } from 'lucide-react';
 import type { KonvaEventObject } from '../types/konva';
 
@@ -136,53 +136,36 @@ const FloorPlanEditor: React.FC = () => {
 
   // 要素を追加
   const addElement = (type: 'wall' | 'door' | 'window', position?: { x: number; y: number }) => {
-    const defaultProperties = {
-      wall: {
-        thickness: 150, // mm
-        length: 2000, // mm
-        height: 2400, // mm
-        material: 'concrete'
-      },
-      door: {
-        width: 800, // mm
-        height: 2100, // mm
-        material: 'wood',
-        swingDirection: 'inward'
-      },
-      window: {
-        width: 1200, // mm
-        height: 1000, // mm
-        material: 'glass',
-        heightFrom: 900, // 床から90cm
-        heightTo: 1900, // 床から190cm
-        windowType: 'sliding',
-        glassType: 'double'
-      }
-    };
-
-    const props = defaultProperties[type];
-    
-    // 要素のサイズを計算
-    let elementWidth: number;
-    let elementHeight: number;
-    
-    if (type === 'wall') {
-      elementWidth = mmToPixels((props as any).length || 2000);
-      elementHeight = mmToPixels((props as any).thickness || 150);
-    } else {
-      elementWidth = mmToPixels((props as any).width || 800);
-      elementHeight = mmToPixels((props as any).height || 1000);
-    }
-    
     const newElement: FloorElement = {
       id: `${type}_${Date.now()}`,
       type,
-      x: position ? snapToGrid(position.x) : 100,
-      y: position ? snapToGrid(position.y) : 100,
-      width: elementWidth,
-      height: elementHeight,
+      x: position?.x || 100,
+      y: position?.y || 100,
+      width: type === 'wall' ? mmToPixels(2000) : type === 'door' ? mmToPixels(800) : mmToPixels(1200),
+      height: type === 'wall' ? mmToPixels(120) : type === 'door' ? mmToPixels(35) : mmToPixels(1000),
       rotation: 0,
-      properties: props as any
+      properties: {
+        ...(type === 'wall' && {
+          length: 2000,
+          thickness: 120,
+          height: 2400,
+          material: 'concrete'
+        }),
+        ...(type === 'door' && {
+          length: 800,
+          width: 35,
+          height: 2000,
+          material: 'wood',
+          swingDirection: 'right'
+        }),
+        ...(type === 'window' && {
+          width: 1200,
+          height: 1000,
+          heightFrom: 800,
+          windowType: 'sliding',
+          glassType: 'double'
+        })
+      }
     };
 
     setFloors(prev => prev.map((floor, index) => 
@@ -249,48 +232,45 @@ const FloorPlanEditor: React.FC = () => {
   // 要素プロパティ更新
   const updateElementPropertyFixed = (property: string, value: any) => {
     if (!selectedElementId) return;
-    
+
     setFloors(prev => prev.map((floor, index) => 
       index === currentFloorIndex 
         ? {
             ...floor,
-            elements: floor.elements.map(el => {
-              if (el.id === selectedElementId) {
-                // 実際のサイズプロパティの場合は要素のサイズも更新
-                if (property === 'width') {
-                  return { 
-                    ...el, 
-                    width: mmToPixels(value),
-                    properties: { ...el.properties, [property]: value }
-                  };
-                } else if (property === 'height') {
-                  return { 
-                    ...el, 
-                    height: mmToPixels(value),
-                    properties: { ...el.properties, [property]: value }
-                  };
-                } else if (property === 'length' && el.type === 'wall') {
-                  // 壁の場合、長さは幅として扱う
-                  return { 
-                    ...el, 
-                    width: mmToPixels(value),
-                    properties: { ...el.properties, [property]: value }
-                  };
-                } else if (property === 'thickness' && el.type === 'wall') {
-                  // 壁の厚さは高さとして扱う
-                  return { 
-                    ...el, 
-                    height: mmToPixels(value),
-                    properties: { ...el.properties, [property]: value }
-                  };
-                } else {
-                  return { 
-                    ...el, 
-                    properties: { ...el.properties, [property]: value }
-                  };
+            elements: floor.elements.map(element => {
+              if (element.id === selectedElementId) {
+                const updatedElement = {
+                  ...element,
+                  properties: {
+                    ...element.properties,
+                    [property]: value
+                  }
+                };
+
+                // サイズを更新
+                if (element.type === 'wall') {
+                  if (property === 'length') {
+                    updatedElement.width = mmToPixels(value);
+                  } else if (property === 'thickness') {
+                    updatedElement.height = mmToPixels(value);
+                  }
+                } else if (element.type === 'door') {
+                  if (property === 'length') {
+                    updatedElement.width = mmToPixels(value);
+                  } else if (property === 'width') {
+                    updatedElement.height = mmToPixels(value);
+                  }
+                } else if (element.type === 'window') {
+                  if (property === 'width') {
+                    updatedElement.width = mmToPixels(value);
+                  } else if (property === 'height') {
+                    updatedElement.height = mmToPixels(value);
+                  }
                 }
+
+                return updatedElement;
               }
-              return el;
+              return element;
             })
           }
         : floor
@@ -365,6 +345,24 @@ const FloorPlanEditor: React.FC = () => {
           onTouchStart={handleElementTouchStart}
           onDragMove={(e: any) => handleElementDragMove(element.id, e)}
         />
+        
+        {/* ドアの開き軌道を表示 */}
+        {element.type === 'door' && (
+          <Arc
+            x={element.properties.swingDirection === 'right' ? element.x : element.x + element.width}
+            y={element.y}
+            innerRadius={0}
+            outerRadius={element.width}
+            angle={90}
+            rotation={element.rotation + (element.properties.swingDirection === 'right' ? 0 : 180)}
+            fill="rgba(217, 119, 6, 0.2)"
+            stroke="#d97706"
+            strokeWidth={1}
+            dash={[5, 5]}
+            listening={false}
+          />
+        )}
+        
         {isSelected && (
           <>
             {/* 選択時の角のハンドル */}
@@ -763,16 +761,30 @@ const FloorPlanEditor: React.FC = () => {
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          幅 (mm)
+                          長さ (mm)
                         </label>
                         <input
                           type="number"
-                          value={selectedElement.properties.width || pixelsToMm(selectedElement.width)}
-                          onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={selectedElement.properties.length || 800}
+                          onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                           placeholder="800"
                           min="600"
                           step="50"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          厚さ (mm)
+                        </label>
+                        <input
+                          type="number"
+                          value={selectedElement.properties.width || 35}
+                          onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                          placeholder="35"
+                          min="20"
+                          step="5"
                         />
                       </div>
                       <div>
@@ -781,9 +793,9 @@ const FloorPlanEditor: React.FC = () => {
                         </label>
                         <input
                           type="number"
-                          value={selectedElement.properties.height || pixelsToMm(selectedElement.height)}
+                          value={selectedElement.properties.height || 2000}
                           onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                           placeholder="2000"
                           min="1800"
                           step="50"
@@ -794,13 +806,14 @@ const FloorPlanEditor: React.FC = () => {
                           開き方向
                         </label>
                         <select
-                          value={selectedElement.properties.swingDirection || 'inward'}
+                          value={selectedElement.properties.swingDirection || 'right'}
                           onChange={(e) => updateElementPropertyFixed('swingDirection', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                         >
+                          <option value="left">左開き</option>
+                          <option value="right">右開き</option>
                           <option value="inward">内開き</option>
                           <option value="outward">外開き</option>
-                          <option value="sliding">引き戸</option>
                         </select>
                       </div>
                       <div>
@@ -810,7 +823,7 @@ const FloorPlanEditor: React.FC = () => {
                         <select
                           value={selectedElement.properties.material || 'wood'}
                           onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                         >
                           <option value="wood">木製</option>
                           <option value="steel">スチール</option>
@@ -1025,12 +1038,12 @@ const FloorPlanEditor: React.FC = () => {
                       <>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            幅 (mm)
+                            長さ (mm)
                           </label>
                           <input
                             type="number"
-                            value={selectedElement.properties.width || pixelsToMm(selectedElement.width)}
-                            onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
+                            value={selectedElement.properties.length || 800}
+                            onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                             placeholder="800"
                             min="600"
@@ -1039,11 +1052,25 @@ const FloorPlanEditor: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
+                            厚さ (mm)
+                          </label>
+                          <input
+                            type="number"
+                            value={selectedElement.properties.width || 35}
+                            onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
+                            className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+                            placeholder="35"
+                            min="20"
+                            step="5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
                             高さ (mm)
                           </label>
                           <input
                             type="number"
-                            value={selectedElement.properties.height || pixelsToMm(selectedElement.height)}
+                            value={selectedElement.properties.height || 2000}
                             onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
                             className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                             placeholder="2000"
