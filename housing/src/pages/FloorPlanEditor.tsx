@@ -553,14 +553,7 @@ const FloorPlanEditor: React.FC = () => {
             </div>
 
             {/* プロパティパネル */}
-            {/* デバッグ情報 */}
-            <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-              <div>selectedElementId: {selectedElementId || 'null'}</div>
-              <div>selectedElement: {selectedElement ? 'found' : 'null'}</div>
-              <div>currentFloor elements: {currentFloor.elements.length}</div>
-            </div>
-            
-            {selectedElementId && selectedElement ? (
+            {selectedElementId && selectedElement && (
               <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -799,7 +792,7 @@ const FloorPlanEditor: React.FC = () => {
                   </div>
                 )}
               </div>
-            ) : null}
+            )}
 
             {/* 階層管理 */}
             <div className="border-t pt-4">
