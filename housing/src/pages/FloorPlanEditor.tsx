@@ -136,24 +136,53 @@ const FloorPlanEditor: React.FC = () => {
 
   // 要素を追加
   const addElement = (type: 'wall' | 'door' | 'window', position?: { x: number; y: number }) => {
+    const defaultProperties = {
+      wall: {
+        thickness: 150, // mm
+        length: 2000, // mm
+        height: 2400, // mm
+        material: 'concrete'
+      },
+      door: {
+        width: 800, // mm
+        height: 2100, // mm
+        material: 'wood',
+        swingDirection: 'inward'
+      },
+      window: {
+        width: 1200, // mm
+        height: 1000, // mm
+        material: 'glass',
+        heightFrom: 900, // 床から90cm
+        heightTo: 1900, // 床から190cm
+        windowType: 'sliding',
+        glassType: 'double'
+      }
+    };
+
+    const props = defaultProperties[type];
+    
+    // 要素のサイズを計算
+    let elementWidth: number;
+    let elementHeight: number;
+    
+    if (type === 'wall') {
+      elementWidth = mmToPixels((props as any).length || 2000);
+      elementHeight = mmToPixels((props as any).thickness || 150);
+    } else {
+      elementWidth = mmToPixels((props as any).width || 800);
+      elementHeight = mmToPixels((props as any).height || 1000);
+    }
+    
     const newElement: FloorElement = {
       id: `${type}_${Date.now()}`,
       type,
       x: position ? snapToGrid(position.x) : 100,
       y: position ? snapToGrid(position.y) : 100,
-      width: type === 'wall' ? 200 : type === 'door' ? 80 : 120,
-      height: type === 'wall' ? 20 : type === 'door' ? 20 : 20,
+      width: elementWidth,
+      height: elementHeight,
       rotation: 0,
-      properties: {
-        thickness: type === 'wall' ? 150 : 100, // mm
-        length: type === 'wall' ? 2000 : type === 'door' ? 800 : 1200, // mm
-        height: type === 'wall' ? 2400 : type === 'door' ? 2100 : 1200, // mm
-        material: type === 'wall' ? 'concrete' : type === 'door' ? 'wood' : 'glass',
-        ...(type === 'window' && {
-          heightFrom: 900, // 床から90cm
-          heightTo: 2100   // 床から210cm
-        })
-      }
+      properties: props as any
     };
 
     setFloors(prev => prev.map((floor, index) => 
@@ -224,14 +253,44 @@ const FloorPlanEditor: React.FC = () => {
       index === currentFloorIndex 
         ? {
             ...floor,
-            elements: floor.elements.map(el => 
-              el.id === selectedElementId 
-                ? { 
+            elements: floor.elements.map(el => {
+              if (el.id === selectedElementId) {
+                // 実際のサイズプロパティの場合は要素のサイズも更新
+                if (property === 'width') {
+                  return { 
+                    ...el, 
+                    width: mmToPixels(value),
+                    properties: { ...el.properties, [property]: value }
+                  };
+                } else if (property === 'height') {
+                  return { 
+                    ...el, 
+                    height: mmToPixels(value),
+                    properties: { ...el.properties, [property]: value }
+                  };
+                } else if (property === 'length' && el.type === 'wall') {
+                  // 壁の場合、長さは幅として扱う
+                  return { 
+                    ...el, 
+                    width: mmToPixels(value),
+                    properties: { ...el.properties, [property]: value }
+                  };
+                } else if (property === 'thickness' && el.type === 'wall') {
+                  // 壁の厚さは高さとして扱う
+                  return { 
+                    ...el, 
+                    height: mmToPixels(value),
+                    properties: { ...el.properties, [property]: value }
+                  };
+                } else {
+                  return { 
                     ...el, 
                     properties: { ...el.properties, [property]: value }
-                  } 
-                : el
-            )
+                  };
+                }
+              }
+              return el;
+            })
           }
         : floor
     ));
@@ -524,7 +583,10 @@ const FloorPlanEditor: React.FC = () => {
                 <div className="mb-4 p-3 bg-gray-50 rounded-md">
                   <div className="text-sm text-gray-600 space-y-1">
                     <div>位置: X={Math.round(selectedElement.x)}px, Y={Math.round(selectedElement.y)}px</div>
-                    <div>サイズ: {selectedElement.width}×{selectedElement.height}px</div>
+                    <div>
+                      サイズ: {selectedElement.width}×{selectedElement.height}px 
+                      ({Math.round(pixelsToMm(selectedElement.width))}×{Math.round(pixelsToMm(selectedElement.height))}mm)
+                    </div>
                     <div>回転: {selectedElement.rotation}°</div>
                   </div>
                 </div>
@@ -537,7 +599,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.length || ''}
+                        value={selectedElement.properties.length || pixelsToMm(selectedElement.width)}
                         onChange={(e) => updateElementPropertyFixed('length', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="2000"
@@ -551,7 +613,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.thickness || ''}
+                        value={selectedElement.properties.thickness || pixelsToMm(selectedElement.height)}
                         onChange={(e) => updateElementPropertyFixed('thickness', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="120"
@@ -565,7 +627,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.height || ''}
+                        value={selectedElement.properties.height || 2400}
                         onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="2400"
@@ -599,7 +661,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.width || ''}
+                        value={selectedElement.properties.width || pixelsToMm(selectedElement.width)}
                         onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="800"
@@ -613,7 +675,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.height || ''}
+                        value={selectedElement.properties.height || pixelsToMm(selectedElement.height)}
                         onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="2000"
@@ -661,7 +723,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.width || ''}
+                        value={selectedElement.properties.width || pixelsToMm(selectedElement.width)}
                         onChange={(e) => updateElementPropertyFixed('width', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="1200"
@@ -675,7 +737,7 @@ const FloorPlanEditor: React.FC = () => {
                       </label>
                       <input
                         type="number"
-                        value={selectedElement.properties.height || ''}
+                        value={selectedElement.properties.height || pixelsToMm(selectedElement.height)}
                         onChange={(e) => updateElementPropertyFixed('height', parseFloat(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="1000"
