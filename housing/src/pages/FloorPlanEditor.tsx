@@ -1,7 +1,7 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Stage, Layer, Rect, Line, Circle, Text } from 'react-konva';
-import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move } from 'lucide-react';
+import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus } from 'lucide-react';
 import type { KonvaEventObject } from '../types/konva';
 
 interface FloorElement {
@@ -48,6 +48,7 @@ const FloorPlanEditor: React.FC = () => {
   const location = useLocation();
   const propertyInfo: PropertyInfo = location.state?.propertyInfo;
   const stageRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [floors, setFloors] = useState<Floor[]>([
     { id: '1', name: '1階', elements: [] }
@@ -59,6 +60,26 @@ const FloorPlanEditor: React.FC = () => {
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
   const [gridVisible, setGridVisible] = useState(true);
   const [gridSize] = useState(20);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [stageSize, setStageSize] = useState({ width: 800, height: 600 });
+
+  // ウィンドウサイズ変更時のステージサイズ更新
+  useEffect(() => {
+    const updateStageSize = () => {
+      if (containerRef.current) {
+        const container = containerRef.current;
+        const rect = container.getBoundingClientRect();
+        setStageSize({
+          width: rect.width,
+          height: rect.height
+        });
+      }
+    };
+
+    updateStageSize();
+    window.addEventListener('resize', updateStageSize);
+    return () => window.removeEventListener('resize', updateStageSize);
+  }, [sidebarOpen]);
 
   const currentFloor = floors[currentFloorIndex];
 
@@ -83,15 +104,13 @@ const FloorPlanEditor: React.FC = () => {
     if (!gridVisible) return null;
 
     const lines = [];
-    const stageWidth = 800;
-    const stageHeight = 600;
 
     // 縦線
-    for (let i = 0; i < stageWidth / gridSize; i++) {
+    for (let i = 0; i < stageSize.width / gridSize; i++) {
       lines.push(
         <Line
           key={`v${i}`}
-          points={[i * gridSize, 0, i * gridSize, stageHeight]}
+          points={[i * gridSize, 0, i * gridSize, stageSize.height]}
           stroke="#e5e7eb"
           strokeWidth={0.5}
         />
@@ -99,11 +118,11 @@ const FloorPlanEditor: React.FC = () => {
     }
 
     // 横線
-    for (let i = 0; i < stageHeight / gridSize; i++) {
+    for (let i = 0; i < stageSize.height / gridSize; i++) {
       lines.push(
         <Line
           key={`h${i}`}
-          points={[0, i * gridSize, stageWidth, i * gridSize]}
+          points={[0, i * gridSize, stageSize.width, i * gridSize]}
           stroke="#e5e7eb"
           strokeWidth={0.5}
         />
@@ -498,264 +517,246 @@ const FloorPlanEditor: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <button
-              onClick={handleBack}
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              戻る
-            </button>
-            <h1 className="text-lg font-semibold text-gray-900">
-              {propertyInfo?.projectName || '間取り編集'}
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleZoomOut}
-              className="p-2 text-gray-600 hover:text-gray-900"
-              title="縮小"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleZoomReset}
-              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
-              title="リセット"
-            >
-              {Math.round(scale * 100)}%
-            </button>
-            <button
-              onClick={handleZoomIn}
-              className="p-2 text-gray-600 hover:text-gray-900"
-              title="拡大"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </button>
-            <button
-              onClick={handleSave}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              保存
-            </button>
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <button
+                onClick={() => navigate('/housing/property-info')}
+                className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
+              >
+                <ArrowLeft className="h-5 w-5 mr-1" />
+                <span className="hidden sm:inline">戻る</span>
+              </button>
+              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">間取り設計</h1>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <button
+                onClick={() => setGridVisible(!gridVisible)}
+                className={`p-2 rounded-md ${gridVisible ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+                title="グリッド表示切替"
+              >
+                <Grid className="h-4 w-4 sm:h-5 sm:w-5" />
+              </button>
+              <button
+                onClick={handleSave}
+                className="bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm sm:text-base"
+              >
+                <span className="hidden sm:inline">保存</span>
+                <Save className="h-4 w-4 sm:hidden" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
         {/* ツールパネル */}
-        <div className="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
-          <div className="space-y-6">
-            {/* ツール選択 */}
+        <div className="w-full lg:w-64 bg-white border-r border-gray-200 p-4 lg:overflow-y-auto">
+          <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">ツール</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setSelectedTool('select')}
-                  className={`p-3 text-sm rounded-md border ${
-                    selectedTool === 'select'
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  <Move className="w-4 h-4 mx-auto mb-1" />
-                  選択
-                </button>
-                <button
-                  onClick={() => setSelectedTool('wall')}
-                  draggable
-                  onDragStart={(e) => handleToolDragStart(e, 'wall')}
-                  className={`p-3 text-sm rounded-md border ${
-                    selectedTool === 'wall'
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  壁
-                </button>
-                <button
-                  onClick={() => setSelectedTool('door')}
-                  draggable
-                  onDragStart={(e) => handleToolDragStart(e, 'door')}
-                  className={`p-3 text-sm rounded-md border ${
-                    selectedTool === 'door'
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  ドア
-                </button>
-                <button
-                  onClick={() => setSelectedTool('window')}
-                  draggable
-                  onDragStart={(e) => handleToolDragStart(e, 'window')}
-                  className={`p-3 text-sm rounded-md border ${
-                    selectedTool === 'window'
-                      ? 'bg-blue-50 border-blue-200 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  窓
-                </button>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">描画ツール</h3>
+              <div className="grid grid-cols-4 lg:grid-cols-1 gap-2">
+                {[
+                  { tool: 'wall', icon: Minus, label: '壁' },
+                  { tool: 'door', icon: Square, label: 'ドア' },
+                  { tool: 'window', icon: Square, label: '窓' },
+                  { tool: 'select', icon: MousePointer, label: '選択' }
+                ].map(({ tool, icon: Icon, label }) => (
+                  <button
+                    key={tool}
+                    onClick={() => setSelectedTool(tool as any)}
+                    className={`flex items-center justify-center lg:justify-start p-2 lg:p-3 rounded-md text-sm ${
+                      selectedTool === tool
+                        ? 'bg-blue-100 text-blue-600 border-blue-200'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    } border`}
+                  >
+                    <Icon className="h-4 w-4 lg:mr-2" />
+                    <span className="hidden lg:inline">{label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* グリッド設定 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">表示設定</h3>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={gridVisible}
-                  onChange={(e) => setGridVisible(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">グリッド表示</span>
-              </label>
-            </div>
-
-            {/* 選択要素のプロパティ */}
+            {/* 選択された要素のプロパティ */}
             {selectedElement && (
-              <div>
+              <div className="border-t pt-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">プロパティ</h3>
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      種類
-                    </label>
-                    <div className="text-sm text-gray-900">
-                      {selectedElement.type === 'wall' ? '壁' : 
-                       selectedElement.type === 'door' ? 'ドア' : '窓'}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      長さ (mm)
-                    </label>
-                    <input
-                      type="number"
-                      value={getInputValue(selectedElement.id, 'length')}
-                      onChange={(e) => handlePropertyInputChange(selectedElement.id, 'length', e.target.value)}
-                      onBlur={() => handleInputBlur(selectedElement.id, 'length')}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      厚さ (mm)
-                    </label>
-                    <input
-                      type="number"
-                      value={getInputValue(selectedElement.id, 'thickness')}
-                      onChange={(e) => handlePropertyInputChange(selectedElement.id, 'thickness', e.target.value)}
-                      onBlur={() => handleInputBlur(selectedElement.id, 'thickness')}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      高さ (mm)
-                    </label>
-                    <input
-                      type="number"
-                      value={getInputValue(selectedElement.id, 'height')}
-                      onChange={(e) => handlePropertyInputChange(selectedElement.id, 'height', e.target.value)}
-                      onBlur={() => handleInputBlur(selectedElement.id, 'height')}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                    />
-                  </div>
-
-                  {selectedElement.type === 'window' && (
+                  {selectedElement.type === 'wall' && (
                     <>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">
-                          床からの高さ (mm)
+                          厚さ (mm)
                         </label>
                         <input
                           type="number"
-                          value={getInputValue(selectedElement.id, 'heightFrom')}
-                          onChange={(e) => handlePropertyInputChange(selectedElement.id, 'heightFrom', e.target.value)}
-                          onBlur={() => handleInputBlur(selectedElement.id, 'heightFrom')}
+                          value={selectedElement.thickness || 100}
+                          onChange={(e) => updateElementProperty('thickness', parseInt(e.target.value))}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">
-                          上端の高さ (mm)
+                          材質
                         </label>
-                        <input
-                          type="number"
-                          value={getInputValue(selectedElement.id, 'heightTo')}
-                          onChange={(e) => handlePropertyInputChange(selectedElement.id, 'heightTo', e.target.value)}
-                          onBlur={() => handleInputBlur(selectedElement.id, 'heightTo')}
+                        <select
+                          value={selectedElement.material || 'concrete'}
+                          onChange={(e) => updateElementProperty('material', e.target.value)}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
-                        />
+                        >
+                          <option value="concrete">コンクリート</option>
+                          <option value="wood">木造</option>
+                          <option value="steel">鉄骨</option>
+                        </select>
                       </div>
                     </>
                   )}
 
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => rotateElement(selectedElement.id)}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      <RotateCw className="w-3 h-3 mr-1" />
-                      回転
-                    </button>
-                    <button
-                      onClick={() => deleteElement(selectedElement.id)}
-                      className="flex-1 inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50"
-                    >
-                      <Trash2 className="w-3 h-3 mr-1" />
-                      削除
-                    </button>
-                  </div>
+                  {(selectedElement.type === 'door' || selectedElement.type === 'window') && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          幅 (mm)
+                        </label>
+                        <input
+                          type="number"
+                          value={selectedElement.width || 800}
+                          onChange={(e) => updateElementProperty('width', parseInt(e.target.value))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          高さ (mm)
+                        </label>
+                        <input
+                          type="number"
+                          value={selectedElement.height || 2000}
+                          onChange={(e) => updateElementProperty('height', parseInt(e.target.value))}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                        />
+                      </div>
+                      {selectedElement.type === 'window' && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              床からの高さ (mm)
+                            </label>
+                            <input
+                              type="number"
+                              value={selectedElement.heightFrom || 900}
+                              onChange={(e) => updateElementProperty('heightFrom', parseInt(e.target.value))}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              上端高さ (mm)
+                            </label>
+                            <input
+                              type="number"
+                              value={selectedElement.heightTo || 2100}
+                              onChange={(e) => updateElementProperty('heightTo', parseInt(e.target.value))}
+                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             )}
+
+            {/* 階層管理 */}
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">階層</h3>
+              <div className="space-y-2">
+                {floors.map((floor, index) => (
+                  <div
+                    key={floor.id}
+                    className={`p-2 rounded border cursor-pointer ${
+                      currentFloor === index ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                    }`}
+                    onClick={() => setCurrentFloorIndex(index)}
+                  >
+                    <div className="text-sm font-medium">{floor.name}</div>
+                    <div className="text-xs text-gray-500">{floor.elements.length}個の要素</div>
+                  </div>
+                ))}
+                <button
+                  onClick={() => {
+                    const newFloor: Floor = {
+                      id: (floors.length + 1).toString(),
+                      name: (floors.length + 1).toString(),
+                      elements: []
+                    };
+                    setFloors(prev => [...prev, newFloor]);
+                    setCurrentFloorIndex(floors.length);
+                  }}
+                  className="w-full p-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-gray-400"
+                >
+                  + 階層を追加
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* キャンバス */}
-        <div 
-          className="flex-1 bg-gray-100 overflow-hidden"
-          onDrop={handleStageDrop}
-          onDragOver={handleStageDragOver}
-        >
-          <Stage
-            ref={stageRef}
-            width={window.innerWidth - 256}
-            height={window.innerHeight - 60}
-            scaleX={scale}
-            scaleY={scale}
-            x={stagePos.x}
-            y={stagePos.y}
-            onClick={handleStageClick}
-            onWheel={handleWheel}
-            draggable={selectedTool === 'select'}
-            onDragEnd={(e) => {
-              setStagePos({
-                x: e.target.x(),
-                y: e.target.y(),
-              });
-            }}
-          >
-            <Layer>
-              {/* グリッド */}
-              {renderGrid()}
-              
-              {/* 要素 */}
-              {currentFloor.elements.map(element => renderElement(element))}
-            </Layer>
-          </Stage>
+        {/* キャンバスエリア */}
+        <div className="flex-1 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gray-100">
+            <Stage
+              width={window.innerWidth - (window.innerWidth < 1024 ? 0 : 256)}
+              height={window.innerHeight - 64}
+              scaleX={scale}
+              scaleY={scale}
+              x={stagePos.x}
+              y={stagePos.y}
+              onWheel={handleWheel}
+              onClick={handleStageClick}
+              onMouseDown={handleClick}
+              ref={stageRef}
+              draggable={selectedTool === 'select'}
+            >
+              <Layer>
+                {/* グリッド */}
+                {gridVisible && renderGrid()}
+                
+                {/* 現在の階層の要素を描画 */}
+                {floors[currentFloorIndex]?.elements.map((element) => renderElement(element))}
+              </Layer>
+            </Stage>
+          </div>
+
+          {/* ズームコントロール */}
+          <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg p-2 space-y-2">
+            <button
+              onClick={() => setScale(Math.min(scale * 1.2, 3))}
+              className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setScale(Math.max(scale / 1.2, 0.1))}
+              className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => {
+                setScale(1);
+                setStagePos({ x: 0, y: 0 });
+              }}
+              className="block w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs"
+            >
+              1:1
+            </button>
+          </div>
         </div>
       </div>
     </div>

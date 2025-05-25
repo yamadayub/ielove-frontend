@@ -12,6 +12,7 @@ interface PropertyInfo {
   budget: string;
   timeline: string;
   description: string;
+  specialFeatures?: string[]; // 戸建て用のこだわり仕様
 }
 
 const PropertyInfoForm: React.FC = () => {
@@ -28,7 +29,8 @@ const PropertyInfoForm: React.FC = () => {
     floorArea: '',
     budget: '',
     timeline: '',
-    description: ''
+    description: '',
+    specialFeatures: []
   });
 
   const [errors, setErrors] = useState<Partial<PropertyInfo>>({});
@@ -97,17 +99,11 @@ const PropertyInfoForm: React.FC = () => {
 
   const floorPlanOptions = propertyType === 'detached_house' 
     ? [
-        { value: '1K', label: '1K' },
-        { value: '1DK', label: '1DK' },
         { value: '1LDK', label: '1LDK' },
-        { value: '2K', label: '2K' },
-        { value: '2DK', label: '2DK' },
         { value: '2LDK', label: '2LDK' },
-        { value: '3K', label: '3K' },
-        { value: '3DK', label: '3DK' },
         { value: '3LDK', label: '3LDK' },
         { value: '4LDK', label: '4LDK' },
-        { value: '5LDK以上', label: '5LDK以上' },
+        { value: '5LDK', label: '5LDK' },
         { value: 'その他', label: 'その他' }
       ]
     : [
@@ -127,9 +123,8 @@ const PropertyInfoForm: React.FC = () => {
   const floorTypeOptions = propertyType === 'detached_house'
     ? [
         { value: '平屋', label: '平屋' },
-        { value: '2階建て', label: '2階建て' },
-        { value: '3階建て', label: '3階建て' },
-        { value: '地下あり', label: '地下あり' }
+        { value: '総二階', label: '総二階' },
+        { value: '一部二階', label: '一部二階' }
       ]
     : [
         { value: '低層階（1-3階）', label: '低層階（1-3階）' },
@@ -138,14 +133,37 @@ const PropertyInfoForm: React.FC = () => {
         { value: '最上階', label: '最上階' }
       ];
 
-  const budgetOptions = [
-    { value: '300万円未満', label: '300万円未満' },
-    { value: '300-500万円', label: '300-500万円' },
-    { value: '500-800万円', label: '500-800万円' },
-    { value: '800-1200万円', label: '800-1200万円' },
-    { value: '1200-2000万円', label: '1200-2000万円' },
-    { value: '2000万円以上', label: '2000万円以上' }
+  // 戸建て用のこだわり仕様オプション
+  const specialFeaturesOptions = [
+    { value: 'entrance_cloak', label: 'エントランスクローク' },
+    { value: 'work_space', label: 'ワークスペース' },
+    { value: 'walk_in_closet', label: 'ウォークインクローゼット' },
+    { value: 'spacious_living', label: '広々リビング' },
+    { value: 'pantry', label: 'パントリー' },
+    { value: 'study_room', label: '書斎' },
+    { value: 'japanese_room', label: '和室' },
+    { value: 'loft', label: 'ロフト' },
+    { value: 'balcony', label: 'バルコニー・テラス' },
+    { value: 'garage', label: 'ガレージ' }
   ];
+
+  const budgetOptions = propertyType === 'detached_house'
+    ? [
+        { value: '1000万円未満', label: '1000万円未満' },
+        { value: '1000-1500万円', label: '1000-1500万円' },
+        { value: '1500-2000万円', label: '1500-2000万円' },
+        { value: '2000-3000万円', label: '2000-3000万円' },
+        { value: '3000-4000万円', label: '3000-4000万円' },
+        { value: '4000万円以上', label: '4000万円以上' }
+      ]
+    : [
+        { value: '300万円未満', label: '300万円未満' },
+        { value: '300-500万円', label: '300-500万円' },
+        { value: '500-800万円', label: '500-800万円' },
+        { value: '800-1200万円', label: '800-1200万円' },
+        { value: '1200-2000万円', label: '1200-2000万円' },
+        { value: '2000万円以上', label: '2000万円以上' }
+      ];
 
   const timelineOptions = [
     { value: '1ヶ月以内', label: '1ヶ月以内' },
@@ -236,7 +254,7 @@ const PropertyInfoForm: React.FC = () => {
               {/* 間取り */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  現在の間取り <span className="text-red-500">*</span>
+                  {propertyType === 'detached_house' ? '希望間取り' : '現在の間取り'} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.floorPlan}
@@ -277,10 +295,40 @@ const PropertyInfoForm: React.FC = () => {
               </div>
             </div>
 
+            {/* 戸建て用のこだわり仕様 */}
+            {propertyType === 'detached_house' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  こだわり仕様（複数選択可）
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {specialFeaturesOptions.map((option) => (
+                    <label key={option.value} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        value={option.value}
+                        checked={formData.specialFeatures?.includes(option.value) || false}
+                        onChange={(e) => {
+                          const currentFeatures = formData.specialFeatures || [];
+                          if (e.target.checked) {
+                            handleInputChange('specialFeatures', [...currentFeatures, option.value].join(','));
+                          } else {
+                            handleInputChange('specialFeatures', currentFeatures.filter(f => f !== option.value).join(','));
+                          }
+                        }}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                      />
+                      <span className="text-sm text-gray-700">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 床面積 */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                床面積 <span className="text-red-500">*</span>
+                {propertyType === 'detached_house' ? '延床面積' : '専有面積'} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -290,7 +338,7 @@ const PropertyInfoForm: React.FC = () => {
                   className={`w-full px-3 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     errors.floorArea ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="例：80"
+                  placeholder={propertyType === 'detached_house' ? "例：120" : "例：80"}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-3">
                   <span className="text-gray-500 text-sm">㎡</span>
@@ -305,7 +353,7 @@ const PropertyInfoForm: React.FC = () => {
               {/* 予算 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  予算 <span className="text-red-500">*</span>
+                  {propertyType === 'detached_house' ? '建築予算' : 'リノベーション予算'} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.budget}
@@ -361,7 +409,10 @@ const PropertyInfoForm: React.FC = () => {
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="設計に関するご要望や特記事項があればご記入ください"
+                placeholder={propertyType === 'detached_house' 
+                  ? "建築に関するご要望や特記事項があればご記入ください" 
+                  : "リノベーションに関するご要望や特記事項があればご記入ください"
+                }
               />
             </div>
 
