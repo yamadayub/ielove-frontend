@@ -5,11 +5,9 @@ import { ArrowLeft, ArrowRight, Home, Building2 } from 'lucide-react';
 interface PropertyInfo {
   propertyType: 'detached_house' | 'apartment_renovation';
   projectName: string;
-  address: string;
   floorPlan: string;
   floorType: string;
   floorArea: string;
-  budget: string;
   timeline: string;
   description: string;
   specialFeatures?: string[]; // 戸建て用のこだわり仕様
@@ -23,11 +21,9 @@ const PropertyInfoForm: React.FC = () => {
   const [formData, setFormData] = useState<PropertyInfo>({
     propertyType: propertyType || 'detached_house',
     projectName: '',
-    address: '',
     floorPlan: '',
     floorType: '',
     floorArea: '',
-    budget: '',
     timeline: '',
     description: '',
     specialFeatures: []
@@ -79,20 +75,12 @@ const PropertyInfoForm: React.FC = () => {
       newErrors.projectName = 'プロジェクト名は必須です';
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = '住所は必須です';
-    }
-
     if (!formData.floorPlan) {
       newErrors.floorPlan = '間取りは必須です';
     }
 
     if (!formData.floorArea.trim()) {
       newErrors.floorArea = '床面積は必須です';
-    }
-
-    if (!formData.budget) {
-      newErrors.budget = '予算は必須です';
     }
 
     if (!formData.timeline) {
@@ -165,24 +153,6 @@ const PropertyInfoForm: React.FC = () => {
     { value: 'garage', label: 'ガレージ' }
   ];
 
-  const budgetOptions = propertyType === 'detached_house'
-    ? [
-        { value: '1000万円未満', label: '1000万円未満' },
-        { value: '1000-1500万円', label: '1000-1500万円' },
-        { value: '1500-2000万円', label: '1500-2000万円' },
-        { value: '2000-3000万円', label: '2000-3000万円' },
-        { value: '3000-4000万円', label: '3000-4000万円' },
-        { value: '4000万円以上', label: '4000万円以上' }
-      ]
-    : [
-        { value: '300万円未満', label: '300万円未満' },
-        { value: '300-500万円', label: '300-500万円' },
-        { value: '500-800万円', label: '500-800万円' },
-        { value: '800-1200万円', label: '800-1200万円' },
-        { value: '1200-2000万円', label: '1200-2000万円' },
-        { value: '2000万円以上', label: '2000万円以上' }
-      ];
-
   const timelineOptions = [
     { value: '1ヶ月以内', label: '1ヶ月以内' },
     { value: '2-3ヶ月', label: '2-3ヶ月' },
@@ -246,25 +216,6 @@ const PropertyInfoForm: React.FC = () => {
               />
               {errors.projectName && (
                 <p className="mt-1 text-sm text-red-600">{errors.projectName}</p>
-              )}
-            </div>
-
-            {/* 住所 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                住所 <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.address ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="例：東京都渋谷区○○1-2-3"
-              />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
               )}
             </div>
 
@@ -338,52 +289,28 @@ const PropertyInfoForm: React.FC = () => {
               </div>
             )}
 
-            {/* 床面積 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {propertyType === 'detached_house' ? '延床面積' : '専有面積'} <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.floorArea}
-                  onChange={(e) => handleInputChange('floorArea', e.target.value)}
-                  className={`w-full px-3 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.floorArea ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder={propertyType === 'detached_house' ? "例：120" : "例：80"}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                  <span className="text-gray-500 text-sm">㎡</span>
-                </div>
-              </div>
-              {errors.floorArea && (
-                <p className="mt-1 text-sm text-red-600">{errors.floorArea}</p>
-              )}
-            </div>
-
             <div className="grid md:grid-cols-2 gap-6">
-              {/* 予算 */}
+              {/* 床面積 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {propertyType === 'detached_house' ? '建築予算' : 'リノベーション予算'} <span className="text-red-500">*</span>
+                  {propertyType === 'detached_house' ? '延床面積' : '専有面積'} <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={formData.budget}
-                  onChange={(e) => handleInputChange('budget', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.budget ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">選択してください</option>
-                  {budgetOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.budget && (
-                  <p className="mt-1 text-sm text-red-600">{errors.budget}</p>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.floorArea}
+                    onChange={(e) => handleInputChange('floorArea', e.target.value)}
+                    className={`w-full px-3 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.floorArea ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder={propertyType === 'detached_house' ? "例：120" : "例：80"}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-gray-500 text-sm">㎡</span>
+                  </div>
+                </div>
+                {errors.floorArea && (
+                  <p className="mt-1 text-sm text-red-600">{errors.floorArea}</p>
                 )}
               </div>
 

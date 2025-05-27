@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import PropertyTypeSelection from './pages/PropertyTypeSelection';
 import PropertyInfoForm from './pages/PropertyInfoForm';
 import FloorPlanEditor from './pages/FloorPlanEditor';
+import IsometricView from './pages/IsometricView';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -21,16 +22,20 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Vite の base 設定に合わせて basename を設定
+  const basename = '/housing';
+  
   return (
     <QueryClientProvider client={queryClient}>
-      <Router basename="/housing">
+      <Router basename={basename}>
         <div className="App">
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/property-type" element={<PropertyTypeSelection />} />
             <Route path="/property-info" element={<PropertyInfoForm />} />
             <Route path="/floor-plan-editor" element={<FloorPlanEditor />} />
+            <Route path="/isometric-view" element={<IsometricView />} />
           </Routes>
           <Toaster position="top-right" />
         </div>
