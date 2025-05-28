@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <Home className="w-8 h-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">住宅設計</h1>
+              <h1 className="text-2xl font-bold text-gray-900">間取りシミュレーター</h1>
             </div>
             <div className="flex items-center space-x-4">
               <button className="p-2 text-gray-400 hover:text-gray-500">
@@ -41,8 +41,8 @@ const Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ウェルカムセクション */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">プロジェクト管理</h2>
-          <p className="text-lg text-gray-600">住宅設計プロジェクトを作成・管理できます</p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">物件管理</h2>
+          <p className="text-lg text-gray-600">間取りを作成・管理できます</p>
         </div>
 
         {/* 新規プロジェクト作成ボタン */}
@@ -52,27 +52,27 @@ const Dashboard: React.FC = () => {
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <Plus className="w-5 h-5 mr-2" />
-            新規プロジェクト作成
+            新規間取り作成
           </button>
         </div>
 
         {/* プロジェクト一覧 */}
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">プロジェクト一覧</h3>
+            <h3 className="text-lg font-medium text-gray-900">物件一覧</h3>
           </div>
           <div className="p-6">
             {projects.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">プロジェクトがありません</h3>
-                <p className="text-gray-500 mb-6">新しいプロジェクトを作成して設計を始めましょう</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">物件がありません</h3>
+                <p className="text-gray-500 mb-6">新しい物件を作成して間取りの作成を始めましょう</p>
                 <button
                   onClick={handleNewProject}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  プロジェクト作成
+                  物件作成
                 </button>
               </div>
             ) : (
