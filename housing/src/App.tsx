@@ -30,14 +30,13 @@ function App() {
       <Router basename={basename}>
         <div className="App">
           <Routes>
-            {/* ルートパスはmarketplace/にリダイレクト */}
-            <Route path="/" element={<Navigate to="/marketplace/" replace />} />
+            {/* /housing/配下のルートのみを処理 */}
+            <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/property-type" element={<PropertyTypeSelection />} />
             <Route path="/property-info" element={<PropertyInfoForm />} />
             <Route path="/floor-plan-editor" element={<FloorPlanEditor />} />
             <Route path="/isometric-view" element={<IsometricView />} />
-            {/* marketplace/へのアクセスは外部のmarketplaceアプリケーションで処理される */}
           </Routes>
           <Toaster position="top-right" />
         </div>
