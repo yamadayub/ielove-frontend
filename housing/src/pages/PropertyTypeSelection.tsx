@@ -29,7 +29,8 @@ const PropertyTypeSelection: React.FC = () => {
         '外構・庭の設計も対応',
         '建築基準法に準拠した設計'
       ],
-      color: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600'
     },
     {
       id: 'apartment_renovation',
@@ -42,20 +43,21 @@ const PropertyTypeSelection: React.FC = () => {
         '配管・電気設備の最適化',
         'バリアフリー対応'
       ],
-      color: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100'
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white overflow-y-auto">
       {/* ヘッダー */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center">
+      <div className="border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center max-w-4xl mx-auto">
           <button
             onClick={handleBack}
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mr-4"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mr-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="w-5 h-5 mr-1" />
             戻る
           </button>
           <h1 className="text-lg font-semibold text-gray-900">
@@ -65,58 +67,55 @@ const PropertyTypeSelection: React.FC = () => {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="max-w-3xl mx-auto px-6 py-12 pb-24">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
             どちらの物件タイプですか？
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 max-w-xl mx-auto leading-relaxed">
             物件の種別によって設計の制約や可能な工事内容が異なります。
             適切な設計を行うために、該当する物件タイプを選択してください。
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
           {propertyTypes.map((type) => {
             const Icon = type.icon;
             return (
               <div
                 key={type.id}
                 onClick={() => handlePropertyTypeSelect(type.id as 'detached_house' | 'apartment_renovation')}
-                className={`
-                  relative p-6 rounded-lg border-2 cursor-pointer transition-all duration-200
-                  ${type.color}
-                `}
+                className="group relative p-8 rounded-3xl border border-gray-100 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] bg-white"
               >
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start space-x-6">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-lg bg-white/50 flex items-center justify-center">
-                      <Icon className="w-6 h-6" />
+                    <div className={`w-16 h-16 rounded-2xl ${type.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                      <Icon className={`w-8 h-8 ${type.iconColor}`} />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
                       {type.title}
                     </h3>
-                    <p className="text-sm opacity-80 mb-4">
+                    <p className="text-gray-600 mb-6 leading-relaxed">
                       {type.description}
                     </p>
-                    <ul className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {type.features.map((feature, index) => (
-                        <li key={index} className="flex items-center text-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-60"></div>
+                        <div key={index} className="flex items-center text-sm text-gray-700">
+                          <div className="w-2 h-2 rounded-full bg-gray-300 mr-3"></div>
                           {feature}
-                        </li>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
                 
                 {/* 選択ボタン */}
-                <div className="mt-6 flex justify-end">
-                  <button className="px-4 py-2 bg-white/80 text-current font-medium rounded-md hover:bg-white transition-colors">
+                <div className="mt-8 flex justify-end">
+                  <div className="px-6 py-3 bg-gray-900 text-white font-medium rounded-full group-hover:bg-gray-800 transition-colors">
                     選択する
-                  </button>
+                  </div>
                 </div>
               </div>
             );
@@ -124,50 +123,74 @@ const PropertyTypeSelection: React.FC = () => {
         </div>
 
         {/* 補足情報 */}
-        <div className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="mt-16 bg-gray-50 rounded-3xl p-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
             設計について
           </h3>
-          <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600">
+          <div className="grid md:grid-cols-2 gap-8 text-sm text-gray-600">
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">戸建て住宅の場合</h4>
-              <ul className="space-y-1">
-                <li>• 構造計算に基づいた安全な設計</li>
-                <li>• 建築基準法・地域の条例に準拠</li>
-                <li>• 敷地条件を考慮した最適な配置</li>
-                <li>• 将来の増改築も考慮した設計</li>
+              <h4 className="font-semibold text-gray-900 mb-4">戸建て住宅の場合</h4>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  構造計算に基づいた安全な設計
+                </li>
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  建築基準法・地域の条例に準拠
+                </li>
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  敷地条件を考慮した最適な配置
+                </li>
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  将来の増改築も考慮した設計
+                </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">マンションリノベーションの場合</h4>
-              <ul className="space-y-1">
-                <li>• 管理規約・使用細則の確認</li>
-                <li>• 構造壁・梁の位置を考慮</li>
-                <li>• 配管・電気設備の制約を確認</li>
-                <li>• 近隣への騒音対策も配慮</li>
+              <h4 className="font-semibold text-gray-900 mb-4">マンションリノベーションの場合</h4>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  管理規約・使用細則の確認
+                </li>
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  構造壁・梁の位置を考慮
+                </li>
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  配管・電気設備の制約を確認
+                </li>
+                <li className="flex items-start">
+                  <span className="w-1 h-1 rounded-full bg-gray-400 mt-2 mr-3 flex-shrink-0"></span>
+                  近隣への騒音対策も配慮
+                </li>
               </ul>
             </div>
           </div>
         </div>
 
         {/* 注意事項 */}
-        <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="mt-8 bg-amber-50 rounded-2xl p-6">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
+              <div className="w-6 h-6 bg-amber-200 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-amber-700" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
+            <div className="ml-4">
+              <h3 className="text-sm font-semibold text-amber-900 mb-2">
                 ご注意
               </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  実際の工事を行う前には、必ず建築士や施工業者による詳細な現地調査と設計が必要です。
-                  このツールで作成した間取りは参考資料としてご活用ください。
-                </p>
-              </div>
+              <p className="text-sm text-amber-800 leading-relaxed">
+                実際の工事を行う前には、必ず建築士や施工業者による詳細な現地調査と設計が必要です。
+                このツールで作成した間取りは参考資料としてご活用ください。
+              </p>
             </div>
           </div>
         </div>

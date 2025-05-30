@@ -1,13 +1,13 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Stage, Layer, Rect, Line, Circle, Text, Arc } from 'react-konva';
-import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus, RectangleHorizontal, Home, DoorOpen, Eye } from 'lucide-react';
+import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus, DoorOpen, Eye } from 'lucide-react';
 import type { KonvaEventObject } from '../types/konva';
 import Konva from 'konva';
 
 interface FloorElement {
   id: string;
-  type: 'wall' | 'door' | 'window';
+  type: 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf';
   x: number; // mm単位の座標
   y: number; // mm単位の座標
   width: number; // mm単位のサイズ（長さ）
@@ -54,7 +54,7 @@ const FloorPlanEditor: React.FC = () => {
     { id: '1', name: '1階', elements: [] }
   ]);
   const [currentFloorIndex, setCurrentFloorIndex] = useState(0);
-  const [selectedTool, setSelectedTool] = useState<'select' | 'wall' | 'door' | 'window'>('select');
+  const [selectedTool, setSelectedTool] = useState<'select' | 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf'>('select');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
@@ -147,7 +147,7 @@ const FloorPlanEditor: React.FC = () => {
   };
 
   // 要素を追加
-  const addElement = (type: 'wall' | 'door' | 'window', position?: { x: number; y: number }) => {
+  const addElement = (type: 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf', position?: { x: number; y: number }) => {
     const newElement: FloorElement = {
       id: `${type}_${Date.now()}`,
       type,
@@ -155,10 +155,26 @@ const FloorPlanEditor: React.FC = () => {
       y: position ? pixelsToMm(position.y) : 1000, // mm単位で保存
       width: type === 'wall' ? 2000 : 
              type === 'door' ? 800 : 
-             1200, // mm単位で保存
+             type === 'window' ? 1200 :
+             type === 'kitchen' ? 2400 :
+             type === 'bathtub' ? 1700 :
+             type === 'toilet' ? 700 :
+             type === 'refrigerator' ? 600 :
+             type === 'washing_machine' ? 600 :
+             type === 'desk' ? 1200 :
+             type === 'chair' ? 450 :
+             type === 'shelf' ? 800 : 800, // mm単位で保存
       height: type === 'wall' ? 120 : // 壁の厚み: 120mm
               type === 'door' ? 35 : 
-              40, // 窓の幅: 40mm
+              type === 'window' ? 40 : // 窓の幅: 40mm
+              type === 'kitchen' ? 600 :
+              type === 'bathtub' ? 800 :
+              type === 'toilet' ? 400 :
+              type === 'refrigerator' ? 650 :
+              type === 'washing_machine' ? 600 :
+              type === 'desk' ? 700 :
+              type === 'chair' ? 450 :
+              type === 'shelf' ? 300 : 300,
       rotation: 0,
       properties: {
         ...(type === 'wall' && {
@@ -182,6 +198,63 @@ const FloorPlanEditor: React.FC = () => {
           glassWidth: 10, // ガラス幅: 10mm
           windowType: 'sliding',
           glassType: 'single'
+        }),
+        ...(type === 'kitchen' && {
+          length: 2400,
+          width: 600,
+          height: 850,
+          material: 'stainless_steel',
+          hasStove: true,
+          hasSink: true
+        }),
+        ...(type === 'bathtub' && {
+          length: 1700,
+          width: 800,
+          height: 600,
+          material: 'acrylic',
+          capacity: 280
+        }),
+        ...(type === 'toilet' && {
+          length: 700,
+          width: 400,
+          height: 800,
+          material: 'ceramic',
+          type: 'western'
+        }),
+        ...(type === 'refrigerator' && {
+          length: 600,
+          width: 650,
+          height: 1800,
+          capacity: 400,
+          type: 'double_door'
+        }),
+        ...(type === 'washing_machine' && {
+          length: 600,
+          width: 600,
+          height: 1000,
+          capacity: 8,
+          type: 'front_loading'
+        }),
+        ...(type === 'desk' && {
+          length: 1200,
+          width: 700,
+          height: 720,
+          material: 'wood',
+          hasDrawers: true
+        }),
+        ...(type === 'chair' && {
+          length: 450,
+          width: 450,
+          height: 800,
+          material: 'fabric',
+          hasArmrest: false
+        }),
+        ...(type === 'shelf' && {
+          length: 800,
+          width: 300,
+          height: 1800,
+          material: 'wood',
+          shelves: 4
         })
       }
     };
@@ -349,6 +422,14 @@ const FloorPlanEditor: React.FC = () => {
         case 'wall': return '#6b7280';
         case 'door': return '#d97706';
         case 'window': return '#3b82f6';
+        case 'kitchen': return '#059669';
+        case 'bathtub': return '#0891b2';
+        case 'toilet': return '#7c3aed';
+        case 'refrigerator': return '#dc2626';
+        case 'washing_machine': return '#2563eb';
+        case 'desk': return '#92400e';
+        case 'chair': return '#b45309';
+        case 'shelf': return '#374151';
         default: return '#6b7280';
       }
     };
@@ -358,6 +439,14 @@ const FloorPlanEditor: React.FC = () => {
         case 'wall': return '#374151';
         case 'door': return '#92400e';
         case 'window': return '#1e40af';
+        case 'kitchen': return '#047857';
+        case 'bathtub': return '#0e7490';
+        case 'toilet': return '#5b21b6';
+        case 'refrigerator': return '#991b1b';
+        case 'washing_machine': return '#1d4ed8';
+        case 'desk': return '#78350f';
+        case 'chair': return '#9a3412';
+        case 'shelf': return '#1f2937';
         default: return '#374151';
       }
     };
@@ -398,7 +487,7 @@ const FloorPlanEditor: React.FC = () => {
         {/* ドアの開き軌道を表示 */}
         {element.type === 'door' && (
           <Arc
-            x={element.properties.swingDirection === 'right' ? elementX : elementX + elementWidth}
+            x={elementX}
             y={elementY}
             innerRadius={0}
             outerRadius={elementWidth}
@@ -495,14 +584,14 @@ const FloorPlanEditor: React.FC = () => {
   };
 
   // ツールドラッグ開始
-  const handleToolDragStart = (e: React.DragEvent<HTMLButtonElement>, toolType: 'wall' | 'door' | 'window') => {
+  const handleToolDragStart = (e: React.DragEvent<HTMLButtonElement>, toolType: 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf') => {
     e.dataTransfer.setData('toolType', toolType);
   };
 
   // ステージドロップ処理
   const handleStageDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
-    const toolType = e.dataTransfer.getData('toolType') as 'wall' | 'door' | 'window';
+    const toolType = e.dataTransfer.getData('toolType') as 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf';
     if (toolType) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = (e.clientX - rect.left - stagePos.x) / scale;
@@ -583,22 +672,22 @@ const FloorPlanEditor: React.FC = () => {
   };
 
   return (
-    <div className="floor-plan-editor min-h-screen bg-gray-50 overflow-hidden">
+    <div className="floor-plan-editor min-h-screen bg-gray-50">
       {/* ヘッダー */}
       <div className="bg-white shadow-sm border-b">
-        <div className="px-2 sm:px-4 lg:px-8">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-12 sm:h-16">
             <div className="flex items-center min-w-0">
               <button
-                onClick={() => navigate('/housing/property-info')}
-                className="flex items-center text-gray-600 hover:text-gray-900 mr-2 sm:mr-4 flex-shrink-0"
+                onClick={() => navigate('/property-info')}
+                className="flex items-center text-gray-600 hover:text-gray-900 mr-3 sm:mr-4 flex-shrink-0"
               >
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-1" />
                 <span className="hidden sm:inline">戻る</span>
               </button>
               <h1 className="text-sm sm:text-lg lg:text-xl font-semibold text-gray-900 truncate">間取り設計</h1>
             </div>
-            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-4 flex-shrink-0">
+            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-shrink-0">
               <button
                 onClick={() => setGridVisible(!gridVisible)}
                 className={`p-1.5 sm:p-2 rounded-md ${gridVisible ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
@@ -626,13 +715,13 @@ const FloorPlanEditor: React.FC = () => {
       </div>
 
       {/* 階層タブ - ヘッダーの下に配置 */}
-      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 py-1 sm:py-2 overflow-x-auto">
-        <div className="flex items-center space-x-1 sm:space-x-2 min-w-max">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-1.5 sm:py-2 overflow-x-auto">
+        <div className="flex items-center space-x-2 min-w-max">
           {floors.map((floor, index) => (
             <button
               key={floor.id}
               onClick={() => setCurrentFloorIndex(index)}
-              className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 index === currentFloorIndex
                   ? 'bg-blue-100 text-blue-700 border border-blue-300'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -651,52 +740,78 @@ const FloorPlanEditor: React.FC = () => {
               setFloors(prev => [...prev, newFloor]);
               setCurrentFloorIndex(floors.length);
             }}
-            className="px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors whitespace-nowrap"
+            className="w-6 h-6 sm:w-7 sm:h-7 rounded bg-green-100 text-green-700 hover:bg-green-200 border border-green-300 transition-colors flex items-center justify-center"
+            title="階を追加"
           >
-            + 階を追加
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col h-[calc(100vh-6rem)] sm:h-[calc(100vh-8rem)]">
+      <div className="flex flex-col h-[calc(100vh-6.5rem)] sm:h-[calc(100vh-7.5rem)]">
         {/* ツールパネル - スマホでは上部に横並び、デスクトップでは左側に縦並び */}
-        <div className="w-full lg:w-64 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 p-2 sm:p-4 lg:h-full lg:overflow-y-auto">
-          <div className="flex lg:flex-col space-x-1 sm:space-x-2 lg:space-x-0 lg:space-y-4 justify-center lg:justify-start">
+        <div className="w-full lg:w-64 bg-white border-b lg:border-r lg:border-b-0 border-gray-200 p-3 sm:p-4 lg:h-full lg:overflow-y-auto">
+          <div className="flex lg:flex-col space-x-2 sm:space-x-3 lg:space-x-0 lg:space-y-4 justify-center lg:justify-start">
             {/* 選択ツール */}
             <button
               onClick={() => setSelectedTool('select')}
-              className={`p-1.5 sm:p-2 rounded-md transition-colors flex-shrink-0 ${
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-md transition-colors flex-shrink-0 flex items-center justify-center ${
                 selectedTool === 'select'
                   ? 'bg-blue-100 text-blue-600'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
+              title="選択ツール"
             >
               <MousePointer className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
-            {/* 壁ツール */}
-            <button
-              onClick={() => addElement('wall')}
-              className="p-1.5 sm:p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
-            >
-              <Home className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
-            {/* ドアツール */}
-            <button
-              onClick={() => addElement('door')}
-              className="p-1.5 sm:p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
-            >
-              <DoorOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
-            {/* 窓ツール */}
-            <button
-              onClick={() => addElement('window')}
-              className="p-1.5 sm:p-2 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex-shrink-0"
-            >
-              <RectangleHorizontal className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
+            {/* 要素追加プルダウン */}
+            <div className="flex-1 lg:w-full">
+              <select
+                value={selectedTool === 'select' ? '' : selectedTool}
+                onChange={(e) => {
+                  const elementType = e.target.value as 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf';
+                  if (elementType) {
+                    setSelectedTool(elementType);
+                  } else {
+                    setSelectedTool('select');
+                  }
+                }}
+                className={`w-full h-10 sm:h-12 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  selectedTool !== 'select' 
+                    ? 'border-blue-300 bg-blue-50' 
+                    : 'border-gray-300'
+                }`}
+              >
+                <option value="">要素を選択</option>
+                <optgroup label="建築要素">
+                  <option value="wall">壁</option>
+                  <option value="door">ドア</option>
+                  <option value="window">窓</option>
+                </optgroup>
+                <optgroup label="水回り">
+                  <option value="kitchen">キッチン</option>
+                  <option value="bathtub">浴槽</option>
+                  <option value="toilet">トイレ</option>
+                </optgroup>
+                <optgroup label="家電">
+                  <option value="refrigerator">冷蔵庫</option>
+                  <option value="washing_machine">洗濯機</option>
+                </optgroup>
+                <optgroup label="家具">
+                  <option value="desk">机</option>
+                  <option value="chair">椅子</option>
+                  <option value="shelf">棚</option>
+                </optgroup>
+              </select>
+              
+              {/* ヘルプテキスト */}
+              {selectedTool !== 'select' && (
+                <p className="text-xs text-blue-600 mt-1 lg:mt-2">
+                  グリッドエリアをタップして配置してください
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -728,24 +843,24 @@ const FloorPlanEditor: React.FC = () => {
             </div>
 
             {/* ズームコントロール */}
-            <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white rounded-lg shadow-lg p-1 sm:p-2 space-y-1 sm:space-y-2">
+            <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 bg-white rounded-lg shadow-lg p-2 space-y-2">
               <button
                 onClick={handleZoomIn}
-                className="block w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
                 title="ズームイン"
               >
-                <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
+                <ZoomIn className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={handleZoomOut}
-                className="block w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center"
                 title="ズームアウト"
               >
-                <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
+                <ZoomOut className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <button
                 onClick={handleZoomReset}
-                className="block w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs font-medium"
+                className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 hover:bg-gray-200 rounded flex items-center justify-center text-xs font-medium"
                 title="ズームリセット"
               >
                 1:1
@@ -755,7 +870,7 @@ const FloorPlanEditor: React.FC = () => {
 
           {/* プロパティパネル - レスポンシブ対応と縦スクロール修正 */}
           {selectedElementId && selectedElement && (
-            <div className="bg-white border-t border-gray-200 p-4 h-80 lg:h-96 overflow-y-auto">
+            <div className="bg-white border-t border-gray-200 p-4 sm:p-6 h-80 lg:h-96 overflow-y-auto">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -766,14 +881,14 @@ const FloorPlanEditor: React.FC = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => rotateElement(selectedElementId)}
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                      className="w-8 h-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center justify-center"
                       title="90度回転"
                     >
                       <RotateCw className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => deleteElement(selectedElementId)}
-                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded"
+                      className="w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded flex items-center justify-center"
                       title="削除"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -783,7 +898,7 @@ const FloorPlanEditor: React.FC = () => {
                         setSelectedElementId(null);
                         setInputValues({}); // 入力フィールドの状態をクリア
                       }}
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                      className="w-8 h-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center justify-center"
                       title="閉じる"
                     >
                       <X className="h-4 w-4" />
@@ -792,22 +907,22 @@ const FloorPlanEditor: React.FC = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
-                  {/* 基本情報 */}
-                  <div className="p-3 bg-gray-50 rounded-md">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">基本情報</h4>
+                  {/* 選択された要素の情報表示 */}
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-2">選択された要素</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <div>位置: X={Math.round(selectedElement.x)}mm, Y={Math.round(selectedElement.y)}mm</div>
+                      <div>位置: X={selectedElement ? Math.round(selectedElement.x) : 0}mm, Y={selectedElement ? Math.round(selectedElement.y) : 0}mm</div>
                       <div>
-                        サイズ: {Math.round(selectedElement.width)}×{Math.round(selectedElement.height)}mm
+                        サイズ: {selectedElement ? Math.round(selectedElement.width) : 0}×{selectedElement ? Math.round(selectedElement.height) : 0}mm
                       </div>
-                      <div>回転: {selectedElement.rotation}°</div>
-                      {selectedElement.type === 'wall' && (
+                      <div>回転: {selectedElement ? selectedElement.rotation : 0}°</div>
+                      {selectedElement && selectedElement.type === 'wall' && (
                         <div>高さ: {selectedElement.properties.height || 2400}mm</div>
                       )}
-                      {selectedElement.type === 'door' && (
+                      {selectedElement && selectedElement.type === 'door' && (
                         <div>高さ: {selectedElement.properties.height || 2000}mm</div>
                       )}
-                      {selectedElement.type === 'window' && (
+                      {selectedElement && selectedElement.type === 'window' && (
                         <>
                           <div>高さ: {selectedElement.properties.height || 1200}mm</div>
                           <div>床からの高さ: {selectedElement.properties.heightFrom || 800}mm</div>
@@ -817,7 +932,7 @@ const FloorPlanEditor: React.FC = () => {
                   </div>
                   
                   {/* プロパティ編集フィールド */}
-                  {selectedElement.type === 'wall' && (
+                  {selectedElement && selectedElement.type === 'wall' && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -879,7 +994,7 @@ const FloorPlanEditor: React.FC = () => {
                     </>
                   )}
                   
-                  {selectedElement.type === 'door' && (
+                  {selectedElement && selectedElement.type === 'door' && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -956,7 +1071,7 @@ const FloorPlanEditor: React.FC = () => {
                     </>
                   )}
                   
-                  {selectedElement.type === 'window' && (
+                  {selectedElement && selectedElement.type === 'window' && (
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">

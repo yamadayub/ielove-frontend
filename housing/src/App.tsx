@@ -28,7 +28,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router basename={basename}>
-        <div className="App">
+        <div className="App min-h-screen overflow-y-auto">
           <Routes>
             {/* /housing/配下のルートのみを処理 */}
             <Route path="/" element={<Dashboard />} />

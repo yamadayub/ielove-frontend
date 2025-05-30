@@ -32,18 +32,25 @@ body {
   width: 100%;
   min-width: 320px;
   min-height: 100vh;
+  height: 100%;
   background-color: #ffffff;
   color: #213547;
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
+  overflow-y: auto;
+}
+
+html {
+  height: 100%;
+  overflow-y: auto;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  height: 100%;
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
 }
 
 h1 {
@@ -121,11 +128,6 @@ textarea:focus {
   
   ::-webkit-scrollbar {
     display: none;
-  }
-  
-  html, body {
-    overflow-x: hidden;
-    position: relative;
   }
 }
 
