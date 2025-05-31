@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
+import './App.css';
 
 // Pages
 import Dashboard from './pages/Dashboard';
@@ -10,6 +11,8 @@ import PropertyTypeSelection from './pages/PropertyTypeSelection';
 import PropertyInfoForm from './pages/PropertyInfoForm';
 import FloorPlanEditor from './pages/FloorPlanEditor';
 import IsometricView from './pages/IsometricView';
+import ContractorPortal from './pages/ContractorPortal';
+import ProjectManagement from './pages/ProjectManagement';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -37,6 +40,8 @@ function App() {
             <Route path="/property-info" element={<PropertyInfoForm />} />
             <Route path="/floor-plan-editor" element={<FloorPlanEditor />} />
             <Route path="/isometric-view" element={<IsometricView />} />
+            <Route path="/builder-portal" element={<ContractorPortal />} />
+            <Route path="/project-management" element={<ProjectManagement />} />
           </Routes>
           <Toaster position="top-right" />
         </div>
