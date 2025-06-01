@@ -13,6 +13,8 @@ import FloorPlanEditor from './pages/FloorPlanEditor';
 import IsometricView from './pages/IsometricView';
 import ContractorPortal from './pages/ContractorPortal';
 import ProjectManagement from './pages/ProjectManagement';
+import ClientMessages from './pages/ClientMessages';
+import ClientFiles from './pages/ClientFiles';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -42,6 +44,8 @@ function App() {
             <Route path="/isometric-view" element={<IsometricView />} />
             <Route path="/builder-portal" element={<ContractorPortal />} />
             <Route path="/project-management" element={<ProjectManagement />} />
+            <Route path="/client-messages" element={<ClientMessages />} />
+            <Route path="/client-files" element={<ClientFiles />} />
           </Routes>
           <Toaster position="top-right" />
         </div>

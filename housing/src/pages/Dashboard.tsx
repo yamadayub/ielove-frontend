@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Home, Building2, Settings, User } from 'lucide-react';
+import { Plus, Home, Building2, Settings, User, MessageSquare, FileText, Bell, Calendar } from 'lucide-react';
 import { useHousingStore } from '../store/housingStore';
 
 const Dashboard: React.FC = () => {
@@ -15,11 +15,35 @@ const Dashboard: React.FC = () => {
     navigate('/floor-plan-editor', { state: { projectId } });
   };
 
+  const handleMessagesClick = (projectId: string) => {
+    navigate(`/client-messages?projectId=${projectId}`);
+  };
+
+  const handleFilesClick = (projectId: string) => {
+    navigate(`/client-files?projectId=${projectId}`);
+  };
+
+  // サンプルの進行中プロジェクト（工務店とのコミュニケーションが必要なもの）
+  const ongoingProjects = [
+    {
+      id: 'PRJ001',
+      name: '世田谷区桜丘の戸建てリノベーション',
+      contractorName: '山田工務店',
+      propertyAddress: '東京都世田谷区桜丘1-2-3',
+      startDate: '2024-01-15',
+      endDate: '2024-06-30',
+      progress: 45,
+      unreadMessages: 1,
+      newFiles: 2,
+      nextMeeting: '2024-02-15T14:00:00Z'
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       {/* ヘッダー */}
       <div className="border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <Home className="w-6 h-6 text-gray-900 mr-2" />
@@ -38,7 +62,99 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* メインコンテンツ */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* 進行中のプロジェクト（工務店とのコミュニケーション） */}
+        {ongoingProjects.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">進行中のプロジェクト</h2>
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+              {ongoingProjects.map((project) => (
+                <div key={project.id} className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{project.name}</h3>
+                      <div className="text-sm text-gray-600 mb-2">
+                        <div>施工業者: {project.contractorName}</div>
+                        <div>所在地: {project.propertyAddress}</div>
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>
+                            {new Date(project.startDate).toLocaleDateString('ja-JP')} - {new Date(project.endDate).toLocaleDateString('ja-JP')}
+                          </span>
+                        </div>
+                        <div>進捗: {project.progress}%</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {project.unreadMessages > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                          {project.unreadMessages}
+                        </span>
+                      )}
+                      {project.newFiles > 0 && (
+                        <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1">
+                          {project.newFiles}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* 進捗バー */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                      <span>工事進捗</span>
+                      <span>{project.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${project.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* アクションボタン */}
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => handleMessagesClick(project.id)}
+                      className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      メッセージ
+                      {project.unreadMessages > 0 && (
+                        <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                          {project.unreadMessages}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleFilesClick(project.id)}
+                      className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      ファイル
+                      {project.newFiles > 0 && (
+                        <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-1">
+                          {project.newFiles}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleProjectClick(project.id)}
+                      className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      <Home className="h-4 w-4 mr-2" />
+                      間取り確認
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ウェルカムセクション */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">物件管理</h2>
