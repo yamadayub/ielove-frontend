@@ -88,11 +88,11 @@ const StepDetail: React.FC<StepDetailProps> = ({
       <div className="px-4 py-3 border-b flex items-center">
         <button
           onClick={onClose}
-          className="mr-2 text-gray-700 hover:text-gray-900"
+          className="text-gray-700 hover:text-gray-900"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-bold text-base">ステップ詳細</h1>
+        <h1 className="font-bold text-base ml-4">Step {step.id}</h1>
       </div>
 
       {/* 画像スライダー */}

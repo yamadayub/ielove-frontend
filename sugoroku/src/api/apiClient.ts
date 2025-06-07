@@ -5,7 +5,8 @@ import { useMemo } from 'react';
 // 環境に応じたベースURLを設定
 // 本番環境では正しいAPIのURLを設定する
 // 開発環境では現在のプロキシパスを使用する
-const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+// const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+const baseURL = window.location.origin;
 
 // 注意: ベースURLが空の場合は、同じオリジンに対してリクエストが送信される
 // デプロイ時には適切なURLに変更する必要がある

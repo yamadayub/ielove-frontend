@@ -3,22 +3,31 @@ import { Project, CreateProjectRequest, UpdateProjectRequest } from '../types/pr
 import { Material, MaterialLibrary } from '../types/materials';
 import { ChatRoom, ChatMessage, SendMessageRequest, CreateChatRoomRequest } from '../types/chat';
 
+// Viteの環境変数の型定義
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 class HousingApiClient {
   private api: AxiosInstance;
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_URL || '/api',
+      baseURL: '/api',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Request interceptor for auth
+    // リクエストインターセプター
     this.api.interceptors.request.use(
       (config) => {
-        // Add auth token if available
+        // 認証トークンを追加
         const token = localStorage.getItem('clerk-token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -30,11 +39,16 @@ class HousingApiClient {
       }
     );
 
-    // Response interceptor for error handling
+    // レスポンスインターセプター
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
         console.error('API Error:', error);
+        if (error.response?.status === 401) {
+          // 認証エラーの場合の処理
+          localStorage.removeItem('clerk-token');
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
     );

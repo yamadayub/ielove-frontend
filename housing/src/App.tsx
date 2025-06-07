@@ -5,11 +5,15 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
 import './App.css';
 
+// Layout
+import Layout from './components/Layout';
+
 // Pages
 import Dashboard from './pages/Dashboard';
 import PropertyTypeSelection from './pages/PropertyTypeSelection';
 import PropertyInfoForm from './pages/PropertyInfoForm';
 import FloorPlanEditor from './pages/FloorPlanEditor';
+import ThreeDView from './pages/ThreeDView';
 import IsometricView from './pages/IsometricView';
 import ContractorPortal from './pages/ContractorPortal';
 import ProjectManagement from './pages/ProjectManagement';
@@ -33,7 +37,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router basename={basename}>
-        <div className="App min-h-screen overflow-y-auto">
+        <Layout>
           <Routes>
             {/* /housing/配下のルートのみを処理 */}
             <Route path="/" element={<Dashboard />} />
@@ -41,14 +45,15 @@ function App() {
             <Route path="/property-type" element={<PropertyTypeSelection />} />
             <Route path="/property-info" element={<PropertyInfoForm />} />
             <Route path="/floor-plan-editor" element={<FloorPlanEditor />} />
+            <Route path="/3d-view" element={<ThreeDView />} />
             <Route path="/isometric-view" element={<IsometricView />} />
             <Route path="/builder-portal" element={<ContractorPortal />} />
             <Route path="/project-management" element={<ProjectManagement />} />
             <Route path="/client-messages" element={<ClientMessages />} />
             <Route path="/client-files" element={<ClientFiles />} />
           </Routes>
-          <Toaster position="top-right" />
-        </div>
+        </Layout>
+        <Toaster position="top-right" />
       </Router>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

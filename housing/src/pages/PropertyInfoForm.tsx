@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Home, Building2 } from 'lucide-react';
+import { ArrowRight, Home, Building2 } from 'lucide-react';
 
 interface PropertyInfo {
   propertyType: 'detached_house' | 'apartment_renovation';
-  projectName: string;
   floorPlan: string;
   floorType: string;
   floorArea: string;
@@ -19,7 +18,6 @@ const PropertyInfoForm: React.FC = () => {
 
   const [formData, setFormData] = useState<PropertyInfo>({
     propertyType: propertyType || 'detached_house',
-    projectName: '',
     floorPlan: '',
     floorType: '',
     floorArea: '',
@@ -28,10 +26,6 @@ const PropertyInfoForm: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<PropertyInfo>>({});
-
-  const handleBack = () => {
-    navigate('/property-type');
-  };
 
   const handleInputChange = (field: keyof PropertyInfo, value: string) => {
     setFormData(prev => ({
@@ -68,10 +62,6 @@ const PropertyInfoForm: React.FC = () => {
 
   const validateForm = (): boolean => {
     const newErrors: Partial<PropertyInfo> = {};
-
-    if (!formData.projectName.trim()) {
-      newErrors.projectName = 'プロジェクト名は必須です';
-    }
 
     if (!formData.floorPlan) {
       newErrors.floorPlan = '間取りは必須です';
@@ -148,19 +138,11 @@ const PropertyInfoForm: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white overflow-y-auto">
-      {/* ヘッダー */}
-      <div className="border-b border-gray-100 px-6 py-4">
-        <div className="flex items-center max-w-4xl mx-auto">
-          <button
-            onClick={handleBack}
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 mr-6 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 mr-1" />
-            戻る
-          </button>
-          <div className="flex items-center">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+    <div className="h-full bg-gray-50 overflow-y-auto">
+      <main className="max-w-4xl mx-auto px-4 py-8">
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
               propertyType === 'detached_house' ? 'bg-blue-50' : 'bg-green-50'
             }`}>
               {propertyType === 'detached_house' ? (
@@ -169,45 +151,20 @@ const PropertyInfoForm: React.FC = () => {
                 <Building2 className="w-4 h-4 text-green-600" />
               )}
             </div>
-            <h1 className="text-lg font-semibold text-gray-900">
+            <span className="text-lg font-semibold text-gray-900">
               {propertyType === 'detached_house' ? '戸建て住宅' : 'マンションリノベーション'}
-            </h1>
+            </span>
           </div>
-        </div>
-      </div>
-
-      {/* メインコンテンツ */}
-      <div className="max-w-2xl mx-auto px-6 py-8 pb-24">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            プロジェクト情報
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">
+            基本情報の入力
           </h2>
-          <p className="text-gray-600 leading-relaxed">
-            設計に必要な基本情報を入力してください。後から変更することも可能です。
+          <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+            間取り作成に必要な基本情報を入力してください。後から変更することも可能です。
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* プロジェクト名 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-3">
-              プロジェクト名 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.projectName}
-              onChange={(e) => handleInputChange('projectName', e.target.value)}
-              className={`w-full px-4 py-3 border-0 border-b-2 bg-transparent focus:outline-none focus:border-gray-900 transition-colors ${
-                errors.projectName ? 'border-red-300' : 'border-gray-200'
-              }`}
-              placeholder="例：我が家のリノベーション"
-            />
-            {errors.projectName && (
-              <p className="mt-2 text-sm text-red-600">{errors.projectName}</p>
-            )}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
             {/* 間取り */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-3">
@@ -216,7 +173,7 @@ const PropertyInfoForm: React.FC = () => {
               <select
                 value={formData.floorPlan}
                 onChange={(e) => handleInputChange('floorPlan', e.target.value)}
-                className={`w-full px-4 py-3 border-0 border-b-2 bg-transparent focus:outline-none focus:border-gray-900 transition-colors ${
+                className={`w-full px-4 py-3 border-0 border-b-2 bg-transparent focus:outline-none focus:border-gray-900 transition-colors text-base ${
                   errors.floorPlan ? 'border-red-300' : 'border-gray-200'
                 }`}
               >
@@ -240,7 +197,7 @@ const PropertyInfoForm: React.FC = () => {
               <select
                 value={formData.floorType}
                 onChange={(e) => handleInputChange('floorType', e.target.value)}
-                className="w-full px-4 py-3 border-0 border-b-2 border-gray-200 bg-transparent focus:outline-none focus:border-gray-900 transition-colors"
+                className="w-full px-4 py-3 border-0 border-b-2 border-gray-200 bg-transparent focus:outline-none focus:border-gray-900 transition-colors text-base"
               >
                 <option value="">選択してください</option>
                 {floorTypeOptions.map((option) => (
@@ -258,9 +215,9 @@ const PropertyInfoForm: React.FC = () => {
               <label className="block text-sm font-medium text-gray-900 mb-4">
                 こだわり仕様（複数選択可）
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {specialFeaturesOptions.map((option) => (
-                  <label key={option.value} className="flex items-center cursor-pointer">
+                  <label key={option.value} className="flex items-center cursor-pointer group">
                     <input
                       type="checkbox"
                       value={option.value}
@@ -268,9 +225,9 @@ const PropertyInfoForm: React.FC = () => {
                       onChange={(e) => {
                         handleSpecialFeaturesChange(option.value, e.target.checked);
                       }}
-                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 mr-3"
+                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900 mr-3 group-hover:border-gray-400 transition-colors"
                     />
-                    <span className="text-sm text-gray-700">{option.label}</span>
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors">{option.label}</span>
                   </label>
                 ))}
               </div>
@@ -287,7 +244,7 @@ const PropertyInfoForm: React.FC = () => {
                 type="text"
                 value={formData.floorArea}
                 onChange={(e) => handleInputChange('floorArea', e.target.value)}
-                className={`w-full px-4 py-3 pr-12 border-0 border-b-2 bg-transparent focus:outline-none focus:border-gray-900 transition-colors ${
+                className={`w-full px-4 py-3 pr-12 border-0 border-b-2 bg-transparent focus:outline-none focus:border-gray-900 transition-colors text-base ${
                   errors.floorArea ? 'border-red-300' : 'border-gray-200'
                 }`}
                 placeholder={propertyType === 'detached_house' ? "例：120" : "例：80"}
@@ -310,7 +267,7 @@ const PropertyInfoForm: React.FC = () => {
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 border-0 border-b-2 border-gray-200 bg-transparent focus:outline-none focus:border-gray-900 transition-colors resize-none"
+              className="w-full px-4 py-3 border-0 border-b-2 border-gray-200 bg-transparent focus:outline-none focus:border-gray-900 transition-colors resize-none text-base"
               placeholder={propertyType === 'detached_house' 
                 ? "建築に関するご要望や特記事項があればご記入ください" 
                 : "リノベーションに関するご要望や特記事項があればご記入ください"
@@ -319,10 +276,10 @@ const PropertyInfoForm: React.FC = () => {
           </div>
 
           {/* 送信ボタン */}
-          <div className="flex justify-center pt-8">
+          <div className="flex justify-center pt-6 sm:pt-8">
             <button
               type="submit"
-              className="inline-flex items-center px-8 py-4 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all"
+              className="inline-flex items-center px-8 py-4 bg-gray-900 text-white font-medium rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all text-sm sm:text-base"
             >
               間取り編集を開始
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -331,16 +288,16 @@ const PropertyInfoForm: React.FC = () => {
         </form>
 
         {/* 注意事項 */}
-        <div className="mt-12 bg-gray-50 rounded-2xl p-6">
+        <div className="mt-8 sm:mt-12 bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
           <div className="flex">
             <div className="flex-shrink-0">
-              <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 rounded-full flex items-center justify-center">
                 <svg className="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
             </div>
-            <div className="ml-4">
+            <div className="ml-3 sm:ml-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">
                 ヒント
               </h3>
@@ -351,7 +308,7 @@ const PropertyInfoForm: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

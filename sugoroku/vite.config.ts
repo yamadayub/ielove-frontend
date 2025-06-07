@@ -8,6 +8,21 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   base: '/sugoroku/',
+  server: {
+    port: 5173,
+    proxy: {
+      '/sugoroku/steps': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/sugoroku/chats': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   build: {
     outDir: '../dist/sugoroku',
     emptyOutDir: true,
