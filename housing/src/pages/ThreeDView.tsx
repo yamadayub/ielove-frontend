@@ -650,9 +650,9 @@ const ThreeDView: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 144px)' }}>
+    <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 144px)', maxHeight: 'calc(100vh - 144px)' }}>
       {/* サブヘッダー - ツールバー（固定） */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-2 z-30 shadow-sm">
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-2 z-30 shadow-sm flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1">
             {/* ビュー切り替えボタン */}
@@ -692,8 +692,11 @@ const ThreeDView: React.FC = () => {
         </div>
       </div>
 
-      {/* メイン3Dビューエリア（可変サイズ） */}
-      <div className="flex-1 relative overflow-hidden" style={{ height: 'calc(100vh - 224px)' }}>
+      {/* メイン3Dビューエリア（制限された高さ） */}
+      <div className="flex-1 relative overflow-hidden" style={{ 
+        minHeight: '300px',
+        maxHeight: 'calc(100vh - 264px)'
+      }}>
         <div 
           ref={containerRef}
           className="w-full h-full"
@@ -730,7 +733,7 @@ const ThreeDView: React.FC = () => {
         {/* 要素選択パネル（オーバーレイ） */}
         {selectedElement && (
           <div 
-            className="absolute bottom-4 left-4 right-4 bg-white border border-gray-300 rounded-lg shadow-xl z-20 max-h-40 overflow-y-auto"
+            className="absolute bottom-16 left-4 right-4 bg-white border border-gray-300 rounded-lg shadow-xl z-20 max-h-32 overflow-y-auto"
             style={{ 
               backdropFilter: 'blur(10px)',
               backgroundColor: 'rgba(255, 255, 255, 0.95)'
@@ -793,7 +796,7 @@ const ThreeDView: React.FC = () => {
       </div>
 
       {/* 表示制御パネル（下部固定） */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-3 z-30 shadow-lg">
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-3 z-30 shadow-lg flex-shrink-0">
         <div className="flex items-center justify-center">
           <div className="flex items-center space-x-6 bg-gray-50 px-4 py-2 rounded-lg">
             <div className="flex items-center space-x-1">
