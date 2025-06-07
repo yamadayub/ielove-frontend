@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Stage, Layer, Rect, Line, Circle, Text, Arc } from 'react-konva';
-import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus, DoorOpen, Eye, Home, Bath, Car, Utensils, Armchair, BookOpen, Box, Package, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Save, ZoomIn, ZoomOut, RotateCw, Trash2, Grid, Move, Menu, X, Minus, Square, MousePointer, Plus, DoorOpen, Eye, Home, Bath, Car, Utensils, Armchair, BookOpen, Box, Orbit, RotateCcw } from 'lucide-react';
 import type { KonvaEventObject } from '../types/konva';
 import Konva from 'konva';
 import { getDefaultLayout } from '../data/defaultLayouts';
@@ -637,7 +637,23 @@ const FloorPlanEditor: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/property-info');
+    // デバッグ用ログ
+    console.log('FloorPlanEditor handleBack called');
+    console.log('propertyInfo:', propertyInfo);
+    console.log('propertyType:', propertyInfo?.propertyType);
+    
+    // propertyTypeに基づいて適切な画面に戻る
+    if (propertyInfo?.propertyType === 'detached_house') {
+      console.log('Navigating to /property-info (detached_house)');
+      navigate('/property-info'); // 一戸建て住宅の画面
+    } else if (propertyInfo?.propertyType === 'apartment_renovation') {
+      console.log('Navigating to /property-info-apartment (apartment_renovation)');
+      navigate('/property-info-apartment'); // マンションリノベーションの画面
+    } else {
+      console.log('Fallback: Navigating to /property-info (default)');
+      // フォールバック（デフォルト）
+      navigate('/property-info');
+    }
   };
 
   const handleSave = () => {
@@ -754,6 +770,15 @@ const FloorPlanEditor: React.FC = () => {
 
           {/* 右側のボタングループ */}
           <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
+            {/* 戻るボタン */}
+            <button
+              onClick={handleBack}
+              className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors"
+              title="前の画面に戻る"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+            
             {/* グリッド切替 */}
             <button
               onClick={() => setGridVisible(!gridVisible)}
@@ -770,14 +795,14 @@ const FloorPlanEditor: React.FC = () => {
                 className="p-2 bg-emerald-100 text-emerald-700 rounded-md hover:bg-emerald-200 transition-colors"
                 title="アイソメトリック図で表示（固定視点）"
               >
-                <Package className="h-4 w-4" />
+                <Box className="h-4 w-4" />
               </button>
               <button
                 onClick={handleView3D}
                 className="p-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
                 title="3Dビューで表示（自由視点・回転可能）"
               >
-                <Box className="h-4 w-4" />
+                <Orbit className="h-4 w-4" />
               </button>
             </div>
             

@@ -6,11 +6,19 @@ const PropertyTypeSelection: React.FC = () => {
   const navigate = useNavigate();
 
   const handlePropertyTypeSelect = (propertyType: 'detached_house' | 'apartment_renovation') => {
-    navigate('/property-info', { 
-      state: { 
-        propertyType 
-      } 
-    });
+    if (propertyType === 'apartment_renovation') {
+      navigate('/property-info-apartment', { 
+        state: { 
+          propertyType 
+        } 
+      });
+    } else {
+      navigate('/property-info', { 
+        state: { 
+          propertyType 
+        } 
+      });
+    }
   };
 
   return (

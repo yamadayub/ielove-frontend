@@ -30,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const showBackButton = () => {
-    return !['/dashboard', '/'].includes(location.pathname);
+    return !['/dashboard', '/', '/floor-plan-editor'].includes(location.pathname);
   };
 
   const isActive3D = location.pathname === '/3d-view';

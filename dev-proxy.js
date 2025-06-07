@@ -17,7 +17,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// housingアプリへのプロキシ設定
+// housingアプリへのプロキシ設定（具体的なパスを先に配置）
 app.use('/housing', createProxyMiddleware({
   target: 'http://localhost:5175',
   changeOrigin: true,
@@ -39,7 +39,7 @@ app.use('/sugoroku', createProxyMiddleware({
   logLevel: 'debug'
 }));
 
-// marketplaceアプリへのプロキシ設定
+// marketplaceアプリへのプロキシ設定（最後に配置）
 app.use('/', createProxyMiddleware({
   target: 'http://localhost:5173',
   changeOrigin: true,

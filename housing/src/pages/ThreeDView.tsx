@@ -1,25 +1,35 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
+import { Canvas, useFrame, ThreeEvent, useLoader } from '@react-three/fiber';
 import { OrbitControls, Grid, Text } from '@react-three/drei';
-import { RotateCcw, ZoomIn, ZoomOut, Grid3X3, Box, X, ArrowLeft } from 'lucide-react';
+import { RotateCcw, ZoomIn, ZoomOut, Grid3X3, Box, X, ArrowLeft, Map, Layers, Grid2X2 } from 'lucide-react';
 import * as THREE from 'three';
 
 interface FloorElement {
   id: string;
-  type: 'wall' | 'door' | 'window';
+  type: 'wall' | 'door' | 'window' | 'kitchen' | 'bathtub' | 'toilet' | 'refrigerator' | 'washing_machine' | 'desk' | 'chair' | 'shelf';
   x: number; // mm単位の座標
   y: number; // mm単位の座標
-  width: number; // mm単位のサイズ（長さ）
-  height: number; // mm単位のサイズ（厚み/幅）
-  rotation: number;
+  dimensions: {
+    width: number;   // x方向 (平面図での幅) mm
+    depth: number;   // y方向 (平面図での奥行き) mm  
+    height: number;  // z方向 (実際の高さ) mm
+  };
   properties: {
-    thickness?: number;
-    length?: number;
-    height?: number;
     material?: string;
-    heightFrom?: number;
-    heightTo?: number;
+    heightFrom?: number; // 床からの高さ (mm)
+    heightTo?: number;   // 上端の高さ (mm)
+    swingDirection?: 'left' | 'right' | 'inward' | 'outward';
+    glassWidth?: number;
+    windowType?: 'sliding' | 'casement' | 'fixed';
+    glassType?: 'single' | 'double' | 'triple' | 'low-e';
+    frameType?: 'aluminum' | 'wood' | 'vinyl' | 'composite';
+    hasStove?: boolean;
+    hasSink?: boolean;
+    capacity?: number;
+    shelves?: number;
+    hasDrawers?: boolean;
+    hasArmrest?: boolean;
     [key: string]: any;
   };
 }
@@ -41,6 +51,210 @@ interface Floor {
   elements: FloorElement[];
 }
 
+// 表示制御の状態インターフェース
+interface VisibilityState {
+  walls: boolean;
+  doors: boolean;
+  windows: boolean;
+  floor: boolean;
+  ceiling: boolean;
+}
+
+// フローリングテクスチャを生成する関数
+const createFlooringTexture = (): THREE.CanvasTexture => {
+  // プロシージャルなフローリングパターンを作成
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const context = canvas.getContext('2d')!;
+  
+  // フローリングのベース色
+  const baseColor = '#d2b48c';
+  const grainColor = '#8b7355';
+  const darkGrain = '#654321';
+  
+  // 背景を塗りつぶし
+  context.fillStyle = baseColor;
+  context.fillRect(0, 0, 512, 512);
+  
+  // 木目パターンを描画
+  for (let i = 0; i < 20; i++) {
+    const y = (i * 25) + Math.random() * 10;
+    context.strokeStyle = i % 2 === 0 ? grainColor : darkGrain;
+    context.lineWidth = 1 + Math.random() * 2;
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(512, y + Math.random() * 5);
+    context.stroke();
+  }
+  
+  // 木目の縦線
+  for (let i = 0; i < 8; i++) {
+    context.strokeStyle = grainColor;
+    context.lineWidth = 0.5;
+    context.beginPath();
+    context.moveTo(i * 64 + Math.random() * 20, 0);
+    context.lineTo(i * 64 + Math.random() * 20, 512);
+    context.stroke();
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(8, 8); // テクスチャを繰り返し
+  
+  return texture;
+};
+
+// 壁紙テクスチャを生成する関数
+const createWallpaperTexture = (): THREE.CanvasTexture => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const context = canvas.getContext('2d')!;
+  
+  // ベース色（オフホワイト）
+  const baseColor = '#fafafa';
+  const patternColor = '#f0f0f0';
+  const subtlePattern = '#e8e8e8';
+  
+  // 背景を塗りつぶし
+  context.fillStyle = baseColor;
+  context.fillRect(0, 0, 256, 256);
+  
+  // 微細な模様パターン
+  for (let i = 0; i < 256; i += 8) {
+    for (let j = 0; j < 256; j += 8) {
+      if ((i + j) % 16 === 0) {
+        context.fillStyle = patternColor;
+        context.fillRect(i, j, 4, 4);
+      }
+    }
+  }
+  
+  // 微細なノイズを追加
+  for (let i = 0; i < 200; i++) {
+    context.fillStyle = subtlePattern;
+    context.fillRect(
+      Math.random() * 256,
+      Math.random() * 256,
+      1,
+      1
+    );
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 4);
+  
+  return texture;
+};
+
+// 木目テクスチャを生成する関数（ドア用）
+const createWoodTexture = (): THREE.CanvasTexture => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const context = canvas.getContext('2d')!;
+  
+  // 木目のベース色
+  const baseColor = '#8b4513';
+  const lightGrain = '#a0522d';
+  const darkGrain = '#654321';
+  const veryDarkGrain = '#3e2723';
+  
+  // 背景を塗りつぶし
+  context.fillStyle = baseColor;
+  context.fillRect(0, 0, 512, 512);
+  
+  // 木目の年輪パターン
+  for (let i = 0; i < 30; i++) {
+    const y = (i * 17) + Math.random() * 8;
+    const colors = [lightGrain, darkGrain, veryDarkGrain];
+    context.strokeStyle = colors[i % 3];
+    context.lineWidth = 0.5 + Math.random() * 2;
+    context.beginPath();
+    context.moveTo(0, y);
+    
+    // 波状の木目ライン
+    for (let x = 0; x <= 512; x += 10) {
+      const waveY = y + Math.sin(x * 0.02) * 3 + Math.random() * 2;
+      context.lineTo(x, waveY);
+    }
+    context.stroke();
+  }
+  
+  // 木目の縦方向のライン
+  for (let i = 0; i < 15; i++) {
+    const x = (i * 34) + Math.random() * 10;
+    context.strokeStyle = darkGrain;
+    context.lineWidth = 0.5;
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x + Math.random() * 5, 512);
+    context.stroke();
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 3);
+  
+  return texture;
+};
+
+// ガラステクスチャを生成する関数（窓用）
+const createGlassTexture = (): THREE.CanvasTexture => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const context = canvas.getContext('2d')!;
+  
+  // ガラスのベース色（薄い水色）
+  const baseColor = '#e0f2fe';
+  
+  // 背景を塗りつぶし
+  context.fillStyle = baseColor;
+  context.fillRect(0, 0, 256, 256);
+  
+  // ガラスの微細な反射パターン
+  context.globalAlpha = 0.1;
+  for (let i = 0; i < 50; i++) {
+    const x = Math.random() * 256;
+    const y = Math.random() * 256;
+    const size = Math.random() * 20 + 5;
+    
+    const gradient = context.createRadialGradient(x, y, 0, x, y, size);
+    gradient.addColorStop(0, '#ffffff');
+    gradient.addColorStop(1, 'transparent');
+    
+    context.fillStyle = gradient;
+    context.fillRect(x - size, y - size, size * 2, size * 2);
+  }
+  
+  // 微細な縦線（ガラスの筋）
+  context.globalAlpha = 0.05;
+  for (let i = 0; i < 20; i++) {
+    const x = i * 12 + Math.random() * 5;
+    context.strokeStyle = '#b3d9f2';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x + Math.random() * 3, 256);
+    context.stroke();
+  }
+  
+  context.globalAlpha = 1;
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 2);
+  
+  return texture;
+};
+
 // 壁コンポーネント
 const Wall: React.FC<{ 
   element: FloorElement; 
@@ -48,21 +262,18 @@ const Wall: React.FC<{
   onSelect: (element: FloorElement) => void;
 }> = ({ element, isSelected, onSelect }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const [wallTexture] = useState(() => createWallpaperTexture());
   
-  // 要素のデータから直接寸法を取得（mm単位）
-  const wallLength = element.width / 1000; // mmをmに変換
-  const wallThickness = element.height / 1000; // mmをmに変換
-  const wallHeight = (element.properties.height || 2400) / 1000; // mmをmに変換
+  // 新しいdimensionsベースのデータ構造から寸法を取得（mm単位）
+  const wallWidth = element.dimensions.width / 1000; // mmをmに変換
+  const wallDepth = element.dimensions.depth / 1000; // mmをmに変換  
+  const wallHeight = element.dimensions.height / 1000; // mmをmに変換
   
-  // 座標変換：平面図の左上原点からアイソメ図の中央原点へ
-  // 平面図: 左上原点、X右向き、Y下向き
-  // アイソメ図: 中央原点、X右向き、Y上向き、Z手前向き
-  const x = (element.x - 5000) / 1000; // 中央に配置するためのオフセット（10m部屋の場合）
+  // 座標変換：平面図の左上原点から3D図の中央原点へ
+  // 8m×6mの部屋の中央を原点(0,0,0)とする
+  const x = (element.x + element.dimensions.width / 2 - 4000) / 1000; // 4m(部屋の幅の半分)をオフセット
   const y = wallHeight / 2; // 床から壁の高さの半分の位置
-  const z = (element.y - 5000) / 1000; // Y軸を反転せず、中央配置のオフセット
-  const width = wallLength;
-  const height = wallHeight;
-  const depth = wallThickness;
+  const z = (element.y + element.dimensions.depth / 2 - 3000) / 1000; // 3m(部屋の奥行きの半分)をオフセット
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -73,18 +284,19 @@ const Wall: React.FC<{
     <mesh
       ref={meshRef}
       position={[x, y, z]}
-      rotation={[0, (element.rotation * Math.PI) / 180, 0]}
       onClick={handleClick}
+      renderOrder={1}
     >
-      <boxGeometry args={[width, height, depth]} />
-      <meshStandardMaterial 
-        color={isSelected ? "#3b82f6" : "#e5e7eb"} 
-        transparent={isSelected}
-        opacity={isSelected ? 0.8 : 1}
+      <boxGeometry args={[wallWidth, wallHeight, wallDepth]} />
+      <meshBasicMaterial 
+        map={isSelected ? undefined : wallTexture}
+        color={isSelected ? "#3b82f6" : "#ffffff"} 
+        transparent={false}
+        opacity={1}
       />
       {isSelected && (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(width, height, depth)]} />
+        <lineSegments renderOrder={10}>
+          <edgesGeometry args={[new THREE.BoxGeometry(wallWidth, wallHeight, wallDepth)]} />
           <lineBasicMaterial color="#1d4ed8" linewidth={2} />
         </lineSegments>
       )}
@@ -99,19 +311,17 @@ const Door: React.FC<{
   onSelect: (element: FloorElement) => void;
 }> = ({ element, isSelected, onSelect }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const [woodTexture] = useState(() => createWoodTexture());
   
-  // 要素のデータから直接寸法を取得（mm単位）
-  const doorLength = element.width / 1000; // mmをmに変換
-  const doorWidth = element.height / 1000; // mmをmに変換
-  const doorHeight = (element.properties.height || 2000) / 1000; // mmをmに変換
+  // 新しいdimensionsベースのデータ構造から寸法を取得（mm単位）
+  const doorWidth = element.dimensions.width / 1000; // mmをmに変換
+  const doorDepth = element.dimensions.depth / 1000; // mmをmに変換  
+  const doorHeight = element.dimensions.height / 1000; // mmをmに変換
   
-  // 座標変換：平面図の左上原点からアイソメ図の中央原点へ
-  const x = (element.x - 5000) / 1000; // 中央に配置するためのオフセット（10m部屋の場合）
+  // 座標変換：平面図の左上原点から3D図の中央原点へ
+  const x = (element.x + element.dimensions.width / 2 - 4000) / 1000;
   const y = doorHeight / 2; // 床からドアの高さの半分の位置
-  const z = (element.y - 5000) / 1000; // Y軸を反転せず、中央配置のオフセット
-  const width = doorLength;
-  const height = doorHeight;
-  const depth = doorWidth;
+  const z = (element.y + element.dimensions.depth / 2 - 3000) / 1000;
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -123,28 +333,29 @@ const Door: React.FC<{
       {/* ドア枠 */}
       <mesh
         position={[x, y, z]}
-        rotation={[0, (element.rotation * Math.PI) / 180, 0]}
+        renderOrder={2}
       >
-        <boxGeometry args={[width, height, depth]} />
-        <meshStandardMaterial 
-          color={isSelected ? "#f59e0b" : "#8b4513"} 
-          transparent={isSelected}
-          opacity={isSelected ? 0.8 : 1}
+        <boxGeometry args={[doorWidth, doorHeight, doorDepth]} />
+        <meshBasicMaterial 
+          map={isSelected ? undefined : woodTexture}
+          color={isSelected ? "#d97706" : "#ffffff"} 
+          transparent={false}
+          opacity={1}
         />
         {isSelected && (
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(width, height, depth)]} />
+          <lineSegments position={[0, 0, 0.002]} renderOrder={10}>
+            <edgesGeometry args={[new THREE.BoxGeometry(doorWidth, doorHeight, doorDepth)]} />
             <lineBasicMaterial color="#d97706" linewidth={2} />
           </lineSegments>
         )}
       </mesh>
       {/* ドアハンドル */}
       <mesh
-        position={[x + width * 0.3, y - height * 0.1, z]}
-        rotation={[0, (element.rotation * Math.PI) / 180, 0]}
+        position={[x + doorWidth * 0.3, y - doorHeight * 0.1, z + doorDepth * 0.6]}
+        renderOrder={3}
       >
         <sphereGeometry args={[0.02]} />
-        <meshStandardMaterial color="#ffd700" />
+        <meshBasicMaterial color="#c4a484" />
       </mesh>
     </group>
   );
@@ -157,20 +368,18 @@ const Window: React.FC<{
   onSelect: (element: FloorElement) => void;
 }> = ({ element, isSelected, onSelect }) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const [glassTexture] = useState(() => createGlassTexture());
   
-  // 要素のデータから直接寸法を取得（mm単位）
-  const windowLength = element.width / 1000; // mmをmに変換
-  const windowWidth = element.height / 1000; // mmをmに変換
-  const windowHeight = (element.properties.height || 1200) / 1000; // mmをmに変換
-  const windowFromFloor = (element.properties.heightFromFloor || 800) / 1000; // 床からの高さ
+  // 新しいdimensionsベースのデータ構造から寸法を取得（mm単位）
+  const windowWidth = element.dimensions.width / 1000; // mmをmに変換
+  const windowDepth = element.dimensions.depth / 1000; // mmをmに変換  
+  const windowHeight = element.dimensions.height / 1000; // mmをmに変換
+  const windowFromFloor = (element.properties.heightFrom || 0) / 1000; // 床からの高さ
   
-  // 座標変換：平面図の左上原点からアイソメ図の中央原点へ
-  const x = (element.x - 5000) / 1000; // 中央に配置するためのオフセット（10m部屋の場合）
+  // 座標変換：平面図の左上原点から3D図の中央原点へ
+  const x = (element.x + element.dimensions.width / 2 - 4000) / 1000;
   const y = windowFromFloor + windowHeight / 2; // 床からの高さ + 窓の高さの半分
-  const z = (element.y - 5000) / 1000; // Y軸を反転せず、中央配置のオフセット
-  const width = windowLength;
-  const height = windowHeight;
-  const depth = windowWidth;
+  const z = (element.y + element.dimensions.depth / 2 - 3000) / 1000;
 
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -179,64 +388,86 @@ const Window: React.FC<{
 
   return (
     <group onClick={handleClick}>
-      {/* 窓枠 */}
+      {/* 窓枠 - メインガラス */}
       <mesh
         position={[x, y, z]}
-        rotation={[0, (element.rotation * Math.PI) / 180, 0]}
+        renderOrder={4}
       >
-        <boxGeometry args={[width, height, depth]} />
-        <meshStandardMaterial 
-          color={isSelected ? "#10b981" : "#87ceeb"} 
+        <boxGeometry args={[windowWidth, windowHeight, windowDepth]} />
+        <meshBasicMaterial 
+          map={isSelected ? undefined : glassTexture}
+          color={isSelected ? "#0ea5e9" : "#ffffff"} 
           transparent 
-          opacity={isSelected ? 0.9 : 0.7} 
+          opacity={isSelected ? 0.7 : 0.4}
+          depthWrite={false}
         />
         {isSelected && (
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(width, height, depth)]} />
-            <lineBasicMaterial color="#059669" linewidth={2} />
+          <lineSegments position={[0, 0, 0.002]} renderOrder={10}>
+            <edgesGeometry args={[new THREE.BoxGeometry(windowWidth, windowHeight, windowDepth)]} />
+            <lineBasicMaterial color="#0284c7" linewidth={2} />
           </lineSegments>
         )}
       </mesh>
-      {/* 窓枠の境界線 */}
+      {/* 窓枠 - 上下の枠 */}
       <mesh
-        position={[x, y - height / 2 + 0.01, z]}
-        rotation={[0, (element.rotation * Math.PI) / 180, 0]}
+        position={[x, y - windowHeight / 2 - 0.02, z]}
+        renderOrder={5}
       >
-        <boxGeometry args={[width, 0.02, depth]} />
-        <meshStandardMaterial color="#4b5563" />
+        <boxGeometry args={[windowWidth + 0.02, 0.03, windowDepth + 0.02]} />
+        <meshBasicMaterial color="#6b7280" />
       </mesh>
       <mesh
-        position={[x, y + height / 2 - 0.01, z]}
-        rotation={[0, (element.rotation * Math.PI) / 180, 0]}
+        position={[x, y + windowHeight / 2 + 0.02, z]}
+        renderOrder={5}
       >
-        <boxGeometry args={[width, 0.02, depth]} />
-        <meshStandardMaterial color="#4b5563" />
+        <boxGeometry args={[windowWidth + 0.02, 0.03, windowDepth + 0.02]} />
+        <meshBasicMaterial color="#6b7280" />
+      </mesh>
+      {/* 窓枠 - 左右の枠 */}
+      <mesh
+        position={[x - windowWidth / 2 - 0.02, y, z]}
+        renderOrder={5}
+      >
+        <boxGeometry args={[0.03, windowHeight + 0.06, windowDepth + 0.02]} />
+        <meshBasicMaterial color="#6b7280" />
+      </mesh>
+      <mesh
+        position={[x + windowWidth / 2 + 0.02, y, z]}
+        renderOrder={5}
+      >
+        <boxGeometry args={[0.03, windowHeight + 0.06, windowDepth + 0.02]} />
+        <meshBasicMaterial color="#6b7280" />
       </mesh>
     </group>
   );
 };
 
 // 床コンポーネント
-const Floor: React.FC = () => {
+const Floor: React.FC<{ visible: boolean }> = ({ visible }) => {
   const floorSize = 10; // 10m×10mの正方形
+  const [texture] = useState(() => createFlooringTexture());
+  
+  if (!visible) return null;
   
   return (
-    <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={0}>
       <planeGeometry args={[floorSize, floorSize]} />
-      <meshStandardMaterial color="#f5f5f4" />
+      <meshBasicMaterial map={texture} />
     </mesh>
   );
 };
 
 // 天井コンポーネント
-const Ceiling: React.FC = () => {
+const Ceiling: React.FC<{ visible: boolean }> = ({ visible }) => {
   const ceilingSize = 10; // 10m×10mの正方形
   const ceilingHeight = 2.4; // 2.4mの高さ
   
+  if (!visible) return null;
+  
   return (
-    <mesh position={[0, ceilingHeight, 0]} rotation={[Math.PI / 2, 0, 0]}>
+    <mesh position={[0, ceilingHeight, 0]} rotation={[Math.PI / 2, 0, 0]} renderOrder={0}>
       <planeGeometry args={[ceilingSize, ceilingSize]} />
-      <meshStandardMaterial color="#ffffff" side={2} />
+      <meshBasicMaterial color="#fafafa" side={2} />
     </mesh>
   );
 };
@@ -245,11 +476,12 @@ const Ceiling: React.FC = () => {
 const Scene: React.FC<{ 
   floors: Floor[]; 
   propertyInfo: PropertyInfo; 
-  isWireframe: boolean;
+  showGrid: boolean;
   selectedElement: FloorElement | null;
   onElementSelect: (element: FloorElement) => void;
   onBackgroundClick: () => void;
-}> = ({ floors, propertyInfo, isWireframe, selectedElement, onElementSelect, onBackgroundClick }) => {
+  visibility: VisibilityState;
+}> = ({ floors, propertyInfo, showGrid, selectedElement, onElementSelect, onBackgroundClick, visibility }) => {
   
   const handleBackgroundClick = () => {
     onBackgroundClick();
@@ -257,43 +489,42 @@ const Scene: React.FC<{
 
   return (
     <>
-      {/* 環境光 */}
-      <ambientLight intensity={0.6} />
-      {/* 直接光 */}
-      <directionalLight position={[10, 10, 5]} intensity={0.8} />
-      <directionalLight position={[-10, 10, -5]} intensity={0.4} />
+      {/* シンプルな環境光のみ */}
+      <ambientLight intensity={0.8} />
       
       {/* 床 */}
-      <Floor />
+      <Floor visible={visibility.floor} />
       
       {/* 天井 */}
-      <Ceiling />
+      <Ceiling visible={visibility.ceiling} />
       
       {/* グリッド */}
-      <Grid 
-        args={[20, 20]} 
-        cellSize={1} 
-        cellThickness={0.5} 
-        cellColor="#d1d5db" 
-        sectionSize={5} 
-        sectionThickness={1} 
-        sectionColor="#9ca3af" 
-        fadeDistance={30} 
-        fadeStrength={1} 
-        followCamera={false} 
-        infiniteGrid={true}
-      />
+      {showGrid && (
+        <Grid 
+          args={[20, 20]} 
+          cellSize={1} 
+          cellThickness={0.5} 
+          cellColor="#d1d5db" 
+          sectionSize={5} 
+          sectionThickness={1} 
+          sectionColor="#9ca3af" 
+          fadeDistance={30} 
+          fadeStrength={1} 
+          followCamera={false} 
+          infiniteGrid={true}
+        />
+      )}
       
       {/* 床の要素を描画 */}
       {floors.map((floor) =>
         floor.elements.map((element) => {
           const isSelected = selectedElement?.id === element.id;
           
-          if (element.type === 'wall') {
+          if (element.type === 'wall' && visibility.walls) {
             return <Wall key={element.id} element={element} isSelected={isSelected} onSelect={onElementSelect} />;
-          } else if (element.type === 'door') {
+          } else if (element.type === 'door' && visibility.doors) {
             return <Door key={element.id} element={element} isSelected={isSelected} onSelect={onElementSelect} />;
-          } else if (element.type === 'window') {
+          } else if (element.type === 'window' && visibility.windows) {
             return <Window key={element.id} element={element} isSelected={isSelected} onSelect={onElementSelect} />;
           }
           return null;
@@ -315,8 +546,8 @@ const Scene: React.FC<{
 const ThreeDView: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const controlsRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<any>(null);
   
   const floors: Floor[] = location.state?.floors || [];
   const propertyInfo: PropertyInfo = location.state?.propertyInfo || {
@@ -330,12 +561,18 @@ const ThreeDView: React.FC = () => {
     specialFeatures: []
   };
 
-  const [isWireframe, setIsWireframe] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
   const [selectedElement, setSelectedElement] = useState<FloorElement | null>(null);
-  const [isEditingProperties, setIsEditingProperties] = useState(false);
-  const [editingProperties, setEditingProperties] = useState<any>({});
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 });
+  const [showGrid, setShowGrid] = useState(true);
+  
+  // 表示制御の状態
+  const [visibility, setVisibility] = useState<VisibilityState>({
+    walls: true,
+    doors: true,
+    windows: true,
+    floor: true,
+    ceiling: false,
+  });
 
   // Canvas サイズの動的更新
   useEffect(() => {
@@ -349,13 +586,8 @@ const ThreeDView: React.FC = () => {
       }
     };
 
-    // 初期サイズ設定
     updateCanvasSize();
-
-    // ウィンドウリサイズ時のサイズ更新
     window.addEventListener('resize', updateCanvasSize);
-    
-    // 少し遅延してもう一度サイズを更新（DOM構築完了後）
     const timer = setTimeout(updateCanvasSize, 100);
 
     return () => {
@@ -364,107 +596,24 @@ const ThreeDView: React.FC = () => {
     };
   }, []);
 
-  // デバッグ用の出力
-  useEffect(() => {
-    console.log('3D View - Floors:', floors);
-    console.log('3D View - Property Info:', propertyInfo);
-    console.log('3D View - Canvas Size:', canvasSize);
-    if (floors.length > 0) {
-      console.log('3D View - Elements in first floor:', floors[0].elements);
-    }
-  }, [floors, propertyInfo, canvasSize]);
-
   // カメラリセット
   const resetCamera = () => {
     if (controlsRef.current) {
       controlsRef.current.reset();
-      // カメラ位置もリセット
-      controlsRef.current.object.position.set(10, 10, 10);
-      controlsRef.current.object.lookAt(0, 0, 0);
-      controlsRef.current.update();
+      console.log('カメラをリセットしました');
     }
-  };
-
-  // ビュー変更
-  const changeView = (position: [number, number, number]) => {
-    if (controlsRef.current) {
-      controlsRef.current.object.position.set(position[0], position[1], position[2]);
-      controlsRef.current.object.lookAt(0, 0, 0);
-      controlsRef.current.update();
-    }
-  };
-
-  // ワイヤーフレーム切替
-  const toggleWireframe = () => {
-    setIsWireframe(!isWireframe);
-  };
-
-  // グリッド切替
-  const toggleGrid = () => {
-    setShowGrid(!showGrid);
   };
 
   // 要素選択処理
   const handleElementSelect = (element: FloorElement) => {
     console.log('Element selected:', element);
     setSelectedElement(element);
-    setIsEditingProperties(false);
-    
-    // プロパティを編集用の状態にコピー
-    setEditingProperties({
-      x: element.x,
-      y: element.y,
-      width: element.width,
-      height: element.height,
-      length: element.properties.length || element.width,
-      thickness: element.properties.thickness || element.height,
-      elementHeight: element.properties.height || 2400,
-      material: element.properties.material || '',
-      ...element.properties
-    });
   };
 
   // 背景クリック処理（選択解除）
   const handleBackgroundClick = () => {
     console.log('Background clicked, deselecting element');
     setSelectedElement(null);
-    setIsEditingProperties(false);
-    setEditingProperties({});
-  };
-
-  // プロパティ変更処理
-  const handlePropertyChange = (key: string, value: string | number) => {
-    setEditingProperties((prev: any) => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  // 変更を保存
-  const saveChanges = () => {
-    if (!selectedElement) return;
-
-    // 実際の要素を更新（実際のアプリケーションではAPIコールが必要）
-    console.log('Saving changes:', editingProperties);
-    
-    // 一時的にローカル状態を更新（デモ用）
-    const updatedElement = {
-      ...selectedElement,
-      x: parseFloat(editingProperties.x) || selectedElement.x,
-      y: parseFloat(editingProperties.y) || selectedElement.y,
-      width: parseFloat(editingProperties.length) || selectedElement.width,
-      height: parseFloat(editingProperties.thickness) || selectedElement.height,
-      properties: {
-        ...selectedElement.properties,
-        length: parseFloat(editingProperties.length) || selectedElement.properties.length,
-        thickness: parseFloat(editingProperties.thickness) || selectedElement.properties.thickness,
-        height: parseFloat(editingProperties.elementHeight) || selectedElement.properties.height,
-        material: editingProperties.material || selectedElement.properties.material
-      }
-    };
-    
-    setSelectedElement(updatedElement);
-    alert('変更を保存しました（デモ用）');
   };
 
   // 前の画面に戻る
@@ -472,39 +621,65 @@ const ThreeDView: React.FC = () => {
     navigate(-1);
   };
 
+  // 表示制御の切り替え
+  const toggleVisibility = (key: keyof VisibilityState) => {
+    setVisibility(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  // 平面図に移動
+  const handleGoToFloorPlan = () => {
+    navigate('/floor-plan-editor', {
+      state: {
+        propertyInfo,
+        elements: floors[0]?.elements || []
+      }
+    });
+  };
+
+  // アイソメ図に移動
+  const handleGoToIsometric = () => {
+    navigate('/isometric-view', {
+      state: {
+        floors,
+        propertyInfo
+      }
+    });
+  };
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" style={{ height: 'calc(100vh - 144px)' }}>
       {/* サブヘッダー - ツールバー */}
       <div className="bg-white border-b border-gray-200 px-4 py-2 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {/* 戻るボタン */}
+          <div className="flex items-center space-x-1">
+            {/* ビュー切り替えボタン */}
             <button
-              onClick={handleGoBack}
-              className="flex items-center text-gray-600 hover:text-gray-900 mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="前の画面に戻る"
+              onClick={handleGoToFloorPlan}
+              className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors"
+              title="平面図に移動"
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              <span className="text-sm font-medium">戻る</span>
+              <Grid3X3 className="h-4 w-4" />
             </button>
-            <h2 className="text-lg font-semibold text-gray-900">3Dビュー</h2>
+            <button
+              onClick={handleGoToIsometric}
+              className="p-2 bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 rounded-lg transition-colors"
+              title="アイソメ図に移動"
+            >
+              <Box className="h-4 w-4" />
+            </button>
           </div>
           
           <div className="flex items-center space-x-1">
             {/* ツールボタン */}
             <button
-              onClick={toggleGrid}
+              onClick={() => setShowGrid(!showGrid)}
               className={`p-2 rounded-lg transition-colors ${showGrid ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
               title="グリッド表示切替"
             >
-              <Grid3X3 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={toggleWireframe}
-              className={`p-2 rounded-lg transition-colors ${isWireframe ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
-              title="ワイヤーフレーム切替"
-            >
-              <Box className="h-4 w-4" />
+              <Grid2X2 className="h-4 w-4" />
             </button>
             <button
               onClick={resetCamera}
@@ -518,7 +693,7 @@ const ThreeDView: React.FC = () => {
       </div>
 
       {/* メイン3Dビューエリア */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative overflow-hidden">
         <div 
           ref={containerRef}
           className="w-full h-full"
@@ -536,10 +711,11 @@ const ThreeDView: React.FC = () => {
             <Scene 
               floors={floors}
               propertyInfo={propertyInfo}
-              isWireframe={isWireframe}
+              showGrid={showGrid}
               selectedElement={selectedElement}
               onElementSelect={handleElementSelect}
               onBackgroundClick={handleBackgroundClick}
+              visibility={visibility}
             />
             <OrbitControls 
               ref={controlsRef}
@@ -551,226 +727,127 @@ const ThreeDView: React.FC = () => {
           </Canvas>
         </div>
 
-        {/* 選択された要素の詳細表示 */}
+        {/* 要素選択パネル（オーバーレイ） */}
         {selectedElement && (
-          <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl shadow-lg border max-w-lg mx-auto" style={{ height: '400px' }}>
-            {/* ヘッダー（固定） */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {selectedElement.type === 'wall' && '壁'}
-                {selectedElement.type === 'door' && 'ドア'}  
-                {selectedElement.type === 'window' && '窓'}
-                の編集
-              </h3>
-              <button
-                onClick={handleBackgroundClick}
-                className="p-1 text-gray-600 hover:text-gray-900 rounded flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            
-            {/* スクロール可能なコンテンツエリア */}
-            <div className="p-4 overflow-y-auto" style={{ height: 'calc(400px - 120px)' }}>
-              <div className="space-y-4">
-                {/* サイズ */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">サイズ (mm)</h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">
-                        {selectedElement.type === 'wall' ? '長さ' : '幅'}
-                      </label>
-                      <input
-                        type="number"
-                        value={editingProperties.length || ''}
-                        onChange={(e) => handlePropertyChange('length', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        min="100"
-                        step="50"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">
-                        {selectedElement.type === 'wall' ? '厚さ' : '奥行き'}
-                      </label>
-                      <input
-                        type="number"
-                        value={editingProperties.thickness || ''}
-                        onChange={(e) => handlePropertyChange('thickness', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        min="10"
-                        step="10"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">高さ</label>
-                      <input
-                        type="number"
-                        value={editingProperties.elementHeight || ''}
-                        onChange={(e) => handlePropertyChange('elementHeight', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        min="100"
-                        step="100"
-                      />
-                    </div>
+          <div 
+            className="absolute bottom-4 left-4 right-4 bg-white border border-gray-300 rounded-lg shadow-xl z-20 max-h-40 overflow-y-auto"
+            style={{ 
+              backdropFilter: 'blur(10px)',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)'
+            }}
+          >
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Box className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">
+                      {selectedElement.type === 'wall' ? '壁' : 
+                       selectedElement.type === 'door' ? 'ドア' : 
+                       selectedElement.type === 'window' ? '窓' : selectedElement.type}
+                    </h3>
+                    <p className="text-xs text-gray-600">
+                      {Math.round(selectedElement.dimensions.width)}mm × {Math.round(selectedElement.dimensions.depth)}mm × {Math.round(selectedElement.dimensions.height)}mm
+                    </p>
                   </div>
                 </div>
-
-                {/* 位置 */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">位置 (mm)</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">X座標</label>
-                      <input
-                        type="number"
-                        value={editingProperties.x || ''}
-                        onChange={(e) => handlePropertyChange('x', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        step="10"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600 mb-1">Y座標</label>
-                      <input
-                        type="number"
-                        value={editingProperties.y || ''}
-                        onChange={(e) => handlePropertyChange('y', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        step="10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 壁の場合のプロパティ */}
-                {selectedElement.type === 'wall' && (
-                  <>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">壁紙</h4>
-                      <select
-                        value={editingProperties.wallpaper || ''}
-                        onChange={(e) => handlePropertyChange('wallpaper', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">選択してください</option>
-                        <option value="white">ホワイト</option>
-                        <option value="beige">ベージュ</option>
-                        <option value="light_gray">ライトグレー</option>
-                        <option value="cream">クリーム</option>
-                        <option value="wood_pattern">木目調</option>
-                        <option value="stone_pattern">石調</option>
-                      </select>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">塗装</h4>
-                      <select
-                        value={editingProperties.paint || ''}
-                        onChange={(e) => handlePropertyChange('paint', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">選択してください</option>
-                        <option value="matt">マット</option>
-                        <option value="satin">サテン</option>
-                        <option value="gloss">グロス</option>
-                        <option value="eggshell">エッグシェル</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-
-                {/* ドアの場合のプロパティ */}
-                {selectedElement.type === 'door' && (
-                  <>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">ドアタイプ</h4>
-                      <select
-                        value={editingProperties.doorType || ''}
-                        onChange={(e) => handlePropertyChange('doorType', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">選択してください</option>
-                        <option value="swing">開き戸</option>
-                        <option value="sliding">引き戸</option>
-                        <option value="bi_fold">二つ折り</option>
-                        <option value="pocket">引き込み戸</option>
-                      </select>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">ハンドルタイプ</h4>
-                      <select
-                        value={editingProperties.handleType || ''}
-                        onChange={(e) => handlePropertyChange('handleType', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">選択してください</option>
-                        <option value="lever">レバーハンドル</option>
-                        <option value="knob">ノブハンドル</option>
-                        <option value="pull">プルハンドル</option>
-                        <option value="push_pull">プッシュプル</option>
-                      </select>
-                    </div>
-                  </>
-                )}
-
-                {/* 窓の場合のプロパティ */}
-                {selectedElement.type === 'window' && (
-                  <>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">窓タイプ</h4>
-                      <select
-                        value={editingProperties.windowType || ''}
-                        onChange={(e) => handlePropertyChange('windowType', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">選択してください</option>
-                        <option value="sliding">引き違い窓</option>
-                        <option value="casement">開き窓</option>
-                        <option value="awning">突き出し窓</option>
-                        <option value="fixed">FIX窓</option>
-                        <option value="bay">出窓</option>
-                      </select>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">ガラスタイプ</h4>
-                      <select
-                        value={editingProperties.glassType || ''}
-                        onChange={(e) => handlePropertyChange('glassType', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="">選択してください</option>
-                        <option value="single">単板ガラス</option>
-                        <option value="double">複層ガラス</option>
-                        <option value="triple">三層ガラス</option>
-                        <option value="low_e">Low-Eガラス</option>
-                        <option value="frosted">すりガラス</option>
-                      </select>
-                    </div>
-                  </>
-                )}
+                <button
+                  onClick={() => setSelectedElement(null)}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  title="選択解除"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            </div>
-
-            {/* フッター（固定） */}
-            <div className="p-4 border-t border-gray-200">
-              <div className="flex space-x-2">
-                <button
-                  onClick={saveChanges}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  保存
-                </button>
-                <button
-                  onClick={handleBackgroundClick}
-                  className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
-                >
-                  キャンセル
-                </button>
+              
+              {/* 要素の詳細プロパティ */}
+              <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <span className="text-gray-500">材質:</span>
+                  <span className="ml-1 text-gray-900">{selectedElement.properties.material || '未設定'}</span>
+                </div>
+                {selectedElement.type === 'window' && selectedElement.properties.heightFrom && (
+                  <div>
+                    <span className="text-gray-500">床からの高さ:</span>
+                    <span className="ml-1 text-gray-900">{selectedElement.properties.heightFrom}mm</span>
+                  </div>
+                )}
+                {selectedElement.type === 'door' && selectedElement.properties.swingDirection && (
+                  <div>
+                    <span className="text-gray-500">開き方向:</span>
+                    <span className="ml-1 text-gray-900">{selectedElement.properties.swingDirection}</span>
+                  </div>
+                )}
+                {selectedElement.type === 'window' && selectedElement.properties.glassType && (
+                  <div>
+                    <span className="text-gray-500">ガラスタイプ:</span>
+                    <span className="ml-1 text-gray-900">{selectedElement.properties.glassType}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
+      </div>
+
+      {/* 表示制御パネル（固定フッター） */}
+      <div className="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 z-10">
+        <div className="flex items-center justify-center">
+          <div className="flex items-center space-x-6 bg-gray-50 px-4 py-2 rounded-lg">
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="show-walls"
+                checked={visibility.walls}
+                onChange={() => toggleVisibility('walls')}
+                className="w-4 h-4 text-blue-600 rounded"
+              />
+              <label htmlFor="show-walls" className="text-sm text-gray-700">壁</label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="show-doors"
+                checked={visibility.doors}
+                onChange={() => toggleVisibility('doors')}
+                className="w-4 h-4 text-blue-600 rounded"
+              />
+              <label htmlFor="show-doors" className="text-sm text-gray-700">ドア</label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="show-windows"
+                checked={visibility.windows}
+                onChange={() => toggleVisibility('windows')}
+                className="w-4 h-4 text-blue-600 rounded"
+              />
+              <label htmlFor="show-windows" className="text-sm text-gray-700">窓</label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="show-floor"
+                checked={visibility.floor}
+                onChange={() => toggleVisibility('floor')}
+                className="w-4 h-4 text-blue-600 rounded"
+              />
+              <label htmlFor="show-floor" className="text-sm text-gray-700">床</label>
+            </div>
+            <div className="flex items-center space-x-1">
+              <input
+                type="checkbox"
+                id="show-ceiling"
+                checked={visibility.ceiling}
+                onChange={() => toggleVisibility('ceiling')}
+                className="w-4 h-4 text-blue-600 rounded"
+              />
+              <label htmlFor="show-ceiling" className="text-sm text-gray-700">天井</label>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

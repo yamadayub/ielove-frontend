@@ -138,7 +138,14 @@ const PropertyInfoForm: React.FC = () => {
   ];
 
   return (
-    <div className="h-full bg-gray-50 overflow-y-auto">
+    <div 
+      className="overflow-y-auto bg-gray-50"
+      style={{ 
+        height: 'calc(100vh - 144px)',
+        overflowY: 'scroll',
+        WebkitOverflowScrolling: 'touch'
+      }}
+    >
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center space-x-3 mb-4">
@@ -288,7 +295,7 @@ const PropertyInfoForm: React.FC = () => {
         </form>
 
         {/* 注意事項 */}
-        <div className="mt-8 sm:mt-12 bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
+        <div className="mt-8 sm:mt-12 bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 mb-8">
           <div className="flex">
             <div className="flex-shrink-0">
               <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 rounded-full flex items-center justify-center">

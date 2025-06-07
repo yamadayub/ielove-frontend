@@ -44,6 +44,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/property-type" element={<PropertyTypeSelection />} />
             <Route path="/property-info" element={<PropertyInfoForm />} />
+            <Route path="/property-info-apartment" element={<PropertyInfoForm />} />
             <Route path="/floor-plan-editor" element={<FloorPlanEditor />} />
             <Route path="/3d-view" element={<ThreeDView />} />
             <Route path="/isometric-view" element={<IsometricView />} />
