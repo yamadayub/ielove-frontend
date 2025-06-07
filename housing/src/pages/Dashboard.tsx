@@ -11,14 +11,14 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex items-center justify-center px-4">
+    <div className="flex items-center justify-center px-4" style={{ minHeight: 'calc(100vh - 144px)' }}>
       <div className="text-center">
         {/* ロゴ */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-center">
           <img 
             src={logoImage} 
             alt="ietsuku logo" 
-            className="w-24 h-24 sm:w-32 sm:h-32 mx-auto"
+            className="w-24 h-24 sm:w-32 sm:h-32 object-contain"
           />
         </div>
         

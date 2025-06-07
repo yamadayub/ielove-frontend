@@ -37,7 +37,7 @@ const PropertyTypeSelection: React.FC = () => {
             className="group bg-white rounded-2xl p-8 border border-gray-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] text-center"
           >
             <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Home className="w-10 h-10 text-blue-600" />
+              <Home className="w-10 h-10 text-blue-600 flex-shrink-0" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
               戸建て
@@ -53,7 +53,7 @@ const PropertyTypeSelection: React.FC = () => {
             className="group bg-white rounded-2xl p-8 border border-gray-200 cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] text-center"
           >
             <div className="w-20 h-20 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Building2 className="w-10 h-10 text-green-600" />
+              <Building2 className="w-10 h-10 text-green-600 flex-shrink-0" />
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
               マンションリノベーション
