@@ -78,6 +78,17 @@ const FloorPlanEditor: React.FC = () => {
   // 入力フィールド専用の状態を追加
   const [inputValues, setInputValues] = useState<{[key: string]: string}>({});
 
+  // プロパティパネルのスクロール設定を確実にする
+  useEffect(() => {
+    const scrollElement = document.querySelector('.property-scroll-container') as HTMLElement;
+    if (scrollElement) {
+      scrollElement.style.overflow = 'auto';
+      scrollElement.style.overflowY = 'scroll';
+      scrollElement.style.touchAction = 'auto';
+      (scrollElement.style as any).webkitOverflowScrolling = 'touch';
+    }
+  }, [selectedElementId]);
+
   // ウィンドウサイズ変更時のステージサイズ更新
   useEffect(() => {
     const updateStageSize = () => {
@@ -289,9 +300,13 @@ const FloorPlanEditor: React.FC = () => {
       const value = element.properties[key];
       newInputValues[key] = value !== undefined ? String(value) : '';
     });
-    // 基本的なサイズ情報も追加
+    // 基本的なサイズ・座標・高さ情報も追加
+    newInputValues.elementX = String(element.x);
+    newInputValues.elementY = String(element.y);
     newInputValues.elementWidth = String(element.dimensions.width);
+    newInputValues.elementDepth = String(element.dimensions.depth);
     newInputValues.elementHeight = String(element.dimensions.depth);
+    newInputValues.elementRealHeight = String(element.dimensions.height);
     setInputValues(newInputValues);
   };
 
@@ -337,8 +352,12 @@ const FloorPlanEditor: React.FC = () => {
             const value = updatedElement.properties[key];
             newInputValues[key] = value !== undefined ? String(value) : '';
           });
+          newInputValues.elementX = String(updatedElement.x);
+          newInputValues.elementY = String(updatedElement.y);
           newInputValues.elementWidth = String(updatedElement.dimensions.width);
+          newInputValues.elementDepth = String(updatedElement.dimensions.depth);
           newInputValues.elementHeight = String(updatedElement.dimensions.depth);
+          newInputValues.elementRealHeight = String(updatedElement.dimensions.height);
           setInputValues(newInputValues);
         }
 
@@ -368,10 +387,14 @@ const FloorPlanEditor: React.FC = () => {
           }
         };
 
-        // 基本的なサイズを更新（dimensions直接操作）
+        // 基本的なサイズ・座標を更新
         const numericValue = parseFloat(value);
-        if (!isNaN(numericValue) && numericValue > 0) {
-          if (property === 'elementWidth') {
+        if (!isNaN(numericValue) && numericValue >= 0) {
+          if (property === 'elementX') {
+            updatedElement.x = numericValue;
+          } else if (property === 'elementY') {
+            updatedElement.y = numericValue;
+          } else if (property === 'elementWidth') {
             updatedElement.dimensions.width = numericValue;
           } else if (property === 'elementHeight') {
             updatedElement.dimensions.depth = numericValue;
@@ -396,9 +419,21 @@ const FloorPlanEditor: React.FC = () => {
     e.target.x(newX);
     e.target.y(newY);
 
+    const newXMm = pixelsToMm(newX);
+    const newYMm = pixelsToMm(newY);
+
     setElements(prev => prev.map(el => 
-      el.id === elementId ? { ...el, x: pixelsToMm(newX), y: pixelsToMm(newY) } : el
+      el.id === elementId ? { ...el, x: newXMm, y: newYMm } : el
     ));
+
+    // 選択された要素の場合、入力フィールドの座標値も更新
+    if (elementId === selectedElementId) {
+      setInputValues(prev => ({
+        ...prev,
+        elementX: String(newXMm),
+        elementY: String(newYMm)
+      }));
+    }
   };
 
   // 要素を描画
@@ -464,8 +499,12 @@ const FloorPlanEditor: React.FC = () => {
         const value = element.properties[key];
         newInputValues[key] = value !== undefined ? String(value) : '';
       });
+      newInputValues.elementX = String(element.x);
+      newInputValues.elementY = String(element.y);
       newInputValues.elementWidth = String(element.dimensions.width);
+      newInputValues.elementDepth = String(element.dimensions.depth);
       newInputValues.elementHeight = String(element.dimensions.depth);
+      newInputValues.elementRealHeight = String(element.dimensions.height);
       setInputValues(newInputValues);
     };
 
@@ -812,7 +851,8 @@ const FloorPlanEditor: React.FC = () => {
           {/* プロパティパネル（オーバーレイ表示） */}
           {selectedElement && (
             <div 
-              className="absolute bottom-0 left-0 right-0 h-1/3 bg-white/95 backdrop-blur-sm border-t border-gray-200 flex flex-col shadow-2xl transform transition-transform duration-300 ease-out"
+              className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 flex flex-col shadow-2xl transform transition-transform duration-300 ease-out"
+              style={{ height: '40vh', minHeight: '300px', maxHeight: '500px' }}
               onClick={(e) => {
                 // プロパティパネル内でのクリックのみ伝播を防ぐ
                 e.stopPropagation();
@@ -869,101 +909,156 @@ const FloorPlanEditor: React.FC = () => {
               </div>
               
               {/* スクロール可能なパネル内容 */}
-              <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div 
+                className="flex-1 p-2 overflow-auto property-scroll-container"
+                style={{ 
+                  height: 'calc(40vh - 80px)',
+                  maxHeight: 'calc(40vh - 80px)',
+                  minHeight: '220px',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#cbd5e1 #f1f5f9'
+                }}
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                   {/* 基本情報 */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3">
-                    <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center">
-                      <div className="w-4 h-4 bg-blue-200 rounded mr-2"></div>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-2">
+                    <h4 className="text-xs font-semibold text-blue-900 mb-1 flex items-center">
+                      <div className="w-3 h-3 bg-blue-200 rounded mr-1"></div>
                       基本情報
                     </h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-white rounded-lg p-2">
-                        <span className="block text-xs text-blue-700 font-medium mb-1">位置 X</span>
-                        <span className="text-sm font-bold text-blue-900">{Math.round(selectedElement.x)}mm</span>
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="bg-white rounded p-1">
+                        <label className="block text-xs text-blue-700 font-medium mb-0.5">X (mm)</label>
+                        <input
+                          type="number"
+                          value={inputValues.elementX || selectedElement.x || ''}
+                          onChange={(e) => updateElementPropertyFixed('elementX', e.target.value)}
+                          className="w-full text-xs font-bold text-blue-900 bg-transparent border-0 p-0 focus:ring-1 focus:ring-blue-400 rounded"
+                          placeholder="X座標"
+                          step="10"
+                        />
                       </div>
-                      <div className="bg-white rounded-lg p-2">
-                        <span className="block text-xs text-blue-700 font-medium mb-1">位置 Y</span>
-                        <span className="text-sm font-bold text-blue-900">{Math.round(selectedElement.y)}mm</span>
+                      <div className="bg-white rounded p-1">
+                        <label className="block text-xs text-blue-700 font-medium mb-0.5">Y (mm)</label>
+                        <input
+                          type="number"
+                          value={inputValues.elementY || selectedElement.y || ''}
+                          onChange={(e) => updateElementPropertyFixed('elementY', e.target.value)}
+                          className="w-full text-xs font-bold text-blue-900 bg-transparent border-0 p-0 focus:ring-1 focus:ring-blue-400 rounded"
+                          placeholder="Y座標"
+                          step="10"
+                        />
                       </div>
-                      <div className="bg-white rounded-lg p-2 col-span-2">
-                        <span className="block text-xs text-blue-700 font-medium mb-1">サイズ</span>
-                        <span className="text-sm font-bold text-blue-900">{Math.round(selectedElement.dimensions.width)}×{Math.round(selectedElement.dimensions.depth)}mm</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* 基本サイズ編集 */}
-                  <div>
-                    <h4 className="text-base font-semibold text-gray-900 border-b pb-2 mb-3">基本サイズ</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-gray-700">幅 (mm)</label>
+                      <div className="bg-white rounded p-1">
+                        <label className="block text-xs text-blue-700 font-medium mb-0.5">幅 (mm)</label>
                         <input
                           type="number"
                           value={inputValues.elementWidth || selectedElement.dimensions.width || ''}
                           onChange={(e) => updateElementPropertyFixed('elementWidth', e.target.value)}
-                          className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          placeholder="幅を入力"
+                          className="w-full text-xs font-bold text-blue-900 bg-transparent border-0 p-0 focus:ring-1 focus:ring-blue-400 rounded"
+                          placeholder="幅"
                           min="10"
                           step="10"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="block text-sm font-semibold text-gray-700">奥行き (mm)</label>
+                      <div className="bg-white rounded p-1">
+                        <label className="block text-xs text-blue-700 font-medium mb-0.5">奥行 (mm)</label>
                         <input
                           type="number"
                           value={inputValues.elementDepth || selectedElement.dimensions.depth || ''}
                           onChange={(e) => updateElementPropertyFixed('elementDepth', e.target.value)}
-                          className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          placeholder="奥行きを入力"
+                          className="w-full text-xs font-bold text-blue-900 bg-transparent border-0 p-0 focus:ring-1 focus:ring-blue-400 rounded"
+                          placeholder="奥行き"
                           min="10"
                           step="10"
                         />
                       </div>
-                      <div className="space-y-1 col-span-2">
-                        <label className="block text-sm font-semibold text-gray-700">実際の高さ (mm)</label>
+                      <div className="bg-white rounded p-1 col-span-2">
+                        <label className="block text-xs text-blue-700 font-medium mb-0.5">高さ (mm)</label>
                         <input
                           type="number"
                           value={inputValues.elementRealHeight || selectedElement.dimensions.height || ''}
                           onChange={(e) => updateElementPropertyFixed('elementRealHeight', e.target.value)}
-                          className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          placeholder="実際の高さを入力"
+                          className="w-full text-xs font-bold text-blue-900 bg-transparent border-0 p-0 focus:ring-1 focus:ring-blue-400 rounded"
+                          placeholder="高さ"
                           min="10"
                           step="10"
                         />
                       </div>
                     </div>
                   </div>
-
+                  
+                  {/* 位置・座標編集 */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-gray-900 border-b pb-1 mb-2">位置・座標</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-gray-700">X座標 (mm)</label>
+                        <input
+                          type="number"
+                          value={inputValues.elementX || selectedElement.x || ''}
+                          onChange={(e) => updateElementPropertyFixed('elementX', e.target.value)}
+                          className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          placeholder="X座標"
+                          step="10"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-xs font-semibold text-gray-700">Y座標 (mm)</label>
+                        <input
+                          type="number"
+                          value={inputValues.elementY || selectedElement.y || ''}
+                          onChange={(e) => updateElementPropertyFixed('elementY', e.target.value)}
+                          className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                          placeholder="Y座標"
+                          step="10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
                   {/* 詳細設定 */}
                   <div>
-                    <h4 className="text-base font-semibold text-gray-900 border-b pb-2 mb-3">詳細設定</h4>
-                    <div className="space-y-3">
+                    <h4 className="text-xs font-semibold text-gray-900 border-b pb-1 mb-2">詳細設定</h4>
+                    <div className="space-y-2">
                       {selectedElement.type === 'wall' && (
-                        <div className="space-y-1">
-                          <label className="block text-sm font-semibold text-gray-700">材質</label>
-                          <select
-                            value={inputValues.material || selectedElement.properties.material || 'concrete'}
-                            onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          >
-                            <option value="concrete">コンクリート</option>
-                            <option value="wood">木造</option>
-                            <option value="steel">鉄骨</option>
-                            <option value="brick">レンガ</option>
-                          </select>
-                        </div>
+                        <>
+                          <div className="space-y-1">
+                            <label className="block text-xs font-semibold text-gray-700">材質</label>
+                            <select
+                              value={inputValues.material || selectedElement.properties.material || 'concrete'}
+                              onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="concrete">コンクリート</option>
+                              <option value="wood">木造</option>
+                              <option value="steel">鉄骨</option>
+                              <option value="brick">レンガ</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="block text-xs font-semibold text-gray-700">厚み (mm)</label>
+                            <input
+                              type="number"
+                              value={inputValues.elementDepth || selectedElement.dimensions.depth || ''}
+                              onChange={(e) => updateElementPropertyFixed('elementDepth', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="120"
+                              min="50"
+                              step="10"
+                            />
+                          </div>
+                        </>
                       )}
                       
                       {selectedElement.type === 'door' && (
                         <>
                           <div className="space-y-1">
-                            <label className="block text-sm font-semibold text-gray-700">開き方向</label>
+                            <label className="block text-xs font-semibold text-gray-700">開き方向</label>
                             <select
                               value={inputValues.swingDirection || selectedElement.properties.swingDirection || 'right'}
                               onChange={(e) => updateElementPropertyFixed('swingDirection', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             >
                               <option value="left">左開き</option>
                               <option value="right">右開き</option>
@@ -972,11 +1067,11 @@ const FloorPlanEditor: React.FC = () => {
                             </select>
                           </div>
                           <div className="space-y-1">
-                            <label className="block text-sm font-semibold text-gray-700">材質</label>
+                            <label className="block text-xs font-semibold text-gray-700">材質</label>
                             <select
                               value={inputValues.material || selectedElement.properties.material || 'wood'}
                               onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             >
                               <option value="wood">木製</option>
                               <option value="steel">スチール</option>
@@ -990,23 +1085,23 @@ const FloorPlanEditor: React.FC = () => {
                       {selectedElement.type === 'window' && (
                         <>
                           <div className="space-y-1">
-                            <label className="block text-sm font-semibold text-gray-700">床からの高さ (mm)</label>
+                            <label className="block text-xs font-semibold text-gray-700">床からの高さ (mm)</label>
                             <input
                               type="number"
                               value={inputValues.heightFrom || selectedElement.properties.heightFrom || ''}
                               onChange={(e) => updateElementPropertyFixed('heightFrom', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="800"
                               min="0"
                               step="50"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="block text-sm font-semibold text-gray-700">ガラスタイプ</label>
+                            <label className="block text-xs font-semibold text-gray-700">ガラスタイプ</label>
                             <select
                               value={inputValues.glassType || selectedElement.properties.glassType || 'single'}
                               onChange={(e) => updateElementPropertyFixed('glassType', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                             >
                               <option value="single">単板ガラス</option>
                               <option value="double">複層ガラス</option>
@@ -1014,53 +1109,80 @@ const FloorPlanEditor: React.FC = () => {
                               <option value="low-e">Low-Eガラス</option>
                             </select>
                           </div>
-                          <div className="space-y-1">
-                            <label className="block text-sm font-semibold text-gray-700">フレーム材質</label>
-                            <select
-                              value={inputValues.frameType || selectedElement.properties.frameType || 'aluminum'}
-                              onChange={(e) => updateElementPropertyFixed('frameType', e.target.value)}
-                              className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            >
-                              <option value="aluminum">アルミ</option>
-                              <option value="wood">木製</option>
-                              <option value="vinyl">樹脂</option>
-                              <option value="composite">複合材</option>
-                            </select>
-                          </div>
                         </>
                       )}
 
                       {selectedElement.type === 'kitchen' && (
-                        <div className="space-y-1">
-                          <label className="block text-sm font-semibold text-gray-700">材質</label>
-                          <select
-                            value={inputValues.material || selectedElement.properties.material || 'stainless_steel'}
-                            onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          >
-                            <option value="stainless_steel">ステンレス</option>
-                            <option value="artificial_marble">人工大理石</option>
-                            <option value="wood">木材</option>
-                          </select>
-                        </div>
+                        <>
+                          <div className="space-y-1">
+                            <label className="block text-xs font-semibold text-gray-700">材質</label>
+                            <select
+                              value={inputValues.material || selectedElement.properties.material || 'stainless_steel'}
+                              onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="stainless_steel">ステンレス</option>
+                              <option value="artificial_marble">人工大理石</option>
+                              <option value="wood">木材</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="block text-xs font-semibold text-gray-700">機能</label>
+                            <div className="flex space-x-3">
+                              <label className="flex items-center text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={inputValues.hasStove === 'true' || selectedElement.properties.hasStove === true}
+                                  onChange={(e) => updateElementPropertyFixed('hasStove', e.target.checked ? 'true' : 'false')}
+                                  className="mr-1 w-3 h-3"
+                                />
+                                コンロ
+                              </label>
+                              <label className="flex items-center text-xs">
+                                <input
+                                  type="checkbox"
+                                  checked={inputValues.hasSink === 'true' || selectedElement.properties.hasSink === true}
+                                  onChange={(e) => updateElementPropertyFixed('hasSink', e.target.checked ? 'true' : 'false')}
+                                  className="mr-1 w-3 h-3"
+                                />
+                                シンク
+                              </label>
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       {/* その他の要素タイプ用の基本設定 */}
                       {!['wall', 'door', 'window', 'kitchen'].includes(selectedElement.type) && (
-                        <div className="space-y-1">
-                          <label className="block text-sm font-semibold text-gray-700">色</label>
-                          <select
-                            value={inputValues.color || 'default'}
-                            onChange={(e) => updateElementPropertyFixed('color', e.target.value)}
-                            className="w-full px-3 py-2 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          >
-                            <option value="default">デフォルト</option>
-                            <option value="white">白</option>
-                            <option value="gray">グレー</option>
-                            <option value="brown">茶色</option>
-                            <option value="black">黒</option>
-                          </select>
-                        </div>
+                        <>
+                          <div className="space-y-1">
+                            <label className="block text-xs font-semibold text-gray-700">色</label>
+                            <select
+                              value={inputValues.color || 'default'}
+                              onChange={(e) => updateElementPropertyFixed('color', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="default">デフォルト</option>
+                              <option value="white">白</option>
+                              <option value="gray">グレー</option>
+                              <option value="brown">茶色</option>
+                              <option value="black">黒</option>
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="block text-xs font-semibold text-gray-700">材質</label>
+                            <select
+                              value={inputValues.material || selectedElement.properties.material || 'wood'}
+                              onChange={(e) => updateElementPropertyFixed('material', e.target.value)}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="wood">木材</option>
+                              <option value="metal">金属</option>
+                              <option value="plastic">プラスチック</option>
+                              <option value="fabric">布製</option>
+                            </select>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
