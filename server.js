@@ -1,13 +1,13 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // デバッグログ
 app.use((req, res, next) => {
@@ -15,30 +15,37 @@ app.use((req, res, next) => {
   next();
 });
 
-// API プロキシ設定（sugoroku API用）
-app.use('/sugoroku/steps', createProxyMiddleware({
-  target: 'http://localhost:8000', // FastAPI サーバー
-  changeOrigin: true,
-  pathRewrite: {
-    '^/sugoroku/steps': '/sugoroku/steps'
-  },
-  onError: (err, req, res) => {
-    console.error('Proxy error:', err);
-    res.status(500).json({ error: 'API server unavailable' });
-  }
-}));
+// プロキシ設定（開発環境のみ）
+if (!isProduction) {
+  const { createProxyMiddleware } = await import('http-proxy-middleware');
+  
+  // API プロキシ設定（sugoroku API用）
+  app.use('/sugoroku/steps', createProxyMiddleware({
+    target: 'http://localhost:8000', // FastAPI サーバー
+    changeOrigin: true,
+    pathRewrite: {
+      '^/sugoroku/steps': '/sugoroku/steps'
+    },
+    onError: (err, req, res) => {
+      console.error('Proxy error:', err);
+      res.status(500).json({ error: 'API server unavailable' });
+    }
+  }));
 
-app.use('/sugoroku/chats', createProxyMiddleware({
-  target: 'http://localhost:8000', // FastAPI サーバー
-  changeOrigin: true,
-  pathRewrite: {
-    '^/sugoroku/chats': '/sugoroku/chats'
-  },
-  onError: (err, req, res) => {
-    console.error('Proxy error:', err);
-    res.status(500).json({ error: 'API server unavailable' });
-  }
-}));
+  app.use('/sugoroku/chats', createProxyMiddleware({
+    target: 'http://localhost:8000', // FastAPI サーバー
+    changeOrigin: true,
+    pathRewrite: {
+      '^/sugoroku/chats': '/sugoroku/chats'
+    },
+    onError: (err, req, res) => {
+      console.error('Proxy error:', err);
+      res.status(500).json({ error: 'API server unavailable' });
+    }
+  }));
+} else {
+  console.log('Running in production mode - proxies disabled');
+}
 
 // housingアプリケーションのためのStatic Files
 app.use('/housing', express.static(join(__dirname, 'dist/housing')));
